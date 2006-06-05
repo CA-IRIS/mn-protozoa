@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<meta name="Author" content="Douglas Lau"/>
+	<link href="protozoa.css" rel="stylesheet" type="text/css"/>
+	<title>Vicon Camera Control Code</title>
+</head>
+
+<body>
+<h2>Vicon Camera Control Code</h2>
+
+<table>
+<tr>
+	<th>BIT</th>
+	<th>FUNCTION</th>
+	<th>ALTERNATE (PRESET)</th>
+</tr>
+<tr>
+	<td>0</td>
+	<td>receiver bit 4</td>
+</tr>
+<tr>
+	<td>1</td>
+	<td>receiver bit 5</td>
+</tr>
+<tr>
+	<td>2</td>
+	<td>receiver bit 6</td>
+</tr>
+<tr>
+	<td>3</td>
+	<td>receiver bit 7</td>
+</tr>
+<tr>
+	<td>4</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>5</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>6</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>7</td>
+	<td>must be 1</td>
+</tr>
+<tr>
+	<td>8</td>
+	<td>receiver bit 0</td>
+</tr>
+<tr>
+	<td>9</td>
+	<td>receiver bit 1</td>
+</tr>
+<tr>
+	<td>10</td>
+	<td>receiver bit 2</td>
+</tr>
+<tr>
+	<td>11</td>
+	<td>receiver bit 3</td>
+</tr>
+<tr>
+	<td>12</td>
+	<td>0 := status poll<br/>1 := command (add bits 16-47)</td>
+</tr>
+<tr>
+	<td>13</td>
+	<td>ack alarm</td>
+</tr>
+<tr>
+	<td>14</td>
+	<td>extended command<br/>(with bit 12; add bits 48-79)</td>
+</tr>
+<tr>
+	<td>15</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>16</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>17</td>
+	<td>toggle auto-iris</td>
+</tr>
+<tr>
+	<td>18</td>
+	<td>toggle auto-pan</td>
+</tr>
+<tr>
+	<td>19</td>
+	<td>tilt down</td>
+</tr>
+<tr>
+	<td>20</td>
+	<td>tilt up</td>
+</tr>
+<tr>
+	<td>21</td>
+	<td>pan right</td>
+</tr>
+<tr>
+	<td>22</td>
+	<td>pan left</td>
+</tr>
+<tr>
+	<td>23</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>24</td>
+	<td>toggle lens speed</td>
+</tr>
+<tr>
+	<td>25</td>
+	<td>iris close</td>
+</tr>
+<tr>
+	<td>26</td>
+	<td>iris open</td>
+</tr>
+<tr>
+	<td>27</td>
+	<td>focus near</td>
+</tr>
+<tr>
+	<td>28</td>
+	<td>focus far</td>
+</tr>
+<tr>
+	<td>29</td>
+	<td>zoom in</td>
+</tr>
+<tr>
+	<td>30</td>
+	<td>zoom out</td>
+</tr>
+<tr>
+	<td>31</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>32</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>33</td>
+	<td>auxilliary 6</td>
+</tr>
+<tr>
+	<td>34</td>
+	<td>auxilliary 5</td>
+</tr>
+<tr>
+	<td>35</td>
+	<td>auxilliary 4</td>
+</tr>
+<tr>
+	<td>36</td>
+	<td>auxilliary 3</td>
+</tr>
+<tr>
+	<td>37</td>
+	<td>auxilliary 2</td>
+</tr>
+<tr>
+	<td>38</td>
+	<td>auxilliary 1</td>
+</tr>
+<tr>
+	<td>39</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>40</td>
+	<td>preset bit 0</td>
+</tr>
+<tr>
+	<td>41</td>
+	<td>preset bit 1</td>
+</tr>
+<tr>
+	<td>42</td>
+	<td>preset bit 2</td>
+</tr>
+<tr>
+	<td>43</td>
+	<td>preset bit 3</td>
+</tr>
+<tr>
+	<td>44</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>45</td>
+	<td>preset recall</td>
+</tr>
+<tr>
+	<td>46</td>
+	<td>preset store</td>
+</tr>
+<tr>
+	<td>47</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>48</td>
+	<td>pan speed bit 7</td>
+	<td>preset recall (0) or store (1)</td>
+</tr>
+<tr>
+	<td>49</td>
+	<td>pan speed bit 8</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>50</td>
+	<td>pan speed bit 9</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>51</td>
+	<td>pan speed bit 10</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>52</td>
+	<td>extended speed (0)</td>
+	<td>extended preset (1)</td>
+</tr>
+<tr>
+	<td>53</td>
+	<td>must be 0</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>54</td>
+	<td>must be 0</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>55</td>
+	<td>must be 0</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>56</td>
+	<td>pan speed bit 0</td>
+	<td>preset bit 0</td>
+</tr>
+<tr>
+	<td>57</td>
+	<td>pan speed bit 1</td>
+	<td>preset bit 1</td>
+</tr>
+<tr>
+	<td>58</td>
+	<td>pan speed bit 2</td>
+	<td>preset bit 2</td>
+</tr>
+<tr>
+	<td>59</td>
+	<td>pan speed bit 3</td>
+	<td>preset bit 3</td>
+</tr>
+<tr>
+	<td>60</td>
+	<td>pan speed bit 4</td>
+	<td>preset bit 4</td>
+</tr>
+<tr>
+	<td>61</td>
+	<td>pan speed bit 5</td>
+	<td>preset bit 5</td>
+</tr>
+<tr>
+	<td>62</td>
+	<td>pan speed bit 6</td>
+	<td>preset bit 6</td>
+</tr>
+<tr>
+	<td>63</td>
+	<td>must be 0</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>64</td>
+	<td>tilt speed bit 7</td>
+	<td>preset pan speed bit 0</td>
+</tr>
+<tr>
+	<td>65</td>
+	<td>tilt speed bit 8</td>
+	<td>preset pan speed bit 1</td>
+</tr>
+<tr>
+	<td>66</td>
+	<td>tilt speed bit 9</td>
+	<td>preset pan speed bit 2</td>
+</tr>
+<tr>
+	<td>67</td>
+	<td>tilt speed bit 10</td>
+	<td>preset pan speed bit 3</td>
+</tr>
+<tr>
+	<td>68</td>
+	<td>must be 0</td>
+	<td>preset pan speed bit 4</td>
+</tr>
+<tr>
+	<td>69</td>
+	<td>must be 0</td>
+	<td>preset pan speed bit 5</td>
+</tr>
+<tr>
+	<td>70</td>
+	<td>must be 0</td>
+	<td>preset pan speed bit 6</td>
+</tr>
+<tr>
+	<td>71</td>
+	<td>must be 0</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>72</td>
+	<td>tilt speed bit 0</td>
+</tr>
+<tr>
+	<td>73</td>
+	<td>tilt speed bit 1</td>
+</tr>
+<tr>
+	<td>74</td>
+	<td>tilt speed bit 2</td>
+</tr>
+<tr>
+	<td>75</td>
+	<td>tilt speed bit 3</td>
+</tr>
+<tr>
+	<td>76</td>
+	<td>tilt speed bit 4</td>
+</tr>
+<tr>
+	<td>77</td>
+	<td>tilt speed bit 5</td>
+</tr>
+<tr>
+	<td>78</td>
+	<td>tilt speed bit 6</td>
+</tr>
+<tr>
+	<td>79</td>
+	<td>must be 0</td>
+</tr>
+</table>
+
+<p class="stamp">
+	2006 May 2
+</p>
+</body>
+</html>
