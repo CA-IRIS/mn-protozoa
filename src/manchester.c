@@ -29,59 +29,47 @@ static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
-static inline void parse_pan(struct ccpacket *p, uint8_t *mess) {
-	int cmnd = pt_bits(mess);
-	if(pt_command(mess)) {
-		if(cmnd == 0x02)
-			p->pan = -pt_speed(mess);
-		else if(cmnd == 0x03)
-			p->pan = pt_speed(mess);
+enum pt_command_t { TILT_UP, TILT_DOWN, PAN_LEFT, PAN_RIGHT };
+
+static inline void parse_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
+	int speed)
+{
+	switch(cmnd) {
+		case PAN_LEFT:
+			p->pan = -speed;
+			break;
+		case PAN_RIGHT:
+			p->pan = speed;
+			break;
+		case TILT_UP:
+			p->tilt = -speed;
+			break;
+		case TILT_DOWN:
+			p->tilt = speed;
+			break;
 	}
 }
 
-static inline void parse_tilt(struct ccpacket *p, uint8_t *mess) {
-	int cmnd = pt_bits(mess);
-	if(pt_command(mess)) {
-		if(cmnd == 0x00)
-			p->tilt = -pt_speed(mess);
-		else if(cmnd == 0x01)
-			p->tilt = pt_speed(mess);
-	}
-}
-
-static inline void parse_zoom(struct ccpacket *p, uint8_t *mess) {
-	int cmnd = pt_bits(mess);
-	if(!pt_command(mess)) {
-		if(cmnd == 0x00) {
-			if(pt_extra(mess) == 0x03)
-				p->zoom = ZOOM_IN;
-			if(pt_extra(mess) == 0x06)
-				p->zoom = ZOOM_OUT;
-		}
-	}
-}
-
-static inline void parse_focus(struct ccpacket *p, uint8_t *mess) {
-	int cmnd = pt_bits(mess);
-	if(!pt_command(mess)) {
-		if(cmnd == 0x00) {
-			if(pt_extra(mess) == 0x02)
-				p->focus = FOCUS_FAR;
-			if(pt_extra(mess) == 0x05)
-				p->focus = FOCUS_NEAR;
-		}
-	}
-}
-
-static inline void parse_iris(struct ccpacket *p, uint8_t *mess) {
-	int cmnd = pt_bits(mess);
-	if(!pt_command(mess)) {
-		if(cmnd == 0x00) {
-			if(pt_extra(mess) == 0x01)
-				p->iris = IRIS_OPEN;
-			if(pt_extra(mess) == 0x04)
-				p->iris = IRIS_CLOSE;
-		}
+static inline void parse_lens(struct ccpacket *p, int extra) {
+	switch(extra) {
+		case 0x03:
+			p->zoom = ZOOM_IN;
+			break;
+		case 0x06:
+			p->zoom = ZOOM_OUT;
+			break;
+		case 0x02:
+			p->focus = FOCUS_FAR;
+			break;
+		case 0x05:
+			p->focus = FOCUS_NEAR;
+			break;
+		case 0x01:
+			p->iris = IRIS_OPEN;
+			break;
+		case 0x04:
+			p->iris = IRIS_CLOSE;
+			break;
 	}
 }
 
@@ -96,12 +84,37 @@ static const enum aux_t AUX[] = {
 	AUX_6		/* 111 */
 };
 
-static inline void parse_aux(struct ccpacket *p, uint8_t *mess) {
-	int cmnd = pt_bits(mess);
-	if(!pt_command(mess)) {
-		if(cmnd == 0x01)
-			p->aux = AUX[pt_extra(mess)];
+static inline void parse_aux(struct ccpacket *p, int extra) {
+	p->aux = AUX[extra];
+}
+
+enum ex_function_t { EX_LENS, EX_AUX, EX_RCL_PRESET, EX_STO_PRESET };
+
+static inline void parse_extended(struct ccpacket *p, enum ex_function_t cmnd,
+	int extra)
+{
+	switch(cmnd) {
+		case EX_LENS:
+			parse_lens(p, extra);
+			break;
+		case EX_AUX:
+			parse_aux(p, extra);
+			break;
+		case EX_RCL_PRESET:
+			/* FIXME */
+			break;
+		case EX_STO_PRESET:
+			/* FIXME */
+			break;
 	}
+}
+
+static inline void parse_packet(struct ccpacket *p, uint8_t *mess) {
+	int cmnd = pt_bits(mess);
+	if(pt_command(mess))
+		parse_pan_tilt(p, cmnd, pt_speed(mess));
+	else
+		parse_extended(p, cmnd, pt_extra(mess));
 }
 
 static void manchester_parse_packet(uint8_t *mess) {
@@ -110,12 +123,7 @@ static void manchester_parse_packet(uint8_t *mess) {
 	ccpacket_init(&p);
 
 	p.receiver = parse_receiver(mess);
-	parse_pan(&p, mess);
-	parse_tilt(&p, mess);
-	parse_zoom(&p, mess);
-	parse_focus(&p, mess);
-	parse_iris(&p, mess);
-	parse_aux(&p, mess);
+	parse_packet(&p, mess);
 
 	printf("rcv: %d pan: %d tilt: %d zoom: %d focus: %d iris: %d aux: %d\n",
 		p.receiver, p.pan, p.tilt, p.zoom, p.focus, p.iris, p.aux);
