@@ -31,6 +31,16 @@ inline bool buffer_is_empty(const struct buffer *buf) {
 	return buf->pout >= buf->pin;
 }
 
+inline int buffer_available(const struct buffer *buf) {
+	return buf->pin - buf->pout;
+}
+
+void buffer_skip(struct buffer *buf, size_t count) {
+	buf->pout += count;
+	if(buf->pout >= buf->pin)
+		buffer_clear(buf);
+}
+
 inline bool buffer_is_full(const struct buffer *buf) {
 	return buf->pin < buf->end;
 }

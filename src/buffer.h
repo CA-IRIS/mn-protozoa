@@ -22,6 +22,7 @@ struct buffer *buffer_init(struct buffer *buf, size_t size);
 void buffer_destroy(struct buffer *buf);
 void buffer_clear(struct buffer *buf);
 bool buffer_is_empty(const struct buffer *buf);
+int buffer_available(const struct buffer *buf);
 bool buffer_is_full(const struct buffer *buf);
 ssize_t buffer_read(struct buffer *buf, int fd);
 ssize_t buffer_write(struct buffer *buf, int fd);
