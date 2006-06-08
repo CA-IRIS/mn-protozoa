@@ -70,6 +70,14 @@ static inline void parse_lens(struct ccpacket *p, int extra) {
 		case 0x04:
 			p->iris = IRIS_CLOSE;
 			break;
+		case 0x00:
+			/* Weird special case for hard down */
+			p->tilt = -1023;
+			break;
+		case 0x07:
+			/* Weird special case for hard left */
+			p->pan = -1023;
+			break;
 	}
 }
 
@@ -86,6 +94,9 @@ static const enum aux_t AUX[] = {
 
 static inline void parse_aux(struct ccpacket *p, int extra) {
 	p->aux = AUX[extra];
+	/* Weird special case for hard up */
+	if(extra == 0)
+		p->tilt = 1023;
 }
 
 enum ex_function_t { EX_LENS, EX_AUX, EX_RCL_PRESET, EX_STO_PRESET };
@@ -124,6 +135,8 @@ static void manchester_parse_packet(uint8_t *mess) {
 
 	p.receiver = parse_receiver(mess);
 	parse_packet(&p, mess);
+
+printf("%02x %02x %02x\n", mess[0], mess[1], mess[2]);
 
 	printf("rcv: %d pan: %d tilt: %d zoom: %d focus: %d iris: %d aux: %d\n",
 		p.receiver, p.pan, p.tilt, p.zoom, p.focus, p.iris, p.aux);
