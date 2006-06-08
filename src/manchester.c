@@ -50,31 +50,42 @@ static inline void parse_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 	}
 }
 
-static inline void parse_lens(struct ccpacket *p, int extra) {
+enum lens_t {
+	XL_TILT_DOWN,	/* 000 (not really a lens function) */
+	XL_IRIS_OPEN,	/* 001 */
+	XL_FOCUS_FAR,	/* 010 */
+	XL_ZOOM_IN,	/* 011 */
+	XL_IRIS_CLOSE,	/* 100 */
+	XL_FOCUS_NEAR,	/* 101 */
+	XL_ZOOM_OUT,	/* 110 */
+	XL_PAN_LEFT,	/* 111 (not really a lens function) */
+};
+
+static inline void parse_lens(struct ccpacket *p, enum lens_t extra) {
 	switch(extra) {
-		case 0x03:
+		case XL_ZOOM_IN:
 			p->zoom = ZOOM_IN;
 			break;
-		case 0x06:
+		case XL_ZOOM_OUT:
 			p->zoom = ZOOM_OUT;
 			break;
-		case 0x02:
+		case XL_FOCUS_FAR:
 			p->focus = FOCUS_FAR;
 			break;
-		case 0x05:
+		case XL_FOCUS_NEAR:
 			p->focus = FOCUS_NEAR;
 			break;
-		case 0x01:
+		case XL_IRIS_OPEN:
 			p->iris = IRIS_OPEN;
 			break;
-		case 0x04:
+		case XL_IRIS_CLOSE:
 			p->iris = IRIS_CLOSE;
 			break;
-		case 0x00:
+		case XL_TILT_DOWN:
 			/* Weird special case for hard down */
 			p->tilt = -1023;
 			break;
-		case 0x07:
+		case XL_PAN_LEFT:
 			/* Weird special case for hard left */
 			p->pan = -1023;
 			break;
