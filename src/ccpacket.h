@@ -29,6 +29,7 @@ enum aux_t {
  */
 struct ccpacket {
 	int	receiver;	/* receiver address: 1 to 255 */
+	int		preset;	/* > 0 (recall) / < 0 (store) */
 	int		pan;	/* -1023 (fast left) to 1023 (fast right) */
 	int		tilt;	/* -1023 (fast down) to 1023 (fast up) */
 	enum zoom_t	zoom;	/* -1 (out), 0 (no change), or 1 (in) */
