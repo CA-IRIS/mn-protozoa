@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -Wall
+CFLAGS = -Os -Wall -combine -fwhole-program
 STEST = protozoa
 
 all:  $(STEST)
