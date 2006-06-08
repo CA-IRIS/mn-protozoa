@@ -10,8 +10,8 @@ static inline bool pt_command(uint8_t *mess) {
 }
 
 static inline int parse_receiver(uint8_t *mess) {
-	return ((mess[0] & 0x03) << 6 | (mess[1] & 0x01) << 5 |
-		(mess[2] >> 2) & 0x1f) + 1;
+	return (((mess[0] & 0x03) << 6 | (mess[1] & 0x01) << 5 |
+		(mess[2] >> 2)) & 0x1f) + 1;
 }
 
 static inline int pt_bits(uint8_t *mess) {
@@ -143,7 +143,7 @@ static inline void manchester_parse_packet(uint8_t *mess) {
 }
 
 static inline int manchester_read_message(struct buffer *rxbuf) {
-	if(buffer_peek(rxbuf) & FLAG == 0) {
+	if((buffer_peek(rxbuf) & FLAG) == 0) {
 		printf("Manchester: unexpected byte %02X\n", buffer_get(rxbuf));
 		return 0;
 	}

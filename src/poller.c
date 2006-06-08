@@ -1,6 +1,7 @@
-#include <stdio.h>
+#include <stdio.h>	/* for printf */
+#include <string.h>	/* for strerror */
 #include <unistd.h>
-#include <sys/errno.h>
+#include <sys/errno.h>	/* for errno */
 #include <sys/poll.h>
 
 #include "sport.h"
@@ -10,7 +11,8 @@ extern int errno;
 
 #define NPORTS 1
 
-int main(int argc, char** args) {
+int main(int argc, char* argv[])
+{
 	struct sport port[NPORTS];
 	struct pollfd pollfds[NPORTS];
 	ssize_t nbytes;

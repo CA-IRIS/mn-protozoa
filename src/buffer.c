@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include <string.h>
+#include <unistd.h>	/* for read, write */
 #include <sys/errno.h>
 
 extern int errno;
