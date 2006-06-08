@@ -24,6 +24,15 @@
 	Receiver addresses are zero-relative (0-255). So, subtract 1 from the
 	camera number to get the receiver address.
 </p>
+<p>
+	There are some parts which are not certain. The p/t speed ranges from
+	0-6, not 0-7 as expected. Also, strange bit patterns occur when holding
+	the joystick all the way left (80 0E 00), up (80 10 00) and down
+	(80 00 00). Holding all the way to the right produces 80 3C 02, which
+	is expected. These examples are all with camera receiver 1. This means
+	either the (third-party) encoder is buggy, or this is a very weird
+	protocol. More testing is needed.
+</p>
 
 <div class="left">
 <table>
