@@ -128,7 +128,7 @@ static inline void parse_packet(struct ccpacket *p, uint8_t *mess) {
 		parse_extended(p, cmnd, pt_extra(mess));
 }
 
-static void manchester_parse_packet(uint8_t *mess) {
+static inline void manchester_parse_packet(uint8_t *mess) {
 	struct ccpacket p;
 
 	ccpacket_init(&p);
@@ -142,12 +142,10 @@ static void manchester_parse_packet(uint8_t *mess) {
 		p.receiver, p.pan, p.tilt, p.zoom, p.focus, p.iris, p.aux);
 }
 
-static int manchester_read_message(struct buffer *rxbuf) {
-	while(buffer_peek(rxbuf) & FLAG == 0)
+static inline int manchester_read_message(struct buffer *rxbuf) {
+	if(buffer_peek(rxbuf) & FLAG == 0) {
 		printf("Manchester: unexpected byte %02X\n", buffer_get(rxbuf));
-	if(buffer_available(rxbuf) < 3) {
-		printf("Manchester: incomplete message\n");
-		return -1;
+		return 0;
 	}
 	manchester_parse_packet(rxbuf->pout);
 	buffer_skip(rxbuf, 3);
@@ -155,7 +153,7 @@ static int manchester_read_message(struct buffer *rxbuf) {
 }
 
 int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
-	while(!buffer_is_empty(rxbuf)) {
+	while(buffer_available(rxbuf) >= 3) {
 		if(manchester_read_message(rxbuf) < 0)
 			return -1;
 	}
