@@ -136,7 +136,7 @@ static void manchester_parse_packet(uint8_t *mess) {
 	p.receiver = parse_receiver(mess);
 	parse_packet(&p, mess);
 
-printf("%02x %02x %02x\n", mess[0], mess[1], mess[2]);
+//printf("%02x %02x %02x\n", mess[0], mess[1], mess[2]);
 
 	printf("rcv: %d pan: %d tilt: %d zoom: %d focus: %d iris: %d aux: %d\n",
 		p.receiver, p.pan, p.tilt, p.zoom, p.focus, p.iris, p.aux);
