@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "ccpacket.h"
 
 void ccpacket_init(struct ccpacket *p) {
@@ -9,4 +10,10 @@ void ccpacket_init(struct ccpacket *p) {
 	p->focus = FOCUS_NONE;
 	p->iris = IRIS_NONE;
 	p->aux = 0;
+}
+
+void ccpacket_debug(struct ccpacket *p) {
+	printf("rcv: %d pan: %d tilt: %d zoom: %d focus: %d iris: %d aux: %d\n",
+		p->receiver, p->pan, p->tilt, p->zoom, p->focus, p->iris,
+		p->aux);
 }

@@ -39,5 +39,6 @@ struct ccpacket {
 };
 
 void ccpacket_init(struct ccpacket *p);
+void ccpacket_debug(struct ccpacket *p);
 
 #endif

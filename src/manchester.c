@@ -150,12 +150,6 @@ static inline void parse_packet(struct ccpacket *p, uint8_t *mess) {
 		parse_extended(p, cmnd, pt_extra(mess));
 }
 
-static void packet_debug(struct ccpacket *p) {
-	printf("rcv: %d pan: %d tilt: %d zoom: %d focus: %d iris: %d aux: %d\n",
-		p->receiver, p->pan, p->tilt, p->zoom, p->focus, p->iris,
-		p->aux);
-}
-
 static inline void manchester_parse_packet(struct combiner *c, uint8_t *mess) {
 	int receiver = parse_receiver(mess);
 	if(c->packet.receiver != 0 && c->packet.receiver != receiver)
@@ -185,12 +179,11 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 		if(manchester_read_message(c, rxbuf) < 0)
 			return -1;
 	}
-	c->do_write(c);
-	return 0;
+	return c->do_write(c);
 }
 
 int manchester_do_write(struct combiner *c) {
-	packet_debug(&c->packet);
+	ccpacket_debug(&c->packet);
 	ccpacket_init(&c->packet);
 	return 0;
 }
