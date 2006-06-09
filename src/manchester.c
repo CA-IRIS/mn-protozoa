@@ -202,38 +202,29 @@ static inline void format_receiver(uint8_t *mess, int receiver) {
 	mess[2] = (r & 0x1f) << 2;
 }
 
-static inline void format_pan(uint8_t *mess, struct ccpacket *p) {
-	int speed = (abs(p->pan) / 170) & 0x07;
-	mess[1] |= speed << 1;
-	if(p->command & CC_PAN_LEFT)
-		mess[1] |= PAN_LEFT << 4;
-	else if(p->command & CC_PAN_RIGHT)
-		mess[1] |= PAN_RIGHT << 4;
-	mess[2] |= PT_COMMAND;
-}
-
-static void manchester_send_pan(struct combiner *c) {
+static void encode_pan_tilt_command(struct combiner *c, enum pt_command_t cmnd,
+	int speed)
+{
+	int s = (abs(speed) / 170) & 0x07;
 	uint8_t mess[3];
 	format_receiver(mess, c->packet.receiver);
-	format_pan(mess, &c->packet);
+	mess[1] |= (cmnd << 4) | (s << 1);
+	mess[2] |= PT_COMMAND;
 	combiner_write(c, mess, 3);
 }
 
-static inline void format_tilt(uint8_t *mess, struct ccpacket *p) {
-	int speed = (abs(p->tilt) / 170) & 0x07;
-	mess[1] |= speed << 1;
-	if(p->command & CC_TILT_DOWN)
-		mess[1] |= TILT_DOWN << 4;
-	else if(p->command & CC_TILT_UP)
-		mess[1] |= TILT_UP << 4;
-	mess[2] |= PT_COMMAND;
+static inline void encode_pan(struct combiner *c) {
+	if(c->packet.command & CC_PAN_LEFT)
+		encode_pan_tilt_command(c, PAN_LEFT, c->packet.pan);
+	else if(c->packet.command & CC_PAN_RIGHT)
+		encode_pan_tilt_command(c, PAN_RIGHT, c->packet.pan);
 }
 
-static void manchester_send_tilt(struct combiner *c) {
-	uint8_t mess[3];
-	format_receiver(mess, c->packet.receiver);
-	format_tilt(mess, &c->packet);
-	combiner_write(c, mess, 3);
+static inline void encode_tilt(struct combiner *c) {
+	if(c->packet.command & CC_TILT_DOWN)
+		encode_pan_tilt_command(c, TILT_DOWN, c->packet.tilt);
+	else if(c->packet.command & CC_TILT_UP)
+		encode_pan_tilt_command(c, TILT_UP, c->packet.tilt);
 }
 
 static void encode_lens_function(struct combiner *c, enum lens_t func) {
@@ -268,10 +259,8 @@ int manchester_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
 //	ccpacket_debug(&c->packet);
-	if(c->packet.command & (CC_PAN_LEFT | CC_PAN_RIGHT))
-		manchester_send_pan(c);
-	if(c->packet.command & (CC_TILT_UP | CC_TILT_DOWN))
-		manchester_send_tilt(c);
+	encode_pan(c);
+	encode_tilt(c);
 	encode_zoom(c);
 	encode_focus(c);
 	encode_iris(c);
