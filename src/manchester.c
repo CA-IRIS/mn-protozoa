@@ -191,6 +191,10 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 	return c->do_write(c);
 }
 
+static void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
+	printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
+}
+
 static inline void format_receiver(uint8_t *mess, int receiver) {
 	int r = receiver - 1;
 	mess[0] = FLAG | ((r >> 6) & 0x03);
@@ -212,8 +216,7 @@ static void manchester_send_pan(struct combiner *c) {
 	uint8_t mess[3];
 	format_receiver(mess, c->packet.receiver);
 	format_pan(mess, &c->packet);
-
-printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
+	combiner_write(c, mess, 3);
 }
 
 static inline void format_tilt(uint8_t *mess, struct ccpacket *p) {
@@ -230,8 +233,21 @@ static void manchester_send_tilt(struct combiner *c) {
 	uint8_t mess[3];
 	format_receiver(mess, c->packet.receiver);
 	format_tilt(mess, &c->packet);
+	combiner_write(c, mess, 3);
+}
 
-printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
+static inline void format_zoom(uint8_t *mess, struct ccpacket *p) {
+	if(p->zoom < 0)
+		mess[1] |= XL_ZOOM_OUT << 1;
+	else if(p->zoom > 0)
+		mess[1] |= XL_ZOOM_IN << 1;
+}
+
+static void manchester_send_zoom(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	format_zoom(mess, &c->packet);
+	combiner_write(c, mess, 3);
 }
 
 int manchester_do_write(struct combiner *c) {
@@ -242,6 +258,8 @@ int manchester_do_write(struct combiner *c) {
 		manchester_send_pan(c);
 	if(c->packet.command & (CC_TILT_UP | CC_TILT_DOWN))
 		manchester_send_tilt(c);
+	if(c->packet.zoom)
+		manchester_send_zoom(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }

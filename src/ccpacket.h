@@ -6,9 +6,8 @@ enum command_t {
 	CC_PAN_RIGHT = 1 << 1,
 	CC_TILT_UP = 1 << 2,
 	CC_TILT_DOWN = 1 << 3,
-	CC_ZOOM = 1 << 4,
-	CC_RECALL = 1 << 5,
-	CC_STORE = 1 << 6,
+	CC_RECALL = 1 << 4,
+	CC_STORE = 1 << 5,
 };
 
 enum zoom_t {
