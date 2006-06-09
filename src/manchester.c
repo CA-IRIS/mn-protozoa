@@ -264,6 +264,20 @@ static void manchester_send_focus(struct combiner *c) {
 	combiner_write(c, mess, 3);
 }
 
+static inline void format_iris(uint8_t *mess, struct ccpacket *p) {
+	if(p->iris < 0)
+		mess[1] |= XL_IRIS_CLOSE << 1;
+	else
+		mess[1] |= XL_IRIS_OPEN << 1;
+}
+
+static void manchester_send_iris(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	format_iris(mess, &c->packet);
+	combiner_write(c, mess, 3);
+}
+
 int manchester_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
@@ -276,6 +290,8 @@ int manchester_do_write(struct combiner *c) {
 		manchester_send_zoom(c);
 	if(c->packet.focus)
 		manchester_send_focus(c);
+	if(c->packet.iris)
+		manchester_send_iris(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }
