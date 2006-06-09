@@ -115,7 +115,12 @@ static inline void parse_aux(struct ccpacket *p, int extra) {
 		p->tilt = 1023;
 }
 
-enum ex_function_t { EX_LENS, EX_AUX, EX_RCL_PRESET, EX_STO_PRESET };
+enum ex_function_t {
+	EX_LENS,	/* 00 */
+	EX_AUX,		/* 01 */
+	EX_RCL_PRESET,	/* 10 */
+	EX_STO_PRESET,	/* 11 */
+};
 
 static inline void parse_extended(struct ccpacket *p, enum ex_function_t cmnd,
 	int extra)
