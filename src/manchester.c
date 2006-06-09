@@ -158,11 +158,8 @@ static void packet_debug(struct ccpacket *p) {
 
 static inline void manchester_parse_packet(struct combiner *c, uint8_t *mess) {
 	int receiver = parse_receiver(mess);
-	if(c->packet.receiver != 0 && c->packet.receiver != receiver) {
-		packet_debug(&c->packet);
-		// FIXME: send out packet
-		ccpacket_init(&c->packet);
-	}
+	if(c->packet.receiver != 0 && c->packet.receiver != receiver)
+		c->do_write(c);
 	c->packet.receiver = receiver;
 	parse_packet(&c->packet, mess);
 
@@ -188,11 +185,12 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 		if(manchester_read_message(c, rxbuf) < 0)
 			return -1;
 	}
-	packet_debug(&c->packet);
-	ccpacket_init(&c->packet);
+	c->do_write(c);
 	return 0;
 }
 
-int manchester_do_write(struct handler *h, struct buffer *txbuf) {
+int manchester_do_write(struct combiner *c) {
+	packet_debug(&c->packet);
+	ccpacket_init(&c->packet);
 	return 0;
 }

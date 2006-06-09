@@ -24,14 +24,13 @@ static struct sport* sport_configure(struct sport *port) {
 	return port;
 }
 
-static int sport_handler(struct handler *h, struct buffer *rxbuf) {
+static int sport_do_read(struct handler *h, struct buffer *rxbuf) {
 	/* Do nothing */
 	return 0;
 }
 
 static struct handler null_handler = {
-	.do_read = sport_handler,
-	.do_write = sport_handler,
+	.do_read = sport_do_read,
 };
 
 struct sport* sport_init(struct sport *port, const char *name) {

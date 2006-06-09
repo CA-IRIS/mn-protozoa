@@ -5,9 +5,10 @@
 #include "sport.h"
 
 struct combiner {
-	struct handler	handler;	/* "sub-struct" of handler */
-	struct ccpacket	packet;		/* current camera control packet */
-	struct buffer	*txbuf;		/* transmit buffer */
+	struct	handler	handler;		/* "sub-struct" of handler */
+	int	(*do_write)	(struct combiner *c);
+	struct	ccpacket	packet;		/* camera control packet */
+	struct	buffer		*txbuf;		/* transmit buffer */
 };
 
 #endif

@@ -7,7 +7,6 @@
 
 struct handler {
 	int	(*do_read)	(struct handler *h, struct buffer *rxbuf);
-	int	(*do_write)	(struct handler *h, struct buffer *txbuf);
 };
 
 struct sport {
