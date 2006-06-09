@@ -236,11 +236,15 @@ static void manchester_send_tilt(struct combiner *c) {
 	combiner_write(c, mess, 3);
 }
 
+static inline void encode_lens_function(uint8_t *mess, enum lens_t func) {
+	mess[1] |= func << 1;
+}
+
 static inline void format_zoom(uint8_t *mess, struct ccpacket *p) {
 	if(p->zoom < 0)
-		mess[1] |= XL_ZOOM_OUT << 1;
+		encode_lens_function(mess, XL_ZOOM_OUT);
 	else
-		mess[1] |= XL_ZOOM_IN << 1;
+		encode_lens_function(mess, XL_ZOOM_IN);
 }
 
 static void manchester_send_zoom(struct combiner *c) {
@@ -252,9 +256,9 @@ static void manchester_send_zoom(struct combiner *c) {
 
 static inline void format_focus(uint8_t *mess, struct ccpacket *p) {
 	if(p->focus < 0)
-		mess[1] |= XL_FOCUS_NEAR << 1;
+		encode_lens_function(mess, XL_FOCUS_NEAR);
 	else
-		mess[1] |= XL_FOCUS_FAR << 1;
+		encode_lens_function(mess, XL_FOCUS_FAR);
 }
 
 static void manchester_send_focus(struct combiner *c) {
@@ -266,9 +270,9 @@ static void manchester_send_focus(struct combiner *c) {
 
 static inline void format_iris(uint8_t *mess, struct ccpacket *p) {
 	if(p->iris < 0)
-		mess[1] |= XL_IRIS_CLOSE << 1;
+		encode_lens_function(mess, XL_IRIS_CLOSE);
 	else
-		mess[1] |= XL_IRIS_OPEN << 1;
+		encode_lens_function(mess, XL_IRIS_OPEN);
 }
 
 static void manchester_send_iris(struct combiner *c) {
