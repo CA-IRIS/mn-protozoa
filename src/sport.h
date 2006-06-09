@@ -2,17 +2,12 @@
 #define __SPORT_H__
 
 #include "buffer.h"
-//#include "handler.h"
 
 #define BUFFER_SIZE 256
 
 struct handler {
-	int		(*do_read)	(struct handler *h,
-					 struct buffer *rxbuf);
-	int		(*do_write)	(struct handler *h,
-					 struct buffer *txbuf);
-
-	struct buffer	*txbuf;
+	int	(*do_read)	(struct handler *h, struct buffer *rxbuf);
+	int	(*do_write)	(struct handler *h, struct buffer *txbuf);
 };
 
 struct sport {
@@ -20,7 +15,7 @@ struct sport {
 	struct buffer	rxbuf;
 	struct buffer	txbuf;
 
-	struct handler	handler;
+	struct handler	*handler;
 };
 
 struct sport* sport_init(

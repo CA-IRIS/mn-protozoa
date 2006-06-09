@@ -5,6 +5,7 @@
 #include <sys/poll.h>
 
 #include "sport.h"
+#include "combiner.h"
 #include "manchester.h"
 
 extern int errno;
@@ -17,10 +18,17 @@ int main(int argc, char* argv[])
 	struct pollfd pollfds[NPORTS];
 	ssize_t nbytes;
 	int i;
+	struct combiner *cmbnr;
 
 	if(sport_init(&port[0], "/dev/ttyS0") == NULL)
 		goto fail;
-	port[0].handler.do_read = manchester_do_read;
+	cmbnr = malloc(sizeof(struct combiner));
+	if(cmbnr == NULL)
+		goto fail;
+	cmbnr->handler.do_read = manchester_do_read;
+	cmbnr->txbuf = &port[0].txbuf;
+	port[0].handler = &cmbnr->handler;
+
 	pollfds[0].fd = port[0].fd;
 	pollfds[0].events = POLLIN;
 	do {

@@ -29,14 +29,17 @@ static int sport_handler(struct handler *h, struct buffer *rxbuf) {
 	return 0;
 }
 
+static struct handler null_handler = {
+	.do_read = sport_handler,
+	.do_write = sport_handler,
+};
+
 struct sport* sport_init(struct sport *port, const char *name) {
 	if(buffer_init(&port->rxbuf, BUFFER_SIZE) == NULL)
 		return NULL;
 	if(buffer_init(&port->txbuf, BUFFER_SIZE) == NULL)
 		return NULL;
-	port->handler.do_read = sport_handler;
-	port->handler.do_write = sport_handler;
-	port->handler.txbuf = &port->txbuf;
+	port->handler = &null_handler;
 	port->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if(port->fd < 0)
 		return NULL;
@@ -47,7 +50,7 @@ ssize_t sport_read(struct sport *port) {
 	ssize_t nbytes = buffer_read(&port->rxbuf, port->fd);
 	if(nbytes <= 0)
 		return nbytes;
-	if(port->handler.do_read(&port->handler, &port->rxbuf) < 0)
+	if(port->handler->do_read(port->handler, &port->rxbuf) < 0)
 		return -1;
 	return nbytes;
 }
