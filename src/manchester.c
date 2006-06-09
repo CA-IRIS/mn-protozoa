@@ -239,7 +239,7 @@ static void manchester_send_tilt(struct combiner *c) {
 static inline void format_zoom(uint8_t *mess, struct ccpacket *p) {
 	if(p->zoom < 0)
 		mess[1] |= XL_ZOOM_OUT << 1;
-	else if(p->zoom > 0)
+	else
 		mess[1] |= XL_ZOOM_IN << 1;
 }
 
@@ -247,6 +247,20 @@ static void manchester_send_zoom(struct combiner *c) {
 	uint8_t mess[3];
 	format_receiver(mess, c->packet.receiver);
 	format_zoom(mess, &c->packet);
+	combiner_write(c, mess, 3);
+}
+
+static inline void format_focus(uint8_t *mess, struct ccpacket *p) {
+	if(p->focus < 0)
+		mess[1] |= XL_FOCUS_NEAR << 1;
+	else
+		mess[1] |= XL_FOCUS_FAR << 1;
+}
+
+static void manchester_send_focus(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	format_focus(mess, &c->packet);
 	combiner_write(c, mess, 3);
 }
 
@@ -260,6 +274,8 @@ int manchester_do_write(struct combiner *c) {
 		manchester_send_tilt(c);
 	if(c->packet.zoom)
 		manchester_send_zoom(c);
+	if(c->packet.focus)
+		manchester_send_focus(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }
