@@ -240,45 +240,33 @@ static inline void encode_lens_function(uint8_t *mess, enum lens_t func) {
 	mess[1] |= func << 1;
 }
 
-static inline void format_zoom(uint8_t *mess, struct ccpacket *p) {
-	if(p->zoom < 0)
+static inline void manchester_send_zoom(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	if(c->packet.zoom < 0)
 		encode_lens_function(mess, XL_ZOOM_OUT);
 	else
 		encode_lens_function(mess, XL_ZOOM_IN);
-}
-
-static void manchester_send_zoom(struct combiner *c) {
-	uint8_t mess[3];
-	format_receiver(mess, c->packet.receiver);
-	format_zoom(mess, &c->packet);
 	combiner_write(c, mess, 3);
 }
 
-static inline void format_focus(uint8_t *mess, struct ccpacket *p) {
-	if(p->focus < 0)
+static inline void manchester_send_focus(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	if(c->packet.focus < 0)
 		encode_lens_function(mess, XL_FOCUS_NEAR);
 	else
 		encode_lens_function(mess, XL_FOCUS_FAR);
-}
-
-static void manchester_send_focus(struct combiner *c) {
-	uint8_t mess[3];
-	format_receiver(mess, c->packet.receiver);
-	format_focus(mess, &c->packet);
 	combiner_write(c, mess, 3);
 }
 
-static inline void format_iris(uint8_t *mess, struct ccpacket *p) {
-	if(p->iris < 0)
+static inline void manchester_send_iris(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	if(c->packet.iris < 0)
 		encode_lens_function(mess, XL_IRIS_CLOSE);
 	else
 		encode_lens_function(mess, XL_IRIS_OPEN);
-}
-
-static void manchester_send_iris(struct combiner *c) {
-	uint8_t mess[3];
-	format_receiver(mess, c->packet.receiver);
-	format_iris(mess, &c->packet);
 	combiner_write(c, mess, 3);
 }
 
