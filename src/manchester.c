@@ -16,7 +16,7 @@ static inline int parse_receiver(uint8_t *mess) {
 		((mess[2] >> 2) & 0x1f));
 }
 
-static inline int pt_bits(uint8_t *mess) {
+static inline int decode_command(uint8_t *mess) {
 	return (mess[1] >> 4) & 0x03;
 }
 
@@ -115,6 +115,10 @@ static const enum aux_t AUX_LUT[] = {
 	AUX_3,		/* 110 */
 	AUX_6		/* 111 */
 };
+/* Reverse AUX function lookup table */
+static const int LUT_AUX[] = {
+	0, 2, 4, 6, 3, 5, 7, 0
+};
 
 static inline void parse_aux(struct ccpacket *p, int extra) {
 	p->aux = AUX_LUT[extra];
@@ -152,7 +156,7 @@ static inline void parse_extended(struct ccpacket *p, enum ex_function_t cmnd,
 }
 
 static inline void parse_packet(struct ccpacket *p, uint8_t *mess) {
-	int cmnd = pt_bits(mess);
+	int cmnd = decode_command(mess);
 	if(pt_command(mess))
 		parse_pan_tilt(p, cmnd, pt_speed(mess));
 	else
@@ -255,6 +259,16 @@ static inline void encode_iris(struct combiner *c) {
 		encode_lens_function(c, XL_IRIS_OPEN);
 }
 
+static inline void encode_aux(struct combiner *c) {
+	uint8_t mess[3];
+	if(c->packet.aux > 0) {
+		format_receiver(mess, c->packet.receiver);
+		mess[1] |= (LUT_AUX[c->packet.aux]) << 1;
+		mess[1] |= (EX_AUX << 4);
+		combiner_write(c, mess, 3);
+	}
+}
+
 int manchester_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
@@ -264,6 +278,7 @@ int manchester_do_write(struct combiner *c) {
 	encode_zoom(c);
 	encode_focus(c);
 	encode_iris(c);
+	encode_aux(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }
