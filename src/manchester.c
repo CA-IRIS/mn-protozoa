@@ -243,41 +243,38 @@ static void encode_lens_function(struct combiner *c, enum lens_t func) {
 	combiner_write(c, mess, 3);
 }
 
-static inline void manchester_send_zoom(struct combiner *c) {
+static inline void encode_zoom(struct combiner *c) {
 	if(c->packet.zoom < 0)
 		encode_lens_function(c, XL_ZOOM_OUT);
-	else
+	else if(c->packet.zoom > 0)
 		encode_lens_function(c, XL_ZOOM_IN);
 }
 
-static inline void manchester_send_focus(struct combiner *c) {
+static inline void encode_focus(struct combiner *c) {
 	if(c->packet.focus < 0)
 		encode_lens_function(c, XL_FOCUS_NEAR);
-	else
+	else if(c->packet.focus > 0)
 		encode_lens_function(c, XL_FOCUS_FAR);
 }
 
-static inline void manchester_send_iris(struct combiner *c) {
+static inline void encode_iris(struct combiner *c) {
 	if(c->packet.iris < 0)
 		encode_lens_function(c, XL_IRIS_CLOSE);
-	else
+	else if(c->packet.iris > 0)
 		encode_lens_function(c, XL_IRIS_OPEN);
 }
 
 int manchester_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
-	ccpacket_debug(&c->packet);
+//	ccpacket_debug(&c->packet);
 	if(c->packet.command & (CC_PAN_LEFT | CC_PAN_RIGHT))
 		manchester_send_pan(c);
 	if(c->packet.command & (CC_TILT_UP | CC_TILT_DOWN))
 		manchester_send_tilt(c);
-	if(c->packet.zoom)
-		manchester_send_zoom(c);
-	if(c->packet.focus)
-		manchester_send_focus(c);
-	if(c->packet.iris)
-		manchester_send_iris(c);
+	encode_zoom(c);
+	encode_focus(c);
+	encode_iris(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }
