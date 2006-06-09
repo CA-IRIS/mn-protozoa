@@ -5,14 +5,15 @@
 #include "combiner.h"
 
 #define FLAG 0x80
+#define PT_COMMAND 0x02
 
 static inline bool pt_command(uint8_t *mess) {
-	return (mess[2] & 0x02) != 0;
+	return (mess[2] & PT_COMMAND) != 0;
 }
 
 static inline int parse_receiver(uint8_t *mess) {
-	return (((mess[0] & 0x03) << 6 | (mess[1] & 0x01) << 5 |
-		(mess[2] >> 2)) & 0x1f) + 1;
+	return 1 + (((mess[0] & 0x03) << 6) | ((mess[1] & 0x01) << 5) |
+		((mess[2] >> 2) & 0x1f));
 }
 
 static inline int pt_bits(uint8_t *mess) {
@@ -31,8 +32,8 @@ static inline int pt_speed(uint8_t *mess) {
 }
 
 enum pt_command_t {
-	TILT_UP,	/* 00 */
-	TILT_DOWN,	/* 01 */
+	TILT_DOWN,	/* 00 */
+	TILT_UP,	/* 01 */
 	PAN_LEFT,	/* 10 */
 	PAN_RIGHT	/* 11 */
 };
@@ -42,15 +43,19 @@ static inline void parse_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 {
 	switch(cmnd) {
 		case PAN_LEFT:
+			p->command |= CC_PAN_LEFT;
 			p->pan = -speed;
 			break;
 		case PAN_RIGHT:
+			p->command |= CC_PAN_RIGHT;
 			p->pan = speed;
 			break;
-		case TILT_UP:
+		case TILT_DOWN:
+			p->command |= CC_TILT_DOWN;
 			p->tilt = -speed;
 			break;
-		case TILT_DOWN:
+		case TILT_UP:
+			p->command |= CC_TILT_UP;
 			p->tilt = speed;
 			break;
 	}
@@ -89,16 +94,18 @@ static inline void parse_lens(struct ccpacket *p, enum lens_t extra) {
 			break;
 		case XL_TILT_DOWN:
 			/* Weird special case for hard down */
+			p->command |= CC_TILT_DOWN;
 			p->tilt = -1023;
 			break;
 		case XL_PAN_LEFT:
 			/* Weird special case for hard left */
+			p->command |= CC_PAN_LEFT;
 			p->pan = -1023;
 			break;
 	}
 }
 
-static const enum aux_t AUX[] = {
+static const enum aux_t AUX_LUT[] = {
 	AUX_NONE,	/* 000 */
 	AUX_NONE,	/* 001 */
 	AUX_1,		/* 010 */
@@ -110,10 +117,12 @@ static const enum aux_t AUX[] = {
 };
 
 static inline void parse_aux(struct ccpacket *p, int extra) {
-	p->aux = AUX[extra];
+	p->aux = AUX_LUT[extra];
 	/* Weird special case for hard up */
-	if(extra == 0)
+	if(extra == 0) {
+		p->command |= CC_TILT_UP;
 		p->tilt = 1023;
+	}
 }
 
 enum ex_function_t {
@@ -152,12 +161,12 @@ static inline void parse_packet(struct ccpacket *p, uint8_t *mess) {
 
 static inline void manchester_parse_packet(struct combiner *c, uint8_t *mess) {
 	int receiver = parse_receiver(mess);
-	if(c->packet.receiver != 0 && c->packet.receiver != receiver)
+	if(c->packet.receiver != receiver)
 		c->do_write(c);
 	c->packet.receiver = receiver;
 	parse_packet(&c->packet, mess);
 
-//printf("%02x %02x %02x\n", mess[0], mess[1], mess[2]);
+printf(" in: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
 }
 
 static inline int manchester_read_message(struct combiner *c,
@@ -182,8 +191,57 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 	return c->do_write(c);
 }
 
+static inline void format_receiver(uint8_t *mess, int receiver) {
+	int r = receiver - 1;
+	mess[0] = FLAG | ((r >> 6) & 0x03);
+	mess[1] = (r >> 5) & 0x01;
+	mess[2] = (r & 0x1f) << 2;
+}
+
+static inline void format_pan(uint8_t *mess, struct ccpacket *p) {
+	int speed = (abs(p->pan) / 170) & 0x07;
+	mess[1] |= speed << 1;
+	if(p->command & CC_PAN_LEFT)
+		mess[1] |= PAN_LEFT << 4;
+	else if(p->command & CC_PAN_RIGHT)
+		mess[1] |= PAN_RIGHT << 4;
+	mess[2] |= PT_COMMAND;
+}
+
+static void manchester_send_pan(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	format_pan(mess, &c->packet);
+
+printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
+}
+
+static inline void format_tilt(uint8_t *mess, struct ccpacket *p) {
+	int speed = (abs(p->tilt) / 170) & 0x07;
+	mess[1] |= speed << 1;
+	if(p->command & CC_TILT_DOWN)
+		mess[1] |= TILT_DOWN << 4;
+	else if(p->command & CC_TILT_UP)
+		mess[1] |= TILT_UP << 4;
+	mess[2] |= PT_COMMAND;
+}
+
+static void manchester_send_tilt(struct combiner *c) {
+	uint8_t mess[3];
+	format_receiver(mess, c->packet.receiver);
+	format_tilt(mess, &c->packet);
+
+printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
+}
+
 int manchester_do_write(struct combiner *c) {
+	if(!c->packet.receiver)
+		return 0;
 	ccpacket_debug(&c->packet);
+	if(c->packet.command & (CC_PAN_LEFT | CC_PAN_RIGHT))
+		manchester_send_pan(c);
+	if(c->packet.command & (CC_TILT_UP | CC_TILT_DOWN))
+		manchester_send_tilt(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }
