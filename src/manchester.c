@@ -23,13 +23,18 @@ static inline int pt_extra(uint8_t *mess) {
 }
 
 /* Valid pan/tilt speeds are 0 - 6, here's a lookup table */
-static const int SPEED[] = { 0, 170, 341, 512, 682, 852, 1023 };
+static const int SPEED[] = { 0, 170, 341, 512, 682, 852, 1023, 1023 };
 
 static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
-enum pt_command_t { TILT_UP, TILT_DOWN, PAN_LEFT, PAN_RIGHT };
+enum pt_command_t {
+	TILT_UP,	/* 00 */
+	TILT_DOWN,	/* 01 */
+	PAN_LEFT,	/* 10 */
+	PAN_RIGHT	/* 11 */
+};
 
 static inline void parse_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 	int speed)
