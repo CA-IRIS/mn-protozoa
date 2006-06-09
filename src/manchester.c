@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "sport.h"
 #include "ccpacket.h"
+#include "combiner.h"
 
 #define FLAG 0x80
 
@@ -155,40 +156,43 @@ static void packet_debug(struct ccpacket *p) {
 		p->aux);
 }
 
-static inline void manchester_parse_packet(struct ccpacket *p, uint8_t *mess) {
+static inline void manchester_parse_packet(struct combiner *c, uint8_t *mess) {
 	int receiver = parse_receiver(mess);
-	if(p->receiver != 0 && p->receiver != receiver) {
-		packet_debug(p);
+	if(c->packet.receiver != 0 && c->packet.receiver != receiver) {
+		packet_debug(&c->packet);
 		// FIXME: send out packet
-		ccpacket_init(p);
+		ccpacket_init(&c->packet);
 	}
-	p->receiver = receiver;
-	parse_packet(p, mess);
+	c->packet.receiver = receiver;
+	parse_packet(&c->packet, mess);
 
 //printf("%02x %02x %02x\n", mess[0], mess[1], mess[2]);
 }
 
-static inline int manchester_read_message(struct ccpacket *p,
+static inline int manchester_read_message(struct combiner *c,
 	struct buffer *rxbuf)
 {
 	if((buffer_peek(rxbuf) & FLAG) == 0) {
 		printf("Manchester: unexpected byte %02X\n", buffer_get(rxbuf));
 		return 0;
 	}
-	manchester_parse_packet(p, rxbuf->pout);
+	manchester_parse_packet(c, rxbuf->pout);
 	buffer_skip(rxbuf, 3);
 	return 0;
 }
 
 int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
-	struct ccpacket p;
-
-	ccpacket_init(&p);
+	struct combiner *c = (struct combiner *)h;
 
 	while(buffer_available(rxbuf) >= 3) {
-		if(manchester_read_message(&p, rxbuf) < 0)
+		if(manchester_read_message(c, rxbuf) < 0)
 			return -1;
 	}
-	packet_debug(&p);
+	packet_debug(&c->packet);
+	ccpacket_init(&c->packet);
+	return 0;
+}
+
+int manchester_do_write(struct handler *h, struct buffer *txbuf) {
 	return 0;
 }

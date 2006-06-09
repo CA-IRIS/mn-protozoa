@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
 	if(cmbnr == NULL)
 		goto fail;
 	cmbnr->handler.do_read = manchester_do_read;
+	ccpacket_init(&cmbnr->packet);
 	cmbnr->txbuf = &port[0].txbuf;
 	port[0].handler = &cmbnr->handler;
 
