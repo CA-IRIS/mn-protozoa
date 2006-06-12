@@ -85,10 +85,6 @@ int config_read(const char *filename, struct sport *ports[]) {
 
 	while(fscanf(f, "%3s %15s %15s %6d", in_out, protocol, port, &baud)==4)
 	{
-		printf("inout: %s\n", in_out);
-		printf("protocol: %s\n", protocol);
-		printf("port: %s\n", port);
-		printf("baud: %d\n", baud);
 		prt = find_port(ports, n_ports, port);
 		if(prt == NULL) {
 			n_ports++;

@@ -24,7 +24,6 @@ int main(int argc, char* argv[])
 	if(pollfds == NULL)
 		goto fail;
 	for(i = 0; i < n_ports; i++) {
-		printf("port: %s\n", port[i].name);
 		pollfds[i].fd = port[i].fd;
 		pollfds[i].events = POLLIN;
 	}
