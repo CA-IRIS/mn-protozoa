@@ -8,7 +8,13 @@ enum command_t {
 	CC_TILT_DOWN = 1 << 3,
 	CC_RECALL = 1 << 4,
 	CC_STORE = 1 << 5,
+	CC_AUTO_IRIS = 1 << 6,
+	CC_AUTO_PAN = 1 << 7,
+	CC_LENS_SPEED = 1 << 8,
+	CC_ACK_ALARM = 1 << 9,
 };
+
+#define SPEED_MAX ((1 << 11) - 1)
 
 enum zoom_t {
 	ZOOM_OUT = -1,
@@ -38,9 +44,9 @@ enum aux_t {
  */
 struct ccpacket {
 	int	receiver;	/* receiver address: 1 to 255 */
-	enum command_t	command;/* bitfield of commands */
-	int		pan;	/* -1023 (fast left) to 1023 (fast right) */
-	int		tilt;	/* -1023 (fast down) to 1023 (fast up) */
+	enum command_t	command;/* bitmask of commands */
+	int		pan;	/* 0 (none) to 4095 (fast) */
+	int		tilt;	/* 0 (none) to 4095 (fast) */
 	enum zoom_t	zoom;	/* -1 (out), 0 (no change), or 1 (in) */
 	enum focus_t	focus;	/* -1 (near), 0 (no change), or 1 (far) */
 	enum iris_t	iris;	/* -1 (close), 0 (no change), or 1 (open) */

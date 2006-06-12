@@ -4,5 +4,5 @@ STEST = protozoa
 
 all:  $(STEST)
 
-$(STEST): poller.c sport.c ccpacket.c buffer.c manchester.c
-	$(CC) -o $(STEST) $(CFLAGS) sport.c ccpacket.c buffer.c manchester.c $<
+$(STEST): poller.c sport.c ccpacket.c buffer.c manchester.c vicon.c
+	$(CC) -o $(STEST) $(CFLAGS) sport.c ccpacket.c buffer.c manchester.c vicon.c $<
