@@ -286,5 +286,6 @@ int vicon_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
 	ccpacket_debug(&c->packet);
+	ccpacket_init(&c->packet);
 	return 0;
 }
