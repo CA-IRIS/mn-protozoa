@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<meta name="Author" content="Douglas Lau"/>
+	<link href="protozoa.css" rel="stylesheet" type="text/css"/>
+	<title>Protozoa Camera Control Server</title>
+</head>
+
+<body>
+<h2>Protozoa Camera Control Server</h2>
+<p>
+	This software can combine and transcode camera control commands from
+	multiple input sources. It works by converting each command to a
+	protocol-neutral format.
+</p>
+<h3>Configuration File</h3>
+<p>
+	The configuration file, /etc/protozoa.conf, contains a series of
+	serial data control directives. Each directive describes a serial
+	port and protocol parameters. First, an OUT directive must be declared,
+	for the output port and protocol. Following that, each IN directive
+	will be attached to that output.
+</p>
+<pre>
+	OUT vicon /dev/ttyS0 9600
+	IN manchester /dev/ttyS1 4800
+</pre>
+<p>
+	The above configuration reads camera control commands on /dev/ttyS1
+	at 4800 baud, decodes using the manchester protocol, then encodes to
+	the vicon protocol and sends them out on /dev/ttyS0 at 9600 baud.
+</p>
+<pre>
+	OUT manchester /dev/ttyS0 9600
+	IN manchester /dev/ttyS1 9600
+	IN vicon /dev/ttyS2 4800
+</pre>
+<p>
+	This configuration interleaves commands from /dev/ttyS1 and /dev/ttyS2,
+	sending them out on /dev/ttyS0.
+</p>
+<p class="stamp">
+	2006 June 12
+</p>
+</body>
+</html>
