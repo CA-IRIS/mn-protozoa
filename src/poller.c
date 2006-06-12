@@ -5,38 +5,34 @@
 #include <sys/poll.h>
 
 #include "sport.h"
-#include "combiner.h"
-#include "manchester.h"
+#include "config.h"
 
 extern int errno;
 
-#define NPORTS 1
-
 int main(int argc, char* argv[])
 {
-	struct sport port[NPORTS];
-	struct pollfd pollfds[NPORTS];
 	ssize_t nbytes;
-	int i;
-	struct combiner *cmbnr;
+	int i, n_ports;
+	struct sport *port;
+	struct pollfd *pollfds;
 
-	if(sport_init(&port[0], "/dev/ttyS0") == NULL)
+	n_ports = config_read("protozoa.conf", &port);
+	if(n_ports <= 0)
 		goto fail;
-	cmbnr = malloc(sizeof(struct combiner));
-	if(cmbnr == NULL)
-		goto fail;
-	cmbnr->handler.do_read = manchester_do_read;
-	cmbnr->do_write = manchester_do_write;
-	ccpacket_init(&cmbnr->packet);
-	cmbnr->txbuf = &port[0].txbuf;
-	port[0].handler = &cmbnr->handler;
 
-	pollfds[0].fd = port[0].fd;
-	pollfds[0].events = POLLIN;
+	pollfds = malloc(sizeof(struct pollfd) * n_ports);
+	if(pollfds == NULL)
+		goto fail;
+	for(i = 0; i < n_ports; i++) {
+		printf("port: %s\n", port[i].name);
+		pollfds[i].fd = port[i].fd;
+		pollfds[i].events = POLLIN;
+	}
+
 	do {
-		if(poll(pollfds, NPORTS, -1) < 0)
+		if(poll(pollfds, n_ports, -1) < 0)
 			goto fail;
-		for(i = 0; i < NPORTS; i++) {
+		for(i = 0; i < n_ports; i++) {
 			if(pollfds[i].revents & POLLIN) {
 				nbytes = sport_read(port + i);
 				if(nbytes < 0)

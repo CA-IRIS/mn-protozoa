@@ -280,17 +280,11 @@ static inline void encode_aux(struct combiner *c) {
 		mess[1] |= (EX_AUX << 4);
 		combiner_write(c, mess, 3);
 	}
-}
+} */
 
 int vicon_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
-//	ccpacket_debug(&c->packet);
-	encode_pan(c);
-	encode_tilt(c);
-	encode_zoom(c);
-	encode_focus(c);
-	encode_iris(c);
-	encode_aux(c);
+	ccpacket_debug(&c->packet);
 	return 0;
-}*/
+}

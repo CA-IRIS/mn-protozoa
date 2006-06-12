@@ -10,6 +10,7 @@ struct handler {
 };
 
 struct sport {
+	char		*name;
 	int		fd;
 	struct buffer	rxbuf;
 	struct buffer	txbuf;
@@ -19,7 +20,8 @@ struct sport {
 
 struct sport* sport_init(
 	struct sport	*port,
-	const char	*name);
+	const char	*name,
+	int		baud);
 
 ssize_t sport_read(struct sport *port);
 ssize_t sport_write(struct sport *port);

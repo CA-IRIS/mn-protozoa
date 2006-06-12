@@ -11,4 +11,6 @@ struct combiner {
 	struct	buffer		*txbuf;		/* transmit buffer */
 };
 
+void combiner_init(struct combiner *cmbnr, struct buffer *txbuf);
+
 #endif

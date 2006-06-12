@@ -1,10 +1,11 @@
 #include <stddef.h>
 #include <fcntl.h>
+#include <string.h>
 #include <termios.h>
 #include <sys/errno.h>
 #include "sport.h"
 
-static struct sport* sport_configure(struct sport *port) {
+static struct sport* sport_configure(struct sport *port, int baud) {
 	struct termios ttyset;
 
 	ttyset.c_iflag = 0;
@@ -14,6 +15,8 @@ static struct sport* sport_configure(struct sport *port) {
 	ttyset.c_cc[VMIN] = 0;
 	ttyset.c_cc[VTIME] = 1;
 
+	if(baud != 9600)
+		return NULL;
 	if(cfsetispeed(&ttyset, B9600) < 0)
 		return NULL;
 	if(cfsetospeed(&ttyset, B9600) < 0)
@@ -33,7 +36,9 @@ static struct handler null_handler = {
 	.do_read = sport_do_read,
 };
 
-struct sport* sport_init(struct sport *port, const char *name) {
+struct sport* sport_init(struct sport *port, const char *name, int baud) {
+	port->name = malloc(strlen(name) + 1);
+	strcpy(port->name, name);
 	if(buffer_init(&port->rxbuf, BUFFER_SIZE) == NULL)
 		return NULL;
 	if(buffer_init(&port->txbuf, BUFFER_SIZE) == NULL)
@@ -42,7 +47,7 @@ struct sport* sport_init(struct sport *port, const char *name) {
 	port->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if(port->fd < 0)
 		return NULL;
-	return sport_configure(port);
+	return sport_configure(port, baud);
 }
 
 ssize_t sport_read(struct sport *port) {
