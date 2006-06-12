@@ -199,7 +199,7 @@ static void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
 	printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
 }
 
-static inline void format_receiver(uint8_t *mess, int receiver) {
+static inline void encode_receiver(uint8_t *mess, int receiver) {
 	int r = receiver - 1;
 	mess[0] = FLAG | ((r >> 6) & 0x03);
 	mess[1] = (r >> 5) & 0x01;
@@ -211,7 +211,7 @@ static void encode_pan_tilt_command(struct combiner *c, enum pt_command_t cmnd,
 {
 	int s = (abs(speed) / 170) & 0x07;
 	uint8_t mess[3];
-	format_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, c->packet.receiver);
 	mess[1] |= (cmnd << 4) | (s << 1);
 	mess[2] |= PT_COMMAND;
 	combiner_write(c, mess, 3);
@@ -233,7 +233,7 @@ static inline void encode_tilt(struct combiner *c) {
 
 static void encode_lens_function(struct combiner *c, enum lens_t func) {
 	uint8_t mess[3];
-	format_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, c->packet.receiver);
 	mess[1] |= func << 1;
 	combiner_write(c, mess, 3);
 }
@@ -262,7 +262,7 @@ static inline void encode_iris(struct combiner *c) {
 static inline void encode_aux(struct combiner *c) {
 	uint8_t mess[3];
 	if(c->packet.aux > 0) {
-		format_receiver(mess, c->packet.receiver);
+		encode_receiver(mess, c->packet.receiver);
 		mess[1] |= (LUT_AUX[c->packet.aux]) << 1;
 		mess[1] |= (EX_AUX << 4);
 		combiner_write(c, mess, 3);
