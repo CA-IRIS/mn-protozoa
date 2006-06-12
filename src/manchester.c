@@ -24,8 +24,17 @@ static inline int pt_extra(uint8_t *mess) {
 	return (mess[1] >> 1) & 0x07;
 }
 
-/* Valid pan/tilt speeds are 0 - 6, here's a lookup table */
-static const int SPEED[] = { 0, 170, 341, 512, 682, 852, 1023, 1023 };
+/* Valid pan/tilt speeds are 0 - 6 (or 7), here's a lookup table */
+static const int SPEED[] = {
+	(0 << 8) + (0 << 8) / 7,
+	(1 << 8) + (1 << 8) / 7,
+	(2 << 8) + (2 << 8) / 7,
+	(3 << 8) + (3 << 8) / 7,
+	(4 << 8) + (4 << 8) / 7,
+	(5 << 8) + (5 << 8) / 7,
+	(6 << 8) + (6 << 8) / 7,
+	SPEED_MAX,
+};
 
 static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
@@ -44,7 +53,7 @@ static inline void decode_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 	switch(cmnd) {
 		case PAN_LEFT:
 			p->command |= CC_PAN_LEFT;
-			p->pan = -speed;
+			p->pan = speed;
 			break;
 		case PAN_RIGHT:
 			p->command |= CC_PAN_RIGHT;
@@ -52,7 +61,7 @@ static inline void decode_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 			break;
 		case TILT_DOWN:
 			p->command |= CC_TILT_DOWN;
-			p->tilt = -speed;
+			p->tilt = speed;
 			break;
 		case TILT_UP:
 			p->command |= CC_TILT_UP;
@@ -95,12 +104,12 @@ static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 		case XL_TILT_DOWN:
 			/* Weird special case for hard down */
 			p->command |= CC_TILT_DOWN;
-			p->tilt = -1023;
+			p->tilt = SPEED_MAX;
 			break;
 		case XL_PAN_LEFT:
 			/* Weird special case for hard left */
 			p->command |= CC_PAN_LEFT;
-			p->pan = -1023;
+			p->pan = SPEED_MAX;
 			break;
 	}
 }
@@ -125,7 +134,7 @@ static inline void decode_aux(struct ccpacket *p, int extra) {
 	/* Weird special case for hard up */
 	if(extra == 0) {
 		p->command |= CC_TILT_UP;
-		p->tilt = 1023;
+		p->tilt = SPEED_MAX;
 	}
 }
 
@@ -209,7 +218,7 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 static void encode_pan_tilt_command(struct combiner *c, enum pt_command_t cmnd,
 	int speed)
 {
-	int s = (abs(speed) / 170) & 0x07;
+	int s = (speed >> 8) & 0x07;
 	uint8_t mess[3];
 	encode_receiver(mess, c->packet.receiver);
 	mess[1] |= (cmnd << 4) | (s << 1);
