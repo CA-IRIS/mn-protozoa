@@ -11,7 +11,7 @@ static inline bool pt_command(uint8_t *mess) {
 	return (mess[2] & PT_COMMAND) != 0;
 }
 
-static inline int parse_receiver(uint8_t *mess) {
+static inline int decode_receiver(uint8_t *mess) {
 	return 1 + (((mess[0] & 0x03) << 6) | ((mess[1] & 0x01) << 5) |
 		((mess[2] >> 2) & 0x1f));
 }
@@ -38,7 +38,7 @@ enum pt_command_t {
 	PAN_RIGHT	/* 11 */
 };
 
-static inline void parse_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
+static inline void decode_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 	int speed)
 {
 	switch(cmnd) {
@@ -72,7 +72,7 @@ enum lens_t {
 	XL_PAN_LEFT,	/* 111 (not really a lens function) */
 };
 
-static inline void parse_lens(struct ccpacket *p, enum lens_t extra) {
+static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 	switch(extra) {
 		case XL_ZOOM_IN:
 			p->zoom = ZOOM_IN;
@@ -120,7 +120,7 @@ static const int LUT_AUX[] = {
 	0, 2, 4, 6, 3, 5, 7, 0
 };
 
-static inline void parse_aux(struct ccpacket *p, int extra) {
+static inline void decode_aux(struct ccpacket *p, int extra) {
 	p->aux = AUX_LUT[extra];
 	/* Weird special case for hard up */
 	if(extra == 0) {
@@ -136,15 +136,15 @@ enum ex_function_t {
 	EX_STO_PRESET,	/* 11 */
 };
 
-static inline void parse_extended(struct ccpacket *p, enum ex_function_t cmnd,
+static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
 	int extra)
 {
 	switch(cmnd) {
 		case EX_LENS:
-			parse_lens(p, extra);
+			decode_lens(p, extra);
 			break;
 		case EX_AUX:
-			parse_aux(p, extra);
+			decode_aux(p, extra);
 			break;
 		case EX_RCL_PRESET:
 			/* FIXME */
@@ -155,20 +155,20 @@ static inline void parse_extended(struct ccpacket *p, enum ex_function_t cmnd,
 	}
 }
 
-static inline void parse_packet(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_packet(struct ccpacket *p, uint8_t *mess) {
 	int cmnd = decode_command(mess);
 	if(pt_command(mess))
-		parse_pan_tilt(p, cmnd, pt_speed(mess));
+		decode_pan_tilt(p, cmnd, pt_speed(mess));
 	else
-		parse_extended(p, cmnd, pt_extra(mess));
+		decode_extended(p, cmnd, pt_extra(mess));
 }
 
-static inline void manchester_parse_packet(struct combiner *c, uint8_t *mess) {
-	int receiver = parse_receiver(mess);
+static inline void manchester_decode_packet(struct combiner *c, uint8_t *mess) {
+	int receiver = decode_receiver(mess);
 	if(c->packet.receiver != receiver)
 		c->do_write(c);
 	c->packet.receiver = receiver;
-	parse_packet(&c->packet, mess);
+	decode_packet(&c->packet, mess);
 
 printf(" in: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
 }
@@ -180,7 +180,7 @@ static inline int manchester_read_message(struct combiner *c,
 		printf("Manchester: unexpected byte %02X\n", buffer_get(rxbuf));
 		return 0;
 	}
-	manchester_parse_packet(c, rxbuf->pout);
+	manchester_decode_packet(c, rxbuf->pout);
 	buffer_skip(rxbuf, 3);
 	return 0;
 }
