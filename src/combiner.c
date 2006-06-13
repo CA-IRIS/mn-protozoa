@@ -20,8 +20,11 @@ void combiner_init(struct combiner *c, struct buffer *txbuf) {
 
 void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
 	int i;
-	printf("out:");
-	for(i = 0; i < count; i++)
-		printf(" %02x", mess[i]);
-	printf("\n");
+	for(i = 0; i < count; i++) {
+		if(buffer_is_full(c->txbuf)) {
+			printf("protozoa: output buffer full\n");
+			break;
+		}
+		buffer_put(c->txbuf, mess[i]);
+	}
 }

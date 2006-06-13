@@ -43,7 +43,7 @@ void buffer_skip(struct buffer *buf, size_t count) {
 }
 
 inline bool buffer_is_full(const struct buffer *buf) {
-	return buf->pin < buf->end;
+	return buf->pin >= buf->end;
 }
 
 ssize_t buffer_read(struct buffer *buf, int fd) {

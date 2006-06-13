@@ -45,6 +45,12 @@ int main(int argc, char* argv[])
 					goto fail;
 			}
 		}
+		for(i = 0; i < n_ports; i++) {
+			if(buffer_is_empty(&port[i].txbuf))
+				pollfds[i].events = POLLIN;
+			else
+				pollfds[i].events = POLLIN | POLLOUT;
+		}
 	} while(1);
 fail:
 	if(errno)

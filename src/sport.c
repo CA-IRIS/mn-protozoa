@@ -1,5 +1,6 @@
-#include <stddef.h>
 #include <fcntl.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 #include <termios.h>
 #include <sys/errno.h>
@@ -80,5 +81,10 @@ ssize_t sport_read(struct sport *port) {
 }
 
 ssize_t sport_write(struct sport *port) {
+	uint8_t *mess;
+	printf("out:");
+	for(mess = port->txbuf.pout; mess < port->txbuf.pin; mess++)
+		printf(" %02x", *mess);
+	printf("\n");
 	return buffer_write(&port->txbuf, port->fd);
 }
