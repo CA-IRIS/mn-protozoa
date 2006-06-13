@@ -7,43 +7,45 @@
 
 #define FLAG 0x80
 
-#define BIT_COMMAND	(12)
-#define BIT_ACK_ALARM	(13)
-#define BIT_EXTENDED	(14)
-#define BIT_AUTO_IRIS	(17)
-#define BIT_AUTO_PAN	(18)
-#define BIT_TILT_DOWN	(19)
-#define BIT_TILT_UP	(20)
-#define BIT_PAN_RIGHT	(21)
-#define BIT_PAN_LEFT	(22)
-#define BIT_LENS_SPEED	(24)
-#define BIT_IRIS_CLOSE	(25)
-#define BIT_IRIS_OPEN	(26)
-#define BIT_FOCUS_NEAR	(27)
-#define BIT_FOCUS_FAR	(28)
-#define BIT_ZOOM_IN	(29)
-#define BIT_ZOOM_OUT	(30)
-#define BIT_AUX_6	(33)
-#define BIT_AUX_5	(34)
-#define BIT_AUX_4	(35)
-#define BIT_AUX_3	(36)
-#define BIT_AUX_2	(37)
-#define BIT_AUX_1	(38)
-#define BIT_RECALL	(45)
-#define BIT_STORE	(46)
-#define BIT_EX_PRESET	(52)
+enum vicon_bit_t {
+	BIT_COMMAND = 12,
+	BIT_ACK_ALARM = 13,
+	BIT_EXTENDED = 14,
+	BIT_AUTO_IRIS = 17,
+	BIT_AUTO_PAN = 18,
+	BIT_TILT_DOWN = 19,
+	BIT_TILT_UP = 20,
+	BIT_PAN_RIGHT = 21,
+	BIT_PAN_LEFT = 22,
+	BIT_LENS_SPEED = 24,
+	BIT_IRIS_CLOSE = 25,
+	BIT_IRIS_OPEN = 26,
+	BIT_FOCUS_NEAR = 27,
+	BIT_FOCUS_FAR = 28,
+	BIT_ZOOM_IN = 29,
+	BIT_ZOOM_OUT = 30,
+	BIT_AUX_6 = 33,
+	BIT_AUX_5 = 34,
+	BIT_AUX_4 = 35,
+	BIT_AUX_3 = 36,
+	BIT_AUX_2 = 37,
+	BIT_AUX_1 = 38,
+	BIT_RECALL = 45,
+	BIT_STORE = 46,
+	BIT_EX_PRESET = 52,
+};
 
 static inline int decode_receiver(uint8_t *mess) {
 	return ((mess[0] & 0x0f) << 4) | (mess[1] & 0x0f);
 }
 
-static inline bool bit_is_set(uint8_t *mess, int bit) {
+static inline bool bit_is_set(uint8_t *mess, enum vicon_bit_t bit) {
 	int by = bit / 8;
 	int mask = 1 << (bit % 8);
 	return (mess[by] & mask) != 0;
 }
 
-static inline void bit_set(uint8_t *mess, int bit) {
+static inline void bit_set(uint8_t *mess, enum vicon_bit_t bit) {
 	int by = bit / 8;
 	int mask = 1 << (bit % 8);
 	mess[by] |= mask;
