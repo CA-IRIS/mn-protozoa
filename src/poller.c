@@ -19,10 +19,8 @@ int main(int argc, char* argv[])
 	struct pollfd *pollfds;
 
 	n_ports = config_read(CONF_FILE, &port);
-	if(n_ports <= 0) {
-		printf("Error reading configuration file: %s\n", CONF_FILE);
+	if(n_ports <= 0)
 		goto fail;
-	}
 
 	pollfds = malloc(sizeof(struct pollfd) * n_ports);
 	if(pollfds == NULL)

@@ -5,6 +5,25 @@
 #include <sys/errno.h>
 #include "sport.h"
 
+static inline int baud_mask(int baud) {
+	switch(baud) {
+		case 1200:
+			return B1200;
+		case 2400:
+			return B2400;
+		case 4800:
+			return B4800;
+		case 9600:
+			return B9600;
+		case 19200:
+			return B19200;
+		case 38400:
+			return B38400;
+		default:
+			return -1;
+	}
+}
+
 static struct sport* sport_configure(struct sport *port, int baud) {
 	struct termios ttyset;
 
@@ -15,11 +34,12 @@ static struct sport* sport_configure(struct sport *port, int baud) {
 	ttyset.c_cc[VMIN] = 0;
 	ttyset.c_cc[VTIME] = 1;
 
-	if(baud != 9600)
+	int b = baud_mask(baud);
+	if(b < 0)
 		return NULL;
-	if(cfsetispeed(&ttyset, B9600) < 0)
+	if(cfsetispeed(&ttyset, b) < 0)
 		return NULL;
-	if(cfsetospeed(&ttyset, B9600) < 0)
+	if(cfsetospeed(&ttyset, b) < 0)
 		return NULL;
 	if(tcsetattr(port->fd, TCSAFLUSH, &ttyset) < 0)
 		return NULL;

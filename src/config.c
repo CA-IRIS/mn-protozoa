@@ -93,8 +93,11 @@ int config_read(const char *filename, struct sport *ports[]) {
 			if(*ports == NULL)
 				goto fail;
 			prt = *ports + (n_ports - 1);
-			if(sport_init(prt, port, baud) == NULL)
+			if(sport_init(prt, port, baud) == NULL) {
+				printf("Error initializing serial port: %s\n",
+					port);
 				goto fail;
+			}
 			if(strcasecmp(in_out, "OUT") == 0)
 				cmbnr = config_outbound(prt, protocol);
 			else if(strcasecmp(in_out, "IN") == 0)
@@ -108,6 +111,8 @@ int config_read(const char *filename, struct sport *ports[]) {
 				goto fail;
 		}
 	}
+	if(n_ports == 0)
+		printf("Error reading configuration file: %s\n", filename);
 	fclose(f);
 	return n_ports;
 fail:
