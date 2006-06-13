@@ -197,7 +197,10 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 		if(manchester_read_message(c, rxbuf) < 0)
 			return -1;
 	}
-	return c->do_write(c);
+	if(buffer_available(rxbuf))
+		return 0;
+	else
+		return c->do_write(c);
 }
 
 static inline void encode_receiver(uint8_t *mess, int receiver) {
