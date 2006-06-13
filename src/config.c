@@ -85,6 +85,7 @@ int config_read(const char *filename, struct sport *ports[]) {
 
 	while(fscanf(f, "%3s %15s %15s %6d", in_out, protocol, port, &baud)==4)
 	{
+		printf("protozoa: %s %s %s %d\n", in_out, protocol, port, baud);
 		prt = find_port(ports, n_ports, port);
 		if(prt == NULL) {
 			n_ports++;

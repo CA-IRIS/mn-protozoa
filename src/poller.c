@@ -7,6 +7,8 @@
 #include "sport.h"
 #include "config.h"
 
+static const char *CONF_FILE = "protozoa.conf";
+
 extern int errno;
 
 int main(int argc, char* argv[])
@@ -16,9 +18,11 @@ int main(int argc, char* argv[])
 	struct sport *port;
 	struct pollfd *pollfds;
 
-	n_ports = config_read("protozoa.conf", &port);
-	if(n_ports <= 0)
+	n_ports = config_read(CONF_FILE, &port);
+	if(n_ports <= 0) {
+		printf("Error reading configuration file: %s\n", CONF_FILE);
 		goto fail;
+	}
 
 	pollfds = malloc(sizeof(struct pollfd) * n_ports);
 	if(pollfds == NULL)
@@ -45,6 +49,7 @@ int main(int argc, char* argv[])
 		}
 	} while(1);
 fail:
-	printf("Error: %s\n", strerror(errno));
+	if(errno)
+		printf("Error: %s\n", strerror(errno));
 	return errno;
 }

@@ -1,6 +1,6 @@
 CC = gcc
-#CFLAGS = -Os -Wall -combine -fwhole-program
-CFLAGS = -Wall -ggdb
+CFLAGS = -Os -Wall -combine -fwhole-program
+#CFLAGS = -Wall -ggdb
 STEST = protozoa
 
 all:  $(STEST)
