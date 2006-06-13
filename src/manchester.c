@@ -204,10 +204,6 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 	return c->do_write(c);
 }
 
-static void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
-	printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
-}
-
 static inline void encode_receiver(uint8_t *mess, int receiver) {
 	int r = receiver - 1;
 	mess[0] = FLAG | ((r >> 6) & 0x03);
