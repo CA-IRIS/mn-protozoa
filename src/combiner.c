@@ -19,5 +19,9 @@ void combiner_init(struct combiner *c, struct buffer *txbuf) {
 }
 
 void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
-	printf("out: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
+	int i;
+	printf("out:");
+	for(i = 0; i < count; i++)
+		printf(" %02x", mess[i]);
+	printf("\n");
 }
