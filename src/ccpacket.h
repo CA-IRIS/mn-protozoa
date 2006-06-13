@@ -35,7 +35,13 @@ enum iris_t {
 };
 
 enum aux_t {
-	AUX_NONE, AUX_1, AUX_2, AUX_3, AUX_4, AUX_5, AUX_6
+	AUX_NONE = 0,
+	AUX_1 = 1 << 0,
+	AUX_2 = 1 << 1,
+	AUX_3 = 1 << 2,
+	AUX_4 = 1 << 3,
+	AUX_5 = 1 << 4,
+	AUX_6 = 1 << 5,
 };
 
 /*
@@ -50,7 +56,7 @@ struct ccpacket {
 	enum zoom_t	zoom;	/* -1 (out), 0 (no change), or 1 (in) */
 	enum focus_t	focus;	/* -1 (near), 0 (no change), or 1 (far) */
 	enum iris_t	iris;	/* -1 (close), 0 (no change), or 1 (open) */
-	enum aux_t	aux;	/* 0 (no function), or function 1-6 */
+	enum aux_t	aux;	/* bitmask of aux functions */
 	int		preset;	/* preset number */
 };
 

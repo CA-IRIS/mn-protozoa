@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <strings.h>
 #include "sport.h"
 #include "ccpacket.h"
 #include "combiner.h"
@@ -40,6 +41,12 @@ static inline bool bit_is_set(uint8_t *mess, int bit) {
 	int by = bit / 8;
 	int mask = 1 << (bit % 8);
 	return (mess[by] & mask) != 0;
+}
+
+static inline void bit_set(uint8_t *mess, int bit) {
+	int by = bit / 8;
+	int mask = 1 << (bit % 8);
+	mess[by] |= mask;
 }
 
 static inline bool is_command(struct buffer *rxbuf) {
@@ -99,18 +106,19 @@ static inline void decode_toggles(struct ccpacket *p, uint8_t *mess) {
 }
 
 static inline void decode_aux(struct ccpacket *p, uint8_t *mess) {
+	p->aux = 0;
 	if(bit_is_set(mess, BIT_AUX_1))
-		p->aux = AUX_1;
-	else if(bit_is_set(mess, BIT_AUX_2))
-		p->aux = AUX_2;
-	else if(bit_is_set(mess, BIT_AUX_3))
-		p->aux = AUX_3;
-	else if(bit_is_set(mess, BIT_AUX_4))
-		p->aux = AUX_4;
-	else if(bit_is_set(mess, BIT_AUX_5))
-		p->aux = AUX_5;
-	else if(bit_is_set(mess, BIT_AUX_6))
-		p->aux = AUX_6;
+		p->aux |= AUX_1;
+	if(bit_is_set(mess, BIT_AUX_2))
+		p->aux |= AUX_2;
+	if(bit_is_set(mess, BIT_AUX_3))
+		p->aux |= AUX_3;
+	if(bit_is_set(mess, BIT_AUX_4))
+		p->aux |= AUX_4;
+	if(bit_is_set(mess, BIT_AUX_5))
+		p->aux |= AUX_5;
+	if(bit_is_set(mess, BIT_AUX_6))
+		p->aux |= AUX_6;
 }
 
 static inline void decode_preset(struct ccpacket *p, uint8_t *mess) {
@@ -211,81 +219,97 @@ int vicon_do_read(struct handler *h, struct buffer *rxbuf) {
 	return 0;
 }
 
-/*
 static inline void encode_receiver(uint8_t *mess, int receiver) {
-	int r = receiver - 1;
-	mess[0] = FLAG | ((r >> 6) & 0x03);
-	mess[1] = (r >> 5) & 0x01;
-	mess[2] = (r & 0x1f) << 2;
+	mess[0] = FLAG | ((receiver >> 4) & 0x0f);
+	mess[1] = receiver & 0x0f;
 }
 
-static void encode_pan_tilt_command(struct combiner *c, enum pt_command_t cmnd,
-	int speed)
-{
-	int s = (abs(speed) / 170) & 0x07;
-	uint8_t mess[3];
+static void encode_pan_tilt(uint8_t *mess, struct ccpacket *p) {
+	if(p->command & CC_PAN_LEFT)
+		bit_set(mess, BIT_PAN_LEFT);
+	else if(p->command & CC_PAN_RIGHT)
+		bit_set(mess, BIT_PAN_RIGHT);
+	if(p->command & CC_TILT_UP)
+		bit_set(mess, BIT_TILT_UP);
+	else if(p->command & CC_TILT_DOWN)
+		bit_set(mess, BIT_TILT_DOWN);
+}
+
+static void encode_lens(uint8_t *mess, struct ccpacket *p) {
+	if(p->iris == IRIS_OPEN)
+		bit_set(mess, BIT_IRIS_OPEN);
+	else if(p->iris == IRIS_CLOSE)
+		bit_set(mess, BIT_IRIS_CLOSE);
+	if(p->focus == FOCUS_NEAR)
+		bit_set(mess, BIT_FOCUS_NEAR);
+	else if(p->focus == FOCUS_FAR)
+		bit_set(mess, BIT_FOCUS_FAR);
+	if(p->zoom == ZOOM_IN)
+		bit_set(mess, BIT_ZOOM_IN);
+	else if(p->zoom == ZOOM_OUT)
+		bit_set(mess, BIT_ZOOM_OUT);
+}
+
+static void encode_toggles(uint8_t *mess, struct ccpacket *p) {
+	if(p->command == CC_ACK_ALARM)
+		bit_set(mess, BIT_ACK_ALARM);
+	if(p->command == CC_AUTO_IRIS)
+		bit_set(mess, BIT_AUTO_IRIS);
+	if(p->command == CC_AUTO_PAN)
+		bit_set(mess, BIT_AUTO_PAN);
+	if(p->command == CC_LENS_SPEED)
+		bit_set(mess, BIT_LENS_SPEED);
+}
+
+static void encode_aux(uint8_t *mess, struct ccpacket *p) {
+	if(p->aux & AUX_1)
+		bit_set(mess, BIT_AUX_1);
+	if(p->aux & AUX_2)
+		bit_set(mess, BIT_AUX_2);
+	if(p->aux & AUX_3)
+		bit_set(mess, BIT_AUX_3);
+	if(p->aux & AUX_4)
+		bit_set(mess, BIT_AUX_4);
+	if(p->aux & AUX_5)
+		bit_set(mess, BIT_AUX_5);
+	if(p->aux & AUX_6)
+		bit_set(mess, BIT_AUX_6);
+}
+
+static void encode_preset(uint8_t *mess, struct ccpacket *p) {
+	if(p->command & CC_RECALL)
+		bit_set(mess, BIT_RECALL);
+	else if(p->command & CC_STORE)
+		bit_set(mess, BIT_STORE);
+	mess[5] |= p->preset & 0x0f;
+}
+
+static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
+	mess[6] = (p->pan >> 7) & 0x0f;
+	mess[7] = p->pan & 0x3f;
+	mess[8] = (p->tilt >> 7) & 0x0f;
+	mess[9] = p->tilt & 0x3f;
+}
+
+static void encode_extended_speed(struct combiner *c) {
+	uint8_t mess[10];
+	bzero(mess, 10);
 	encode_receiver(mess, c->packet.receiver);
-	mess[1] |= (cmnd << 4) | (s << 1);
-	mess[2] |= PT_COMMAND;
-	combiner_write(c, mess, 3);
+	bit_set(mess, BIT_COMMAND);
+	bit_set(mess, BIT_EXTENDED);
+	encode_pan_tilt(mess, &c->packet);
+	encode_lens(mess, &c->packet);
+	encode_toggles(mess, &c->packet);
+	encode_aux(mess, &c->packet);
+	encode_preset(mess, &c->packet);
+	encode_speeds(mess, &c->packet);
+	combiner_write(c, mess, 10);
 }
-
-static inline void encode_pan(struct combiner *c) {
-	if(c->packet.command & CC_PAN_LEFT)
-		encode_pan_tilt_command(c, PAN_LEFT, c->packet.pan);
-	else if(c->packet.command & CC_PAN_RIGHT)
-		encode_pan_tilt_command(c, PAN_RIGHT, c->packet.pan);
-}
-
-static inline void encode_tilt(struct combiner *c) {
-	if(c->packet.command & CC_TILT_DOWN)
-		encode_pan_tilt_command(c, TILT_DOWN, c->packet.tilt);
-	else if(c->packet.command & CC_TILT_UP)
-		encode_pan_tilt_command(c, TILT_UP, c->packet.tilt);
-}
-
-static void encode_lens_function(struct combiner *c, enum lens_t func) {
-	uint8_t mess[3];
-	encode_receiver(mess, c->packet.receiver);
-	mess[1] |= func << 1;
-	combiner_write(c, mess, 3);
-}
-
-static inline void encode_zoom(struct combiner *c) {
-	if(c->packet.zoom < 0)
-		encode_lens_function(c, XL_ZOOM_OUT);
-	else if(c->packet.zoom > 0)
-		encode_lens_function(c, XL_ZOOM_IN);
-}
-
-static inline void encode_focus(struct combiner *c) {
-	if(c->packet.focus < 0)
-		encode_lens_function(c, XL_FOCUS_NEAR);
-	else if(c->packet.focus > 0)
-		encode_lens_function(c, XL_FOCUS_FAR);
-}
-
-static inline void encode_iris(struct combiner *c) {
-	if(c->packet.iris < 0)
-		encode_lens_function(c, XL_IRIS_CLOSE);
-	else if(c->packet.iris > 0)
-		encode_lens_function(c, XL_IRIS_OPEN);
-}
-
-static inline void encode_aux(struct combiner *c) {
-	uint8_t mess[3];
-	if(c->packet.aux > 0) {
-		encode_receiver(mess, c->packet.receiver);
-		mess[1] |= (LUT_AUX[c->packet.aux]) << 1;
-		mess[1] |= (EX_AUX << 4);
-		combiner_write(c, mess, 3);
-	}
-} */
 
 int vicon_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
-	ccpacket_debug(&c->packet);
+	encode_extended_speed(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }

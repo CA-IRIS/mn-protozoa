@@ -124,14 +124,10 @@ static const enum aux_t AUX_LUT[] = {
 	AUX_3,		/* 110 */
 	AUX_6		/* 111 */
 };
-/* Reverse AUX function lookup table */
-static const int LUT_AUX[] = {
-	0, 2, 4, 6, 3, 5, 7, 0
-};
 
 static inline void decode_aux(struct ccpacket *p, int extra) {
-	p->aux = AUX_LUT[extra];
-	/* Weird special case for hard up */
+	p->aux |= AUX_LUT[extra];
+	/* Weird special case for full up */
 	if(extra == 0) {
 		p->command |= CC_TILT_UP;
 		p->tilt = SPEED_MAX;
@@ -264,20 +260,31 @@ static inline void encode_iris(struct combiner *c) {
 		encode_lens_function(c, XL_IRIS_OPEN);
 }
 
+/* Masks for each aux function */
+static const enum aux_t AUX_MASK[] = {
+	AUX_1, AUX_2, AUX_3, AUX_4, AUX_5, AUX_6
+};
+
+/* Reverse AUX function lookup table */
+static const int LUT_AUX[] = {
+	2, 4, 6, 3, 5, 7
+};
+
 static inline void encode_aux(struct combiner *c) {
 	uint8_t mess[3];
-	if(c->packet.aux > 0) {
-		encode_receiver(mess, c->packet.receiver);
-		mess[1] |= (LUT_AUX[c->packet.aux]) << 1;
-		mess[1] |= (EX_AUX << 4);
-		combiner_write(c, mess, 3);
+	int i;
+	for(i = 0; i < 6; i++) {
+		if(c->packet.aux & AUX_MASK[i]) {
+			encode_receiver(mess, c->packet.receiver);
+			mess[1] |= (LUT_AUX[i] << 1) | (EX_AUX << 4);
+			combiner_write(c, mess, 3);
+		}
 	}
 }
 
 int manchester_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
-//	ccpacket_debug(&c->packet);
 	encode_pan(c);
 	encode_tilt(c);
 	encode_zoom(c);
