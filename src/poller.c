@@ -1,59 +1,55 @@
-#include <stdio.h>	/* for printf */
-#include <string.h>	/* for strerror */
-#include <unistd.h>
-#include <sys/errno.h>	/* for errno */
-#include <sys/poll.h>
+#include "poller.h"
 
-#include "sport.h"
-#include "config.h"
+struct poller *poller_init(struct poller *p, int n_ports, struct sport *port) {
+	int i;
 
-static const char *CONF_FILE = "protozoa.conf";
+	p->n_ports = n_ports;
+	p->port = port;
+	p->pollfds = malloc(sizeof(struct pollfd) * n_ports);
+	if(p->pollfds == NULL)
+		return NULL;
+	for(i = 0; i < n_ports; i++)
+		p->pollfds[i].fd = port[i].fd;
+	return p;
+}
 
-extern int errno;
+static void poller_register_events(struct poller *p) {
+	int i;
 
-int main(int argc, char* argv[])
-{
-	ssize_t nbytes;
-	int i, n_ports;
-	struct sport *port;
-	struct pollfd *pollfds;
-
-	n_ports = config_read(CONF_FILE, &port);
-	if(n_ports <= 0)
-		goto fail;
-
-	pollfds = malloc(sizeof(struct pollfd) * n_ports);
-	if(pollfds == NULL)
-		goto fail;
-	for(i = 0; i < n_ports; i++) {
-		pollfds[i].fd = port[i].fd;
-		pollfds[i].events = POLLIN;
+	for(i = 0; i < p->n_ports; i++) {
+		if(buffer_is_empty(&p->port[i].txbuf))
+			p->pollfds[i].events = POLLIN;
+		else
+			p->pollfds[i].events = POLLIN | POLLOUT;
 	}
+}
 
+static int poller_do_poll(struct poller *p) {
+	int i;
+	ssize_t nbytes;
+
+	if(poll(p->pollfds, p->n_ports, -1) < 0)
+		return -1;
+	for(i = 0; i < p->n_ports; i++) {
+		if(p->pollfds[i].revents & POLLIN) {
+			nbytes = sport_read(p->port + i);
+			if(nbytes < 0)
+				return nbytes;
+		}
+		if(p->pollfds[i].revents & POLLOUT) {
+			nbytes = sport_write(p->port + i);
+			if(nbytes < 0)
+				return nbytes;
+		}
+	}
+	return 0;
+}
+
+int poller_loop(struct poller *p) {
+	int r = 0;
 	do {
-		if(poll(pollfds, n_ports, -1) < 0)
-			goto fail;
-		for(i = 0; i < n_ports; i++) {
-			if(pollfds[i].revents & POLLIN) {
-				nbytes = sport_read(port + i);
-				if(nbytes < 0)
-					goto fail;
-			}
-			if(pollfds[i].revents & POLLOUT) {
-				nbytes = sport_write(port + i);
-				if(nbytes < 0)
-					goto fail;
-			}
-		}
-		for(i = 0; i < n_ports; i++) {
-			if(buffer_is_empty(&port[i].txbuf))
-				pollfds[i].events = POLLIN;
-			else
-				pollfds[i].events = POLLIN | POLLOUT;
-		}
-	} while(1);
-fail:
-	if(errno)
-		printf("Error: %s\n", strerror(errno));
-	return errno;
+		poller_register_events(p);
+		r = poller_do_poll(p);
+	} while(r >= 0);
+	return r;
 }
