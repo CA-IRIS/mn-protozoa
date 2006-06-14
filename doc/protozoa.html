@@ -6,15 +6,27 @@
 <head>
 	<meta name="Author" content="Douglas Lau"/>
 	<link href="protozoa.css" rel="stylesheet" type="text/css"/>
-	<title>Protozoa Camera Control Server</title>
+	<title>Protozoa Camera Control Mixer</title>
 </head>
 
 <body>
-<h2>Protozoa Camera Control Server</h2>
+<h2>Protozoa Camera Control Mixer</h2>
 <p>
-	This software can combine and transcode camera control commands from
-	multiple input sources. It works by converting each command to a
-	protocol-neutral format.
+	Protozoa is a program to integrate CCTV camera control systems from
+	multiple vendors. It can combine control codes from different sources
+	to facilitate sharing control between systems. It can also transcode
+	camera control commands between vendor protocols, including
+	<a href="manchester_code.html">American Dynamics (manchester)</a>,
+	<a href="vicon_code.html">Vicon</a> and
+	<a href="pelco_d_code.html">Pelco (D)</a>. It works by converting each
+	input command to a protocol-neutral packet and then converting that
+	packet to an output command.
+</p>
+<p>
+	Most camera control systems use RS-422, which allows for much longer
+	cable runs than the more common RS-232. Simple RS-422 to RS-232
+	converters are available, and are required to allow a computer with
+	standard RS-232 ports to recognise the signals.
 </p>
 <h3>Configuration File</h3>
 <p>
@@ -34,16 +46,20 @@
 	the vicon protocol and sends them out on /dev/ttyS0 at 9600 baud.
 </p>
 <pre>
-	OUT manchester /dev/ttyS0 9600
+	OUT pelco /dev/ttyS0 9600
 	IN manchester /dev/ttyS1 9600
 	IN vicon /dev/ttyS2 4800
+	OUT vicon /dev/ttyS3 9600
+	IN manchester /dev/ttyS4 9600
+	IN vicon /dev/ttyS5 9600
 </pre>
 <p>
 	This configuration interleaves commands from /dev/ttyS1 and /dev/ttyS2,
-	sending them out on /dev/ttyS0.
+	sending them out on /dev/ttyS0. Also, commands from /dev/ttyS4 and
+	/dev/ttyS5 are interleaved onto /dev/ttyS3.
 </p>
 <p class="stamp">
-	2006 June 12
+	2006 June 14
 </p>
 </body>
 </html>
