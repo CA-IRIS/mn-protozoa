@@ -134,6 +134,16 @@ static inline void decode_aux(struct ccpacket *p, int extra) {
 	}
 }
 
+static inline void decode_recall(struct ccpacket *p, int extra) {
+	p->command |= CC_RECALL;
+	p->preset = extra + 1;
+}
+
+static inline void decode_store(struct ccpacket *p, int extra) {
+	p->command |= CC_STORE;
+	p->preset = extra + 1;
+}
+
 enum ex_function_t {
 	EX_LENS,	/* 00 */
 	EX_AUX,		/* 01 */
@@ -152,10 +162,10 @@ static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
 			decode_aux(p, extra);
 			break;
 		case EX_RCL_PRESET:
-			/* FIXME */
+			decode_recall(p, extra);
 			break;
 		case EX_STO_PRESET:
-			/* FIXME */
+			decode_store(p, extra);
 			break;
 	}
 }
