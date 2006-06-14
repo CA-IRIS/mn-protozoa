@@ -6,6 +6,30 @@
 #include "manchester.h"
 #include "vicon.h"
 
+static int config_do_write(struct combiner *cmbnr, const char *protocol) {
+	if(strcasecmp(protocol, "manchester") == 0)
+		cmbnr->do_write = manchester_do_write;
+	else if(strcasecmp(protocol, "vicon") == 0)
+		cmbnr->do_write = vicon_do_write;
+	else {
+		printf("Unknown protocol: %s\n", protocol);
+		return -1;
+	}
+	return 0;
+}
+
+static int config_do_read(struct combiner *cmbnr, const char *protocol) {
+	if(strcasecmp(protocol, "manchester") == 0)
+		cmbnr->handler.do_read = manchester_do_read;
+	else if(strcasecmp(protocol, "vicon") == 0)
+		cmbnr->handler.do_read = vicon_do_read;
+	else {
+		printf("Unknown protocol: %s\n", protocol);
+		return -1;
+	}
+	return 0;
+}
+
 static struct combiner *config_outbound(struct sport *port,
 	char *protocol)
 {
@@ -13,14 +37,8 @@ static struct combiner *config_outbound(struct sport *port,
 	if(cmbnr == NULL)
 		return NULL;
 	combiner_init(cmbnr, &port->txbuf);
-	if(strncasecmp(protocol, "manchester", 5) == 0)
-		cmbnr->do_write = manchester_do_write;
-	else if(strncasecmp(protocol, "vicon", 5) == 0)
-		cmbnr->do_write = vicon_do_write;
-	else {
-		printf("Unknown protocol: %s\n", protocol);
+	if(config_do_write(cmbnr, protocol) < 0)
 		goto fail;
-	}
 	port->handler = &cmbnr->handler;
 	return cmbnr;
 fail:
@@ -38,14 +56,8 @@ static void config_inbound(struct sport *port, const char *protocol,
 		printf("Missing OUT directive");
 		goto fail;
 	}
-	if(strncasecmp(protocol, "manchester", 5) == 0)
-		cmbnr->handler.do_read = manchester_do_read;
-	else if(strncasecmp(protocol, "vicon", 5) == 0)
-		cmbnr->handler.do_read = vicon_do_read;
-	else {
-		printf("Unknown protocol: %s\n", protocol);
+	if(config_do_read(cmbnr, protocol) < 0)
 		goto fail;
-	}
 	ccpacket_init(&cmbnr->packet);
 	cmbnr->txbuf = out->txbuf;
 	port->handler = &cmbnr->handler;
@@ -55,12 +67,10 @@ fail:
 }
 
 static void config_inbound2(struct sport *port, const char *protocol) {
-	if(strncasecmp(protocol, "manchester", 5) == 0)
-		port->handler->do_read = manchester_do_read;
-	else if(strncasecmp(protocol, "vicon", 5) == 0)
-		port->handler->do_read = vicon_do_read;
-	else
-		printf("Unknown protocol: %s\n", protocol);
+	struct combiner *cmbnr = (struct combiner *)port->handler;
+	if(cmbnr == NULL)
+		return;
+	config_do_read(cmbnr, protocol);
 }
 
 static struct sport *find_port(struct sport *ports[], int n_ports, char *port) {
