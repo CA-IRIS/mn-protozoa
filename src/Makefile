@@ -1,9 +1,9 @@
 CC = gcc
 CFLAGS = -Os -Wall -combine -fwhole-program
 #CFLAGS = -Wall -ggdb
-STEST = protozoa
+TARGET = protozoa
 
-all:  $(STEST)
+all:  $(TARGET)
 
-$(STEST): main.c poller.c config.c sport.c ccpacket.c buffer.c manchester.c vicon.c combiner.c
-	$(CC) -o $(STEST) $(CFLAGS) poller.c config.c sport.c ccpacket.c buffer.c manchester.c vicon.c combiner.c $<
+$(TARGET): main.c poller.c config.c sport.c ccpacket.c buffer.c manchester.c vicon.c combiner.c
+	$(CC) -o $(TARGET) $(CFLAGS) poller.c config.c sport.c ccpacket.c buffer.c manchester.c vicon.c combiner.c $<
