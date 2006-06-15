@@ -25,6 +25,7 @@ bool buffer_is_empty(const struct buffer *buf);
 int buffer_available(const struct buffer *buf);
 void buffer_skip(struct buffer *buf, size_t count);
 bool buffer_is_full(const struct buffer *buf);
+int buffer_remaining(const struct buffer *buf);
 ssize_t buffer_read(struct buffer *buf, int fd);
 ssize_t buffer_write(struct buffer *buf, int fd);
 void buffer_put(struct buffer *buf, uint8_t value);

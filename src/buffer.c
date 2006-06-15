@@ -46,6 +46,10 @@ inline bool buffer_is_full(const struct buffer *buf) {
 	return buf->pin >= buf->end;
 }
 
+inline int buffer_remaining(const struct buffer *buf) {
+	return buf->end - buf->pin;
+}
+
 ssize_t buffer_read(struct buffer *buf, int fd) {
 	size_t count = buf->end - buf->pin;
 	if(count <= 0) {
