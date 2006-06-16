@@ -28,12 +28,12 @@ void buffer_clear(struct buffer *buf) {
 	buf->pout = buf->base;
 }
 
-inline bool buffer_is_empty(const struct buffer *buf) {
-	return buf->pout >= buf->pin;
-}
-
 inline int buffer_available(const struct buffer *buf) {
 	return buf->pin - buf->pout;
+}
+
+inline bool buffer_is_empty(const struct buffer *buf) {
+	return buffer_available(buf) <= 0;
 }
 
 void buffer_skip(struct buffer *buf, size_t count) {
