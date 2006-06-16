@@ -2,10 +2,11 @@
 #define __CCPACKET_H__
 
 enum status_t {
-	STATUS_NONE,
-	STATUS_REQUEST,
-	STATUS_EXTENDED,
-	STATUS_EXTENDED_2,
+	STATUS_NONE = 0,
+	STATUS_REQUEST = 1 << 0,
+	STATUS_SECTOR = 1 << 1,
+	STATUS_PRESET = 1 << 2,
+	STATUS_AUX_SET_2 = 1 << 3,
 };
 
 enum command_t {

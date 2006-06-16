@@ -32,7 +32,12 @@ enum vicon_bit_t {
 	BIT_AUX_1 = 38,
 	BIT_RECALL = 45,
 	BIT_STORE = 46,
-	BIT_EX_PRESET = 52,
+	BIT_STAT_V15UVS = 48,
+	BIT_EX_STATUS = 49,
+	BIT_EX_REQUEST = 52,
+	BIT_STAT_SECTOR = 56,
+	BIT_STAT_PRESET = 57,
+	BIT_STAT_AUX_SET_2 = 58,
 };
 
 static inline int decode_receiver(uint8_t *mess) {
@@ -136,6 +141,17 @@ static inline void decode_ex_speed(struct ccpacket *p, uint8_t *mess) {
 	p->tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x3f);
 }
 
+static inline void decode_ex_status(struct ccpacket *p, uint8_t *mess) {
+	p->status = STATUS_REQUEST;
+	if(bit_is_set(mess, BIT_STAT_SECTOR))
+		p->status |= STATUS_SECTOR;
+	if(bit_is_set(mess, BIT_STAT_PRESET))
+		p->status |= STATUS_PRESET;
+	if(bit_is_set(mess, BIT_STAT_V15UVS) &&
+	   bit_is_set(mess, BIT_STAT_AUX_SET_2))
+		p->status |= STATUS_AUX_SET_2;
+}
+
 static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
 	printf("vicon: FIXME extended preset\n");
 }
@@ -153,9 +169,12 @@ static inline int vicon_decode_extended(struct combiner *c,
 	decode_toggles(&c->packet, mess);
 	decode_aux(&c->packet, mess);
 	decode_preset(&c->packet, mess);
-	if(bit_is_set(mess, BIT_EX_PRESET))
-		decode_ex_preset(&c->packet, mess);
-	else
+	if(bit_is_set(mess, BIT_EX_REQUEST)) {
+		if(bit_is_set(mess, BIT_EX_STATUS))
+			decode_ex_status(&c->packet, mess);
+		else
+			decode_ex_preset(&c->packet, mess);
+	} else
 		decode_ex_speed(&c->packet, mess);
 printf(" in: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", mess[0], mess[1], mess[2], mess[3], mess[4], mess[5], mess[6], mess[7], mess[8], mess[9]);
 	buffer_skip(rxbuf, 10);
@@ -187,6 +206,7 @@ static inline int vicon_decode_status(struct combiner *c,
 	if(buffer_available(rxbuf) < 2)
 		return 1;
 	c->packet.receiver = decode_receiver(mess);
+	c->packet.status = STATUS_REQUEST;
 printf(" in: %02x %02x\n", mess[0], mess[1]);
 	buffer_skip(rxbuf, 2);
 	return c->do_write(c);
@@ -311,6 +331,7 @@ static void encode_extended_speed(struct combiner *c) {
 int vicon_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
+ccpacket_debug(&c->packet);
 	encode_extended_speed(c);
 	ccpacket_init(&c->packet);
 	return 0;
