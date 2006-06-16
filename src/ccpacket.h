@@ -1,6 +1,13 @@
 #ifndef __CCPACKET_H__
 #define __CCPACKET_H__
 
+enum status_t {
+	STATUS_NONE,
+	STATUS_REQUEST,
+	STATUS_EXTENDED,
+	STATUS_EXTENDED_2,
+};
+
 enum command_t {
 	CC_PAN_LEFT = 1 << 0,
 	CC_PAN_RIGHT = 1 << 1,
@@ -50,6 +57,7 @@ enum aux_t {
  */
 struct ccpacket {
 	int	receiver;	/* receiver address: 1 to 255 */
+	enum status_t	status;	/* status request type */
 	enum command_t	command;/* bitmask of commands */
 	int		pan;	/* 0 (none) to 4095 (fast) */
 	int		tilt;	/* 0 (none) to 4095 (fast) */

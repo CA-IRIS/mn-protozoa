@@ -3,6 +3,7 @@
 
 void ccpacket_init(struct ccpacket *p) {
 	p->receiver = 0;
+	p->status = STATUS_NONE;
 	p->command = 0;
 	p->pan = 0;
 	p->tilt = 0;
@@ -14,7 +15,24 @@ void ccpacket_init(struct ccpacket *p) {
 }
 
 void ccpacket_debug(struct ccpacket *p) {
-	printf("rcv: %d pan: %d tilt: %d zoom: %d focus: %d iris: %d aux: %d\n",
-		p->receiver, p->pan, p->tilt, p->zoom, p->focus, p->iris,
-		p->aux);
+	printf("rcv: %d", p->receiver);
+	if(p->status)
+		printf(" status: %d", p->status);
+	if(p->command)
+		printf(" command: %d", p->command);
+	if(p->pan)
+		printf(" pan: %d", p->pan);
+	if(p->tilt)
+		printf(" tilt: %d", p->tilt);
+	if(p->zoom)
+		printf(" zoom: %d", p->zoom);
+	if(p->focus)
+		printf(" focus: %d", p->focus);
+	if(p->iris)
+		printf(" iris: %d", p->iris);
+	if(p->aux)
+		printf(" aux: %d", p->aux);
+	if(p->preset)
+		printf(" preset: %d", p->preset);
+	printf("\n");
 }
