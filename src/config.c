@@ -36,9 +36,10 @@ static struct combiner *config_outbound(struct sport *port,
 	struct combiner *cmbnr = malloc(sizeof(struct combiner));
 	if(cmbnr == NULL)
 		return NULL;
-	combiner_init(cmbnr, &port->txbuf);
+	combiner_init(cmbnr);
 	if(config_do_write(cmbnr, protocol) < 0)
 		goto fail;
+	cmbnr->txbuf = &port->txbuf;
 	port->handler = &cmbnr->handler;
 	return cmbnr;
 fail:
@@ -56,9 +57,9 @@ static void config_inbound(struct sport *port, const char *protocol,
 		printf("Missing OUT directive");
 		goto fail;
 	}
+	combiner_init(cmbnr);
 	if(config_do_read(cmbnr, protocol) < 0)
 		goto fail;
-	ccpacket_init(&cmbnr->packet);
 	cmbnr->do_write = out->do_write;
 	cmbnr->txbuf = out->txbuf;
 	port->handler = &cmbnr->handler;
