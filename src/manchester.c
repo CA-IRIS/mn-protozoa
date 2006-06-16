@@ -102,12 +102,12 @@ static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 			p->iris = IRIS_CLOSE;
 			break;
 		case XL_TILT_DOWN:
-			/* Weird special case for hard down */
+			/* Weird special case for full down */
 			p->command |= CC_TILT_DOWN;
 			p->tilt = SPEED_MAX;
 			break;
 		case XL_PAN_LEFT:
-			/* Weird special case for hard left */
+			/* Weird special case for full left */
 			p->command |= CC_PAN_LEFT;
 			p->pan = SPEED_MAX;
 			break;
@@ -115,8 +115,8 @@ static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 }
 
 static const enum aux_t AUX_LUT[] = {
-	AUX_NONE,	/* 000 */
-	AUX_NONE,	/* 001 */
+	AUX_NONE,	/* 000 (full tilt up) */
+	AUX_NONE,	/* 001 (full pan right) */
 	AUX_1,		/* 010 */
 	AUX_4,		/* 011 */
 	AUX_2,		/* 100 */
@@ -131,6 +131,11 @@ static inline void decode_aux(struct ccpacket *p, int extra) {
 	if(extra == 0) {
 		p->command |= CC_TILT_UP;
 		p->tilt = SPEED_MAX;
+	}
+	/** Weird special case for full right */
+	if(extra == 1) {
+		p->command |= CC_PAN_RIGHT;
+		p->pan = SPEED_MAX;
 	}
 }
 
