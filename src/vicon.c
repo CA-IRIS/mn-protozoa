@@ -137,7 +137,7 @@ static inline void decode_ex_speed(struct ccpacket *p, uint8_t *mess) {
 }
 
 static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
-	printf("vicon: FIXME extended preset");
+	printf("vicon: FIXME extended preset\n");
 }
 
 static inline int vicon_decode_extended(struct combiner *c,
@@ -159,7 +159,7 @@ static inline int vicon_decode_extended(struct combiner *c,
 		decode_ex_speed(&c->packet, mess);
 printf(" in: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", mess[0], mess[1], mess[2], mess[3], mess[4], mess[5], mess[6], mess[7], mess[8], mess[9]);
 	buffer_skip(rxbuf, 10);
-	return 0;
+	return c->do_write(c);
 }
 
 static inline int vicon_decode_command(struct combiner *c,

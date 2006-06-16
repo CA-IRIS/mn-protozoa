@@ -59,6 +59,7 @@ static void config_inbound(struct sport *port, const char *protocol,
 	if(config_do_read(cmbnr, protocol) < 0)
 		goto fail;
 	ccpacket_init(&cmbnr->packet);
+	cmbnr->do_write = out->do_write;
 	cmbnr->txbuf = out->txbuf;
 	port->handler = &cmbnr->handler;
 	return;
