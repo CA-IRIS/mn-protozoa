@@ -50,11 +50,22 @@ inline int buffer_remaining(const struct buffer *buf) {
 	return buf->end - buf->pin;
 }
 
+int buffer_compact(struct buffer *buf) {
+	int a = buffer_available(buf);
+	memmove(buf->base, buf->pout, a);
+	buf->pout = buf->base;
+	buf->pin = buf->pout + a;
+	return buffer_remaining(buf);
+}
+
 ssize_t buffer_read(struct buffer *buf, int fd) {
-	size_t count = buf->end - buf->pin;
+	size_t count = buffer_remaining(buf);
 	if(count <= 0) {
-		errno = ENOBUFS;
-		return -1;
+		count = buffer_compact(buf);
+		if(count <= 0) {
+			errno = ENOBUFS;
+			return -1;
+		}
 	}
 	ssize_t nbytes = read(fd, buf->pin, count);
 	if(nbytes > 0)
