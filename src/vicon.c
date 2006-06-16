@@ -328,11 +328,36 @@ static void encode_extended_speed(struct combiner *c) {
 	combiner_write(c, mess, 10);
 }
 
+static void encode_status(struct combiner *c) {
+	uint8_t mess[10];
+	bzero(mess, 10);
+	encode_receiver(mess, c->packet.receiver);
+	if(c->packet.status & STATUS_EXTENDED) {
+		bit_set(mess, BIT_COMMAND);
+		bit_set(mess, BIT_EXTENDED);
+		bit_set(mess, BIT_EX_STATUS);
+		bit_set(mess, BIT_EX_REQUEST);
+		if(c->packet.status & STATUS_SECTOR)
+			bit_set(mess, BIT_STAT_SECTOR);
+		if(c->packet.status & STATUS_PRESET)
+			bit_set(mess, BIT_STAT_PRESET);
+		if(c->packet.status & STATUS_AUX_SET_2) {
+			bit_set(mess, BIT_STAT_V15UVS);
+			bit_set(mess, BIT_STAT_AUX_SET_2);
+		}
+		combiner_write(c, mess, 10);
+	} else
+		combiner_write(c, mess, 2);
+}
+
 int vicon_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
 ccpacket_debug(&c->packet);
-	encode_extended_speed(c);
+	if(c->packet.status)
+		encode_status(c);
+	else
+		encode_extended_speed(c);
 	ccpacket_init(&c->packet);
 	return 0;
 }

@@ -7,6 +7,7 @@ enum status_t {
 	STATUS_SECTOR = 1 << 1,
 	STATUS_PRESET = 1 << 2,
 	STATUS_AUX_SET_2 = 1 << 3,
+	STATUS_EXTENDED = (STATUS_SECTOR | STATUS_PRESET | STATUS_AUX_SET_2),
 };
 
 enum command_t {
