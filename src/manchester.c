@@ -126,17 +126,16 @@ static const enum aux_t AUX_LUT[] = {
 };
 
 static inline void decode_aux(struct ccpacket *p, int extra) {
-	p->aux |= AUX_LUT[extra];
-	/* Weird special case for full up */
 	if(extra == 0) {
+		/* Weird special case for full up */
 		p->command |= CC_TILT_UP;
 		p->tilt = SPEED_MAX;
-	}
-	/** Weird special case for full right */
-	if(extra == 1) {
+	} else if(extra == 1) {
+		/** Weird special case for full right */
 		p->command |= CC_PAN_RIGHT;
 		p->pan = SPEED_MAX;
-	}
+	} else
+		p->aux |= AUX_LUT[extra];
 }
 
 static inline void decode_recall(struct ccpacket *p, int extra) {
