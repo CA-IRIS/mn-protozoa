@@ -12,11 +12,11 @@
 <body>
 <h2>Vicon Camera Control Code</h2>
 
+<div class="left">
 <table>
 <tr>
 	<th>BIT</th>
 	<th>FUNCTION</th>
-	<th>ALTERNATE (PRESET)</th>
 </tr>
 <tr>
 	<td>0</td>
@@ -68,7 +68,7 @@
 </tr>
 <tr>
 	<td>12</td>
-	<td>0 := status poll<br/>1 := command (add bits 16-47)</td>
+	<td>0: status poll<br/>1: command (add bits 16-47)</td>
 </tr>
 <tr>
 	<td>13</td>
@@ -210,124 +210,245 @@
 	<td>47</td>
 	<td>must be 0</td>
 </tr>
+</table>
+</div>
+
+<div class="right">
+<table>
+<tr>
+	<th>BIT</th>
+	<th>EXTENDED PRESET</th>
+</tr>
 <tr>
 	<td>48</td>
-	<td>pan speed bit 7</td>
-	<td>preset recall (0) or store (1)</td>
+	<td>0: recall preset<br/>1: store preset</td>
 </tr>
 <tr>
 	<td>49</td>
-	<td>pan speed bit 8</td>
 	<td>must be 0</td>
 </tr>
 <tr>
 	<td>50</td>
-	<td>pan speed bit 9</td>
 	<td>must be 0</td>
 </tr>
 <tr>
 	<td>51</td>
-	<td>pan speed bit 10</td>
 	<td>must be 0</td>
 </tr>
 <tr>
 	<td>52</td>
-	<td>extended speed (0)</td>
-	<td>extended preset (1)</td>
+	<td>must be 1</td>
 </tr>
 <tr>
 	<td>53</td>
-	<td>must be 0</td>
 	<td>must be 0</td>
 </tr>
 <tr>
 	<td>54</td>
 	<td>must be 0</td>
-	<td>must be 0</td>
 </tr>
 <tr>
 	<td>55</td>
 	<td>must be 0</td>
-	<td>must be 0</td>
 </tr>
 <tr>
 	<td>56</td>
-	<td>pan speed bit 0</td>
 	<td>preset bit 0</td>
 </tr>
 <tr>
 	<td>57</td>
-	<td>pan speed bit 1</td>
 	<td>preset bit 1</td>
 </tr>
 <tr>
 	<td>58</td>
-	<td>pan speed bit 2</td>
 	<td>preset bit 2</td>
 </tr>
 <tr>
 	<td>59</td>
-	<td>pan speed bit 3</td>
 	<td>preset bit 3</td>
 </tr>
 <tr>
 	<td>60</td>
-	<td>pan speed bit 4</td>
 	<td>preset bit 4</td>
 </tr>
 <tr>
 	<td>61</td>
-	<td>pan speed bit 5</td>
 	<td>preset bit 5</td>
 </tr>
 <tr>
 	<td>62</td>
-	<td>pan speed bit 6</td>
 	<td>preset bit 6</td>
 </tr>
 <tr>
 	<td>63</td>
 	<td>must be 0</td>
-	<td>must be 0</td>
 </tr>
 <tr>
 	<td>64</td>
-	<td>tilt speed bit 7</td>
 	<td>preset pan speed bit 0</td>
 </tr>
 <tr>
 	<td>65</td>
-	<td>tilt speed bit 8</td>
 	<td>preset pan speed bit 1</td>
 </tr>
 <tr>
 	<td>66</td>
-	<td>tilt speed bit 9</td>
 	<td>preset pan speed bit 2</td>
 </tr>
 <tr>
 	<td>67</td>
-	<td>tilt speed bit 10</td>
 	<td>preset pan speed bit 3</td>
 </tr>
 <tr>
 	<td>68</td>
-	<td>must be 0</td>
 	<td>preset pan speed bit 4</td>
 </tr>
 <tr>
 	<td>69</td>
-	<td>must be 0</td>
 	<td>preset pan speed bit 5</td>
 </tr>
 <tr>
 	<td>70</td>
-	<td>must be 0</td>
 	<td>preset pan speed bit 6</td>
 </tr>
 <tr>
 	<td>71</td>
 	<td>must be 0</td>
+</tr>
+<tr>
+	<td>72</td>
+	<td>preset tilt speed bit 0</td>
+</tr>
+<tr>
+	<td>73</td>
+	<td>preset tilt speed bit 1</td>
+</tr>
+<tr>
+	<td>74</td>
+	<td>preset tilt speed bit 2</td>
+</tr>
+<tr>
+	<td>75</td>
+	<td>preset tilt speed bit 3</td>
+</tr>
+<tr>
+	<td>76</td>
+	<td>preset tilt speed bit 4</td>
+</tr>
+<tr>
+	<td>77</td>
+	<td>preset tilt speed bit 5</td>
+</tr>
+<tr>
+	<td>78</td>
+	<td>preset tilt speed bit 6</td>
+</tr>
+<tr>
+	<td>79</td>
+	<td>must be 0</td>
+</tr>
+</table>
+</div>
+
+<table>
+<tr>
+	<th>BIT</th>
+	<th>EXTENDED SPEED</th>
+</tr>
+<tr>
+	<td>48</td>
+	<td>pan speed bit 7</td>
+</tr>
+<tr>
+	<td>49</td>
+	<td>pan speed bit 8</td>
+</tr>
+<tr>
+	<td>50</td>
+	<td>pan speed bit 9</td>
+</tr>
+<tr>
+	<td>51</td>
+	<td>pan speed bit 10</td>
+</tr>
+<tr>
+	<td>52</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>53</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>54</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>55</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>56</td>
+	<td>pan speed bit 0</td>
+</tr>
+<tr>
+	<td>57</td>
+	<td>pan speed bit 1</td>
+</tr>
+<tr>
+	<td>58</td>
+	<td>pan speed bit 2</td>
+</tr>
+<tr>
+	<td>59</td>
+	<td>pan speed bit 3</td>
+</tr>
+<tr>
+	<td>60</td>
+	<td>pan speed bit 4</td>
+</tr>
+<tr>
+	<td>61</td>
+	<td>pan speed bit 5</td>
+</tr>
+<tr>
+	<td>62</td>
+	<td>pan speed bit 6</td>
+</tr>
+<tr>
+	<td>63</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>64</td>
+	<td>tilt speed bit 7</td>
+</tr>
+<tr>
+	<td>65</td>
+	<td>tilt speed bit 8</td>
+</tr>
+<tr>
+	<td>66</td>
+	<td>tilt speed bit 9</td>
+</tr>
+<tr>
+	<td>67</td>
+	<td>tilt speed bit 10</td>
+</tr>
+<tr>
+	<td>68</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>69</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>70</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>71</td>
 	<td>must be 0</td>
 </tr>
 <tr>
@@ -364,8 +485,65 @@
 </tr>
 </table>
 
+<br/>
+
+<table>
+<tr>
+	<th>BIT</th>
+	<th>EXTENDED STATUS MODIFY</th>
+</tr>
+<tr>
+	<td>48</td>
+	<td>0: standard<br/>1: V15UVS</td>
+</tr>
+<tr>
+	<td>49</td>
+	<td>must be 1</td>
+</tr>
+<tr>
+	<td>50</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>51</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>52</td>
+	<td>must be 1</td>
+</tr>
+<tr>
+	<td>53</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>54</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>55</td>
+	<td>must be 0</td>
+</tr>
+<tr>
+	<td>56</td>
+	<td>current sector</td>
+</tr>
+<tr>
+	<td>57</td>
+	<td>current preset</td>
+</tr>
+<tr>
+	<td>58</td>
+	<td>aux set 2</td>
+</tr>
+<tr>
+	<td>59 - 79</td>
+	<td>must be 0</td>
+</tr>
+</table>
+
 <p class="stamp">
-	2006 May 2
+	2006 Jun 16
 </p>
 </body>
 </html>
