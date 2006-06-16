@@ -39,7 +39,7 @@ static struct combiner *config_outbound(struct sport *port,
 	combiner_init(cmbnr);
 	if(config_do_write(cmbnr, protocol) < 0)
 		goto fail;
-	cmbnr->txbuf = &port->txbuf;
+	cmbnr->txbuf = port->txbuf;
 	port->handler = &cmbnr->handler;
 	return cmbnr;
 fail:

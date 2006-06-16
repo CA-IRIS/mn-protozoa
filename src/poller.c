@@ -17,7 +17,7 @@ static void poller_register_events(struct poller *p) {
 	int i;
 
 	for(i = 0; i < p->n_ports; i++) {
-		if(buffer_is_empty(&p->port[i].txbuf))
+		if(buffer_is_empty(p->port[i].txbuf))
 			p->pollfds[i].events = POLLIN;
 		else
 			p->pollfds[i].events = POLLIN | POLLOUT;

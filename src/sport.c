@@ -60,9 +60,15 @@ static struct handler null_handler = {
 struct sport* sport_init(struct sport *port, const char *name, int baud) {
 	port->name = malloc(strlen(name) + 1);
 	strcpy(port->name, name);
-	if(buffer_init(&port->rxbuf, BUFFER_SIZE) == NULL)
+	port->rxbuf = malloc(BUFFER_SIZE);
+	if(port->rxbuf == NULL)
 		return NULL;
-	if(buffer_init(&port->txbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(port->rxbuf, BUFFER_SIZE) == NULL)
+		return NULL;
+	port->txbuf = malloc(BUFFER_SIZE);
+	if(port->txbuf == NULL)
+		return NULL;
+	if(buffer_init(port->txbuf, BUFFER_SIZE) == NULL)
 		return NULL;
 	port->handler = &null_handler;
 	port->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -72,10 +78,10 @@ struct sport* sport_init(struct sport *port, const char *name, int baud) {
 }
 
 ssize_t sport_read(struct sport *port) {
-	ssize_t nbytes = buffer_read(&port->rxbuf, port->fd);
+	ssize_t nbytes = buffer_read(port->rxbuf, port->fd);
 	if(nbytes <= 0)
 		return nbytes;
-	if(port->handler->do_read(port->handler, &port->rxbuf) < 0)
+	if(port->handler->do_read(port->handler, port->rxbuf) < 0)
 		return -1;
 	return nbytes;
 }
@@ -83,8 +89,8 @@ ssize_t sport_read(struct sport *port) {
 ssize_t sport_write(struct sport *port) {
 	uint8_t *mess;
 	printf("out:");
-	for(mess = port->txbuf.pout; mess < port->txbuf.pin; mess++)
+	for(mess = port->txbuf->pout; mess < port->txbuf->pin; mess++)
 		printf(" %02x", *mess);
 	printf("\n");
-	return buffer_write(&port->txbuf, port->fd);
+	return buffer_write(port->txbuf, port->fd);
 }

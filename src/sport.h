@@ -12,8 +12,8 @@ struct handler {
 struct sport {
 	char		*name;
 	int		fd;
-	struct buffer	rxbuf;
-	struct buffer	txbuf;
+	struct buffer	*rxbuf;
+	struct buffer	*txbuf;
 
 	struct handler	*handler;
 };
