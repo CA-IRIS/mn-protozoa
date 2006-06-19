@@ -10,15 +10,15 @@ struct combiner {
 	struct	ccpacket	packet;		/* camera control packet */
 	struct	buffer		*txbuf;		/* transmit buffer */
 
-	int			n_dropped;	/* count of dropped packets */
-	int			n_packets;	/* total count of packets */
-	int			n_status;	/* count of status packets */
-	int			n_pan;		/* count of pan packets */
-	int			n_tilt;		/* count of tilt packets */
-	int			n_zoom;		/* count of zoom packets */
-	int			n_lens;		/* count of lens packets */
-	int			n_aux;		/* count of aux packets */
-	int			n_preset;	/* count of preset packets */
+	long long		n_dropped;	/* count of dropped packets */
+	long long		n_packets;	/* total count of packets */
+	long long		n_status;	/* count of status packets */
+	long long		n_pan;		/* count of pan packets */
+	long long		n_tilt;		/* count of tilt packets */
+	long long		n_zoom;		/* count of zoom packets */
+	long long		n_lens;		/* count of lens packets */
+	long long		n_aux;		/* count of aux packets */
+	long long		n_preset;	/* count of preset packets */
 };
 
 void combiner_init(struct combiner *cmbnr);

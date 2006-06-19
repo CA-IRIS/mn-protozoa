@@ -28,7 +28,7 @@ void combiner_init(struct combiner *c) {
 }
 
 void combiner_count(struct combiner *c) {
-	static const char* FORMAT = "%10s: %12d\n";
+	static const char* FORMAT = "%10s: %10lld\n";
 	c->n_packets++;
 	if(c->packet.status)
 		c->n_status++;
