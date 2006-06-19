@@ -175,10 +175,8 @@ static inline int vicon_decode_extended(struct combiner *c,
 			decode_ex_status(&c->packet, mess);
 		else
 			decode_ex_preset(&c->packet, mess);
-	} else {
+	} else
 		decode_ex_speed(&c->packet, mess);
-printf(" in: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", mess[0], mess[1], mess[2], mess[3], mess[4], mess[5], mess[6], mess[7], mess[8], mess[9]);
-	}
 	buffer_skip(rxbuf, 10);
 	return c->do_write(c);
 }
@@ -196,7 +194,6 @@ static inline int vicon_decode_command(struct combiner *c,
 	decode_toggles(&c->packet, mess);
 	decode_aux(&c->packet, mess);
 	decode_preset(&c->packet, mess);
-printf(" in: %02x %02x %02x %02x %02x %02x\n", mess[0], mess[1], mess[2], mess[3], mess[4], mess[5]);
 	buffer_skip(rxbuf, 6);
 	return c->do_write(c);
 }
@@ -209,7 +206,6 @@ static inline int vicon_decode_status(struct combiner *c,
 		return 1;
 	c->packet.receiver = decode_receiver(mess);
 	c->packet.status = STATUS_REQUEST;
-printf(" in: %02x %02x\n", mess[0], mess[1]);
 	buffer_skip(rxbuf, 2);
 	return c->do_write(c);
 }

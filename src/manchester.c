@@ -193,8 +193,6 @@ static inline void manchester_decode_packet(struct combiner *c, uint8_t *mess) {
 		c->do_write(c);
 	c->packet.receiver = receiver;
 	decode_packet(&c->packet, mess);
-
-printf(" in: %02x %02x %02x\n", mess[0], mess[1], mess[2]);
 }
 
 static inline int manchester_read_message(struct combiner *c,

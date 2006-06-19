@@ -78,9 +78,14 @@ struct sport* sport_init(struct sport *port, const char *name, int baud) {
 }
 
 ssize_t sport_read(struct sport *port) {
+	uint8_t *mess;
 	ssize_t nbytes = buffer_read(port->rxbuf, port->fd);
 	if(nbytes <= 0)
 		return nbytes;
+	printf(" in:");
+	for(mess = port->rxbuf->pin - nbytes; mess < port->rxbuf->pin; mess++)
+		printf(" %02x", *mess);
+	printf("\n");
 	if(port->handler->do_read(port->handler, port->rxbuf) < 0)
 		return -1;
 	return nbytes;
