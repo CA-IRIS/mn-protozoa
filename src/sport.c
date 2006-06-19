@@ -1,6 +1,5 @@
 #include <fcntl.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 #include <termios.h>
 #include <sys/errno.h>
@@ -78,24 +77,16 @@ struct sport* sport_init(struct sport *port, const char *name, int baud) {
 }
 
 ssize_t sport_read(struct sport *port) {
-	uint8_t *mess;
-	ssize_t nbytes = buffer_read(port->rxbuf, port->fd);
-	if(nbytes <= 0)
-		return nbytes;
-	printf(" in:");
-	for(mess = port->rxbuf->pin - nbytes; mess < port->rxbuf->pin; mess++)
-		printf(" %02x", *mess);
-	printf("\n");
+	ssize_t n_bytes = buffer_read(port->rxbuf, port->fd);
+	if(n_bytes <= 0)
+		return n_bytes;
+	buffer_debug_in(port->rxbuf, n_bytes);
 	if(port->handler->do_read(port->handler, port->rxbuf) < 0)
 		return -1;
-	return nbytes;
+	return n_bytes;
 }
 
 ssize_t sport_write(struct sport *port) {
-	uint8_t *mess;
-	printf("out:");
-	for(mess = port->txbuf->pout; mess < port->txbuf->pin; mess++)
-		printf(" %02x", *mess);
-	printf("\n");
+	buffer_debug_out(port->txbuf);
 	return buffer_write(port->txbuf, port->fd);
 }

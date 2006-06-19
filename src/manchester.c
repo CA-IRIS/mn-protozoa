@@ -323,7 +323,7 @@ static inline void encode_aux(struct combiner *c) {
 int manchester_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
-ccpacket_debug(&c->packet);
+//ccpacket_debug(&c->packet);
 	encode_pan(c);
 	encode_tilt(c);
 	encode_zoom(c);

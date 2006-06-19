@@ -139,7 +139,6 @@ static inline void decode_preset(struct ccpacket *p, uint8_t *mess) {
 static inline void decode_ex_speed(struct ccpacket *p, uint8_t *mess) {
 	p->pan = ((mess[6] & 0x0f) << 7) | (mess[7] & 0x7f);
 	p->tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x7f);
-ccpacket_debug(p);
 }
 
 static inline void decode_ex_status(struct ccpacket *p, uint8_t *mess) {
@@ -351,6 +350,7 @@ static void encode_status(struct combiner *c) {
 int vicon_do_write(struct combiner *c) {
 	if(!c->packet.receiver)
 		return 0;
+//ccpacket_debug(&c->packet);
 	if(c->packet.status)
 		encode_status(c);
 	else

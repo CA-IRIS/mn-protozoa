@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>	/* for read, write */
 #include <sys/errno.h>
@@ -12,6 +13,7 @@ struct buffer *buffer_init(struct buffer *buf, size_t size) {
 	buf->end = buf->base + size;
 	buf->pin = buf->base;
 	buf->pout = buf->base;
+	buf->debug = false;
 	return buf;
 }
 
@@ -104,4 +106,22 @@ inline uint8_t buffer_get(struct buffer *buf) {
 
 inline uint8_t buffer_peek(const struct buffer *buf) {
 	return *buf->pout;
+}
+
+static void buffer_debug(const char *prefix, uint8_t *start, uint8_t *stop) {
+	uint8_t *mess;
+	printf(prefix);
+	for(mess = start; mess < stop; mess++)
+		printf(" %02x", *mess);
+	printf("\n");
+}
+
+void buffer_debug_in(struct buffer *buf, int n_bytes) {
+	if(buf->debug)
+		buffer_debug(" in:", buf->pin - n_bytes, buf->pin);
+}
+
+void buffer_debug_out(struct buffer *buf) {
+	if(buf->debug)
+		buffer_debug("out:", buf->pout, buf->pin);
 }

@@ -12,13 +12,18 @@ extern int errno;
 
 int main(int argc, char* argv[])
 {
-	int n_ports;
+	int n_ports, i;
 	struct sport *port;
 	struct poller poll;
 
 	n_ports = config_read(CONF_FILE, &port);
 	if(n_ports <= 0)
 		goto fail;
+
+	for(i = 0; i < argc; i++) {
+		if(strcmp(argv[i], "--debug") == 0)
+			config_debug(n_ports, port);
+	}
 
 	if(poller_init(&poll, n_ports, port) == NULL)
 		goto fail;

@@ -1,6 +1,7 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -16,6 +17,7 @@ struct buffer {
 	uint8_t*	end;	/* end address of buffer */
 	uint8_t*	pin;	/* input pointer location */
 	uint8_t*	pout;	/* output pointer location */
+	bool		debug;
 };
 
 struct buffer *buffer_init(struct buffer *buf, size_t size);
@@ -31,5 +33,7 @@ ssize_t buffer_write(struct buffer *buf, int fd);
 void buffer_put(struct buffer *buf, uint8_t value);
 uint8_t buffer_peek(const struct buffer *buf);
 uint8_t buffer_get(struct buffer *buf);
+void buffer_debug_in(struct buffer *buf, int n_bytes);
+void buffer_debug_out(struct buffer *buf);
 
 #endif
