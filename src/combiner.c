@@ -28,8 +28,8 @@ void combiner_init(struct combiner *c) {
 }
 
 void print_stats(const char *stat, long long count, long long total) {
-	int percent = (int)(100 * count / total);
-	printf("%10s: %10lld  %3d%%\n", stat, count, percent);
+	float percent = 100 * (float)count / (float)total;
+	printf("%10s: %10lld  %6.2f%%\n", stat, count, percent);
 }
 
 void combiner_count(struct combiner *c) {
