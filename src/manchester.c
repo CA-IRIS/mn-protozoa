@@ -40,6 +40,8 @@ static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
+#define SPEED_FULL (0x07)
+
 enum pt_command_t {
 	TILT_DOWN,	/* 00 */
 	TILT_UP,	/* 01 */
@@ -125,12 +127,15 @@ static const enum aux_t AUX_LUT[] = {
 	AUX_6		/* 111 */
 };
 
+#define EX_AUX_FULL_UP 0
+#define EX_AUX_FULL_RIGHT 1
+
 static inline void decode_aux(struct ccpacket *p, int extra) {
-	if(extra == 0) {
+	if(extra == EX_AUX_FULL_UP) {
 		/* Weird special case for full up */
 		p->command |= CC_TILT_UP;
 		p->tilt = SPEED_MAX;
-	} else if(extra == 1) {
+	} else if(extra == EX_AUX_FULL_RIGHT) {
 		/** Weird special case for full right */
 		p->command |= CC_PAN_RIGHT;
 		p->pan = SPEED_MAX;
@@ -227,33 +232,55 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 static void encode_pan_tilt_command(struct combiner *c, enum pt_command_t cmnd,
 	int speed)
 {
-	int s = (speed >> 8) & 0x07;
 	uint8_t mess[3];
 	encode_receiver(mess, c->packet.receiver);
-	mess[1] |= (cmnd << 4) | (s << 1);
+	mess[1] |= (cmnd << 4) | (speed << 1);
 	mess[2] |= PT_COMMAND;
 	combiner_write(c, mess, 3);
-}
-
-static inline void encode_pan(struct combiner *c) {
-	if(c->packet.command & CC_PAN_LEFT)
-		encode_pan_tilt_command(c, PAN_LEFT, c->packet.pan);
-	else if(c->packet.command & CC_PAN_RIGHT)
-		encode_pan_tilt_command(c, PAN_RIGHT, c->packet.pan);
-}
-
-static inline void encode_tilt(struct combiner *c) {
-	if(c->packet.command & CC_TILT_DOWN)
-		encode_pan_tilt_command(c, TILT_DOWN, c->packet.tilt);
-	else if(c->packet.command & CC_TILT_UP)
-		encode_pan_tilt_command(c, TILT_UP, c->packet.tilt);
 }
 
 static void encode_lens_function(struct combiner *c, enum lens_t func) {
 	uint8_t mess[3];
 	encode_receiver(mess, c->packet.receiver);
-	mess[1] |= func << 1;
+	mess[1] |= (func << 1) | (EX_LENS << 4);
 	combiner_write(c, mess, 3);
+}
+
+static void encode_aux_function(struct combiner *c, int aux) {
+	uint8_t mess[3];
+	encode_receiver(mess, c->packet.receiver);
+	mess[1] |= (aux << 1) | (EX_AUX << 4);
+	combiner_write(c, mess, 3);
+}
+
+static void encode_pan(struct combiner *c) {
+	int speed = (c->packet.pan >> 8) & 0x07;
+	if(c->packet.command & CC_PAN_LEFT) {
+		if(speed == SPEED_FULL)
+			encode_lens_function(c, XL_PAN_LEFT);
+		else
+			encode_pan_tilt_command(c, PAN_LEFT, speed);
+	} else if(c->packet.command & CC_PAN_RIGHT) {
+		if(speed == SPEED_FULL)
+			encode_aux_function(c, EX_AUX_FULL_RIGHT);
+		else
+			encode_pan_tilt_command(c, PAN_RIGHT, speed);
+	}
+}
+
+static void encode_tilt(struct combiner *c) {
+	int speed = (c->packet.tilt >> 8) & 0x07;
+	if(c->packet.command & CC_TILT_DOWN) {
+		if(speed == SPEED_FULL)
+			encode_lens_function(c, XL_TILT_DOWN);
+		else
+			encode_pan_tilt_command(c, TILT_DOWN, speed);
+	} else if(c->packet.command & CC_TILT_UP) {
+		if(speed == SPEED_FULL)
+			encode_aux_function(c, EX_AUX_FULL_UP);
+		else
+			encode_pan_tilt_command(c, TILT_UP, speed);
+	}
 }
 
 static inline void encode_zoom(struct combiner *c) {
@@ -288,14 +315,10 @@ static const int LUT_AUX[] = {
 };
 
 static inline void encode_aux(struct combiner *c) {
-	uint8_t mess[3];
 	int i;
 	for(i = 0; i < 6; i++) {
-		if(c->packet.aux & AUX_MASK[i]) {
-			encode_receiver(mess, c->packet.receiver);
-			mess[1] |= (LUT_AUX[i] << 1) | (EX_AUX << 4);
-			combiner_write(c, mess, 3);
-		}
+		if(c->packet.aux & AUX_MASK[i])
+			encode_aux_function(c, LUT_AUX[i]);
 	}
 }
 
