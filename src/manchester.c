@@ -12,7 +12,7 @@ static inline bool pt_command(uint8_t *mess) {
 }
 
 static inline int decode_receiver(uint8_t *mess) {
-	return 1 + (((mess[0] & 0x03) << 6) | ((mess[1] & 0x01) << 5) |
+	return 1 + (((mess[0] & 0x0f) << 6) | ((mess[1] & 0x01) << 5) |
 		((mess[2] >> 2) & 0x1f));
 }
 
@@ -219,7 +219,7 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 
 static inline void encode_receiver(uint8_t *mess, int receiver) {
 	int r = receiver - 1;
-	mess[0] = FLAG | ((r >> 6) & 0x03);
+	mess[0] = FLAG | ((r >> 6) & 0x0f);
 	mess[1] = (r >> 5) & 0x01;
 	mess[2] = (r & 0x1f) << 2;
 }
