@@ -27,8 +27,12 @@ void combiner_init(struct combiner *c) {
 	c->n_preset = 0;
 }
 
+void print_stats(const char *stat, long long count, long long total) {
+	int percent = (int)(100 * count / total);
+	printf("%10s: %10lld  %3d%%\n", stat, count, percent);
+}
+
 void combiner_count(struct combiner *c) {
-	static const char* FORMAT = "%10s: %10lld\n";
 	c->n_packets++;
 	if(c->packet.status)
 		c->n_status++;
@@ -46,23 +50,23 @@ void combiner_count(struct combiner *c) {
 		c->n_preset++;
 	if((c->n_packets % 100) == 0) {
 		printf("protozoa statistis:\n");
-		printf(FORMAT, "packets", c->n_packets);
+		print_stats("packets", c->n_packets, c->n_packets);
 		if(c->n_dropped)
-			printf(FORMAT, "dropped", c->n_dropped);
+			print_stats("dropped", c->n_dropped, c->n_packets);
 		if(c->n_status)
-			printf(FORMAT, "status", c->n_status);
+			print_stats("status", c->n_status, c->n_packets);
 		if(c->n_pan)
-			printf(FORMAT, "pan", c->n_pan);
+			print_stats("pan", c->n_pan, c->n_packets);
 		if(c->n_tilt)
-			printf(FORMAT, "tilt", c->n_tilt);
+			print_stats("tilt", c->n_tilt, c->n_packets);
 		if(c->n_zoom)
-			printf(FORMAT, "zoom", c->n_zoom);
+			print_stats("zoom", c->n_zoom, c->n_packets);
 		if(c->n_lens)
-			printf(FORMAT, "lens", c->n_lens);
+			print_stats("lens", c->n_lens, c->n_packets);
 		if(c->n_aux)
-			printf(FORMAT, "aux", c->n_aux);
+			print_stats("aux", c->n_aux, c->n_packets);
 		if(c->n_preset)
-			printf(FORMAT, "preset", c->n_preset);
+			print_stats("preset", c->n_preset, c->n_packets);
 	}
 }
 
