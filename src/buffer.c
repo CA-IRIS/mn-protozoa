@@ -110,10 +110,10 @@ inline uint8_t buffer_peek(const struct buffer *buf) {
 
 static void buffer_debug(const char *prefix, uint8_t *start, uint8_t *stop) {
 	uint8_t *mess;
-	printf(prefix);
+	fprintf(stderr, prefix);
 	for(mess = start; mess < stop; mess++)
-		printf(" %02x", *mess);
-	printf("\n");
+		fprintf(stderr, " %02x", *mess);
+	fprintf(stderr, "\n");
 }
 
 void buffer_debug_in(struct buffer *buf, int n_bytes) {
