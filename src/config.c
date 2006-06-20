@@ -31,7 +31,7 @@ static int config_do_read(struct combiner *cmbnr, const char *protocol) {
 }
 
 static struct combiner *config_outbound(struct sport *port,
-	char *protocol)
+	char *protocol, bool verbose)
 {
 	struct combiner *cmbnr = malloc(sizeof(struct combiner));
 	if(cmbnr == NULL)
@@ -40,6 +40,7 @@ static struct combiner *config_outbound(struct sport *port,
 	if(config_do_write(cmbnr, protocol) < 0)
 		goto fail;
 	cmbnr->txbuf = port->txbuf;
+	cmbnr->verbose = verbose;
 	port->handler = &cmbnr->handler;
 	return cmbnr;
 fail:
@@ -84,7 +85,7 @@ static struct sport *find_port(struct sport *ports[], int n_ports, char *port) {
 	return NULL;
 }
 
-int config_read(const char *filename, struct sport *ports[]) {
+int config_read(const char *filename, struct sport *ports[], bool verbose) {
 	char in_out[4];
 	char protocol[16];
 	char port[16];
@@ -111,7 +112,7 @@ int config_read(const char *filename, struct sport *ports[]) {
 				goto fail;
 			}
 			if(strcasecmp(in_out, "OUT") == 0)
-				cmbnr = config_outbound(prt, protocol);
+				cmbnr = config_outbound(prt, protocol, verbose);
 			else if(strcasecmp(in_out, "IN") == 0)
 				config_inbound(prt, protocol, cmbnr);
 			else

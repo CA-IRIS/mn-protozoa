@@ -3,7 +3,7 @@
 
 #include "sport.h"
 
-int config_read(const char *filename, struct sport *ports[]);
+int config_read(const char *filename, struct sport *ports[], bool verbose);
 void config_debug(int n_ports, struct sport *ports);
 
 #endif

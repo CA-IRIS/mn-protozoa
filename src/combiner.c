@@ -95,7 +95,8 @@ int combiner_process_packet(struct combiner *c) {
 		return 0;
 	int r = c->do_write(c);
 	if(r > 0) {
-		ccpacket_debug(&c->packet);
+		if(c->verbose)
+			ccpacket_debug(&c->packet);
 		r = 0;
 	}
 	ccpacket_init(&c->packet);
