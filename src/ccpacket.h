@@ -13,8 +13,11 @@ enum status_t {
 enum command_t {
 	CC_PAN_LEFT = 1 << 0,
 	CC_PAN_RIGHT = 1 << 1,
+	CC_PAN = (CC_PAN_LEFT | CC_PAN_RIGHT),
 	CC_TILT_UP = 1 << 2,
 	CC_TILT_DOWN = 1 << 3,
+	CC_TILT = (CC_TILT_UP | CC_TILT_DOWN),
+	CC_PAN_TILT = (CC_PAN | CC_TILT),
 	CC_RECALL = 1 << 4,
 	CC_STORE = 1 << 5,
 	CC_AUTO_IRIS = 1 << 6,

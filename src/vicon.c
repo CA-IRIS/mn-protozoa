@@ -302,6 +302,19 @@ static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 	mess[5] |= p->preset & 0x0f;
 }
 
+static void encode_command(struct combiner *c) {
+	uint8_t mess[6];
+	bzero(mess, 6);
+	encode_receiver(mess, c->packet.receiver);
+	bit_set(mess, BIT_COMMAND);
+	encode_pan_tilt(mess, &c->packet);
+	encode_lens(mess, &c->packet);
+	encode_toggles(mess, &c->packet);
+	encode_aux(mess, &c->packet);
+	encode_preset(mess, &c->packet);
+	combiner_write(c, mess, 6);
+}
+
 static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 	mess[6] = (p->pan >> 7) & 0x0f;
 	mess[7] = p->pan & 0x7f;
@@ -353,7 +366,9 @@ int vicon_do_write(struct combiner *c) {
 	}
 	if(c->packet.status)
 		encode_status(c);
-	else
+	else if(c->packet.command & CC_PAN_TILT)
 		encode_extended_speed(c);
+	else
+		encode_command(c);
 	return 1;
 }
