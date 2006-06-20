@@ -49,8 +49,7 @@ void combiner_count(struct combiner *c) {
 	if(c->packet.command & (CC_RECALL | CC_STORE))
 		c->n_preset++;
 	if((c->n_packets % 100) == 0) {
-		printf("protozoa statistis:\n");
-		print_stats("packets", c->n_packets, c->n_packets);
+		printf("protozoa statistics: %lld packets\n", c->n_packets);
 		if(c->n_dropped)
 			print_stats("dropped", c->n_dropped, c->n_packets);
 		if(c->n_status)
