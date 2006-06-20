@@ -200,7 +200,7 @@ static inline int pelco_decode_extended(struct combiner *c,
 {
 	uint8_t *mess = rxbuf->pout;
 	c->packet.receiver = decode_receiver(mess);
-	int ex = mess[2] >> 1 & 0x1f;
+	int ex = mess[3] >> 1 & 0x1f;
 	int p0 = mess[5];
 	int p1 = mess[4];
 	decode_extended(&c->packet, ex, p0, p1);
@@ -320,40 +320,51 @@ static void encode_command(struct combiner *c) {
 	combiner_write(c, mess, 7);
 }
 
-/*
-static void encode_extended_speed(struct combiner *c) {
-	uint8_t mess[10];
-	bzero(mess, 10);
+static void encode_preset(struct combiner *c) {
+	uint8_t mess[7];
+	bzero(mess, 7);
 	encode_receiver(mess, c->packet.receiver);
-	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
-	encode_pan_tilt(mess, &c->packet);
-	encode_lens(mess, &c->packet);
-	encode_toggles(mess, &c->packet);
-	encode_aux(mess, &c->packet);
-	encode_preset(mess, &c->packet);
-	encode_speeds(mess, &c->packet);
-	combiner_write(c, mess, 10);
+	if(c->packet.command & CC_RECALL)
+		mess[3] |= EX_RECALL << 1;
+	else if(c->packet.command & CC_STORE)
+		mess[3] |= EX_STORE << 1;
+	else if(c->packet.command & CC_CLEAR)
+		mess[3] |= EX_CLEAR << 1;
+	mess[5] = c->packet.preset;
+	encode_checksum(mess);
+	combiner_write(c, mess, 7);
 }
 
-static void encode_extended_preset(struct combiner *c) {
-	uint8_t mess[10];
-	bzero(mess, 10);
+static void encode_aux(struct combiner *c) {
+	uint8_t mess[7];
+	bzero(mess, 7);
 	encode_receiver(mess, c->packet.receiver);
-	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
-	bit_set(mess, BIT_EX_REQUEST);
-	if(c->packet.command & CC_STORE)
-		bit_set(mess, BIT_EX_STORE);
-	encode_lens(mess, &c->packet);
-	encode_toggles(mess, &c->packet);
-	encode_aux(mess, &c->packet);
-	mess[7] |= c->packet.preset & 0x7f;
-	mess[8] |= c->packet.pan & 0x7f;
-	mess[9] |= c->packet.tilt & 0x7f;
-	combiner_write(c, mess, 10);
-}*/
-
+	if(c->packet.aux & AUX_CLEAR)
+		mess[3] |= EX_AUX_CLEAR << 1;
+	else
+		mess[3] |= EX_AUX_SET << 1;
+	/* FIXME: use a lookup table; loop through bits */
+	if(c->packet.aux & AUX_1)
+		mess[5] = 1;
+	else if(c->packet.aux & AUX_2)
+		mess[5] = 2;
+	else if(c->packet.aux & AUX_3)
+		mess[5] = 3;
+	else if(c->packet.aux & AUX_4)
+		mess[5] = 4;
+	else if(c->packet.aux & AUX_5)
+		mess[5] = 5;
+	else if(c->packet.aux & AUX_6)
+		mess[5] = 6;
+	else if(c->packet.aux & AUX_7)
+		mess[5] = 7;
+	else if(c->packet.aux & AUX_8)
+		mess[5] = 8;
+	encode_checksum(mess);
+	combiner_write(c, mess, 7);
+}
 
 static inline bool has_sense(struct ccpacket *p) {
 	if(p->command & (CC_AUTO_PAN | CC_MANUAL_PAN))
@@ -371,9 +382,11 @@ static inline bool has_command(struct ccpacket *p) {
 	return has_sense(p);
 }
 
-static inline bool has_extended(struct ccpacket *p) {
-	if(p->command & CC_PRESET)
-		return true;
+static inline bool has_preset(struct ccpacket *p) {
+	return p->command & CC_PRESET;
+}
+
+static inline bool has_aux(struct ccpacket *p) {
 	if(p->aux)
 		return true;
 	else
@@ -387,7 +400,9 @@ int pelco_d_do_write(struct combiner *c) {
 	}
 	if(has_command(&c->packet))
 		encode_command(c);
-//	if(has_extended(&c->packet))
-//		encode_extended(c);
+	if(has_preset(&c->packet))
+		encode_preset(c);
+	if(has_aux(&c->packet))
+		encode_aux(c);
 	return 1;
 }
