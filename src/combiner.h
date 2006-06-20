@@ -25,5 +25,6 @@ void combiner_init(struct combiner *cmbnr);
 void combiner_count(struct combiner *c);
 void combiner_drop(struct combiner *c);
 void combiner_write(struct combiner *c, uint8_t *mess, size_t count);
+int combiner_process_packet(struct combiner *c);
 
 #endif

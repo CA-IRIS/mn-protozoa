@@ -89,3 +89,13 @@ void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
 	for(i = 0; i < count; i++)
 		buffer_put(c->txbuf, mess[i]);
 }
+
+int combiner_process_packet(struct combiner *c) {
+	int r = c->do_write(c);
+	if(r > 0) {
+		ccpacket_debug(&c->packet);
+		r = 0;
+	}
+	ccpacket_init(&c->packet);
+	return r;
+}

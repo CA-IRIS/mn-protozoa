@@ -190,7 +190,7 @@ static inline void decode_packet(struct ccpacket *p, uint8_t *mess) {
 static inline void manchester_decode_packet(struct combiner *c, uint8_t *mess) {
 	int receiver = decode_receiver(mess);
 	if(c->packet.receiver != receiver)
-		c->do_write(c);
+		combiner_process_packet(c);
 	c->packet.receiver = receiver;
 	decode_packet(&c->packet, mess);
 }
@@ -217,7 +217,7 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 	if(buffer_available(rxbuf))
 		return 0;
 	else
-		return c->do_write(c);
+		return combiner_process_packet(c);
 }
 
 static inline void encode_receiver(uint8_t *mess, int receiver) {
@@ -321,15 +321,15 @@ static inline void encode_aux(struct combiner *c) {
 }
 
 int manchester_do_write(struct combiner *c) {
-	if(!c->packet.receiver)
+	if(c->packet.receiver < 1 || c->packet.receiver > 1024) {
+		combiner_drop(c);
 		return 0;
-//ccpacket_debug(&c->packet);
+	}
 	encode_pan(c);
 	encode_tilt(c);
 	encode_zoom(c);
 	encode_focus(c);
 	encode_iris(c);
 	encode_aux(c);
-	ccpacket_init(&c->packet);
-	return 0;
+	return 1;
 }
