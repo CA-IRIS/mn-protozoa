@@ -1,3 +1,4 @@
+*	Finish handling preset stuff + test.
 *	Clean up error logging.
 *	Perform some sort of check for wrong protocol.
 *	Add ability to read protocol streams from a TCP socket.
