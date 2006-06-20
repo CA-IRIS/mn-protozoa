@@ -63,6 +63,7 @@ static void config_inbound(struct sport *port, const char *protocol,
 		goto fail;
 	cmbnr->do_write = out->do_write;
 	cmbnr->txbuf = out->txbuf;
+	cmbnr->verbose = out->verbose;
 	port->handler = &cmbnr->handler;
 	return;
 fail:
