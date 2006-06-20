@@ -4,6 +4,7 @@
 #include "sport.h"
 #include "combiner.h"
 #include "manchester.h"
+#include "pelco_d.h"
 #include "vicon.h"
 
 static int config_do_write(struct combiner *cmbnr, const char *protocol) {
@@ -21,6 +22,8 @@ static int config_do_write(struct combiner *cmbnr, const char *protocol) {
 static int config_do_read(struct combiner *cmbnr, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0)
 		cmbnr->handler.do_read = manchester_do_read;
+	else if(strcasecmp(protocol, "pelco_d") == 0)
+		cmbnr->handler.do_read = pelco_d_do_read;
 	else if(strcasecmp(protocol, "vicon") == 0)
 		cmbnr->handler.do_read = vicon_do_read;
 	else {
