@@ -10,6 +10,8 @@
 static int config_do_write(struct combiner *cmbnr, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0)
 		cmbnr->do_write = manchester_do_write;
+	else if(strcasecmp(protocol, "pelco_d") == 0)
+		cmbnr->do_write = pelco_d_do_write;
 	else if(strcasecmp(protocol, "vicon") == 0)
 		cmbnr->do_write = vicon_do_write;
 	else {
@@ -115,9 +117,11 @@ int config_read(const char *filename, struct sport *ports[], bool verbose) {
 					port);
 				goto fail;
 			}
-			if(strcasecmp(in_out, "OUT") == 0)
+			if(strcasecmp(in_out, "OUT") == 0) {
 				cmbnr = config_outbound(prt, protocol, verbose);
-			else if(strcasecmp(in_out, "IN") == 0)
+				if(cmbnr == NULL)
+					goto fail;
+			} else if(strcasecmp(in_out, "IN") == 0)
 				config_inbound(prt, protocol, cmbnr);
 			else
 				goto fail;

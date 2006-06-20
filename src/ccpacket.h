@@ -21,6 +21,7 @@ enum command_t {
 	CC_RECALL = 1 << 4,
 	CC_STORE = 1 << 5,
 	CC_CLEAR = 1 << 6,
+	CC_PRESET = (CC_RECALL | CC_STORE | CC_CLEAR),
 	CC_AUTO_IRIS = 1 << 7,
 	CC_AUTO_PAN = 1 << 8,
 	CC_MANUAL_PAN = 1 << 9,

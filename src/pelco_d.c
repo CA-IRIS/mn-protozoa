@@ -6,6 +6,7 @@
 #include "combiner.h"
 
 #define FLAG (0xff)
+#define TURBO_SPEED (0xff)
 
 enum pelco_bit_t {
 	BIT_FOCUS_NEAR = 16,
@@ -38,6 +39,14 @@ static inline void bit_set(uint8_t *mess, enum pelco_bit_t bit) {
 
 static inline int decode_receiver(uint8_t *mess) {
 	return mess[1];
+}
+
+static uint8_t calculate_checksum(uint8_t *mess) {
+	int i;
+	int checksum = 0;
+	for(i = 1; i < 6; i++)
+		checksum += mess[i];
+	return checksum;
 }
 
 static inline bool is_extended(struct buffer *rxbuf) {
@@ -201,11 +210,7 @@ static inline int pelco_decode_extended(struct combiner *c,
 
 static inline bool checksum_invalid(struct buffer *rxbuf) {
 	uint8_t *mess = rxbuf->pout;
-	int i;
-	int checksum = 0;
-	for(i = 1; i < 6; i++)
-		checksum += mess[i];
-	return mess[6] != (i & 0xff);
+	return calculate_checksum(mess) != mess[6];
 }
 
 static inline int pelco_decode_message(struct combiner *c,
@@ -238,21 +243,35 @@ int pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
 	return 0;
 }
 
-/*
 static inline void encode_receiver(uint8_t *mess, int receiver) {
-	mess[0] = FLAG | ((receiver >> 4) & 0x0f);
-	mess[1] = receiver & 0x0f;
+	mess[0] = FLAG;
+	mess[1] = receiver;
 }
 
-static void encode_pan_tilt(uint8_t *mess, struct ccpacket *p) {
+static void encode_pan(uint8_t *mess, struct ccpacket *p) {
+	int pan = p->pan >> 5;
+	if(p->pan == SPEED_MAX)
+		pan = TURBO_SPEED;
 	if(p->command & CC_PAN_LEFT)
 		bit_set(mess, BIT_PAN_LEFT);
 	else if(p->command & CC_PAN_RIGHT)
 		bit_set(mess, BIT_PAN_RIGHT);
+	else
+		return;
+	mess[4] = pan;
+}
+
+static void encode_tilt(uint8_t *mess, struct ccpacket *p) {
+	int tilt = p->tilt >> 5;
+	if(p->tilt == SPEED_MAX)
+		tilt = TURBO_SPEED;
 	if(p->command & CC_TILT_UP)
 		bit_set(mess, BIT_TILT_UP);
 	else if(p->command & CC_TILT_DOWN)
 		bit_set(mess, BIT_TILT_DOWN);
+	else
+		return;
+	mess[5] = tilt;
 }
 
 static void encode_lens(uint8_t *mess, struct ccpacket *p) {
@@ -270,60 +289,38 @@ static void encode_lens(uint8_t *mess, struct ccpacket *p) {
 		bit_set(mess, BIT_ZOOM_OUT);
 }
 
-static void encode_toggles(uint8_t *mess, struct ccpacket *p) {
-	if(p->command == CC_ACK_ALARM)
-		bit_set(mess, BIT_ACK_ALARM);
-	if(p->command == CC_AUTO_IRIS)
-		bit_set(mess, BIT_AUTO_IRIS);
-	if(p->command == CC_AUTO_PAN)
-		bit_set(mess, BIT_AUTO_PAN);
-	if(p->command == CC_LENS_SPEED)
-		bit_set(mess, BIT_LENS_SPEED);
+static inline void encode_sense(uint8_t *mess, struct ccpacket *p) {
+	if(p->command & (CC_CAMERA_ON | CC_AUTO_PAN)) {
+		bit_set(mess, BIT_SENSE);
+		if(p->command & CC_CAMERA_ON)
+			bit_set(mess, BIT_CAMERA_ON_OFF);
+		if(p->command & CC_AUTO_PAN)
+			bit_set(mess, BIT_AUTO_PAN);
+	} else if(p->command & (CC_CAMERA_OFF | CC_MANUAL_PAN)) {
+		if(p->command & CC_CAMERA_OFF)
+			bit_set(mess, BIT_CAMERA_ON_OFF);
+		if(p->command & CC_MANUAL_PAN)
+			bit_set(mess, BIT_AUTO_PAN);
+	}
 }
 
-static void encode_aux(uint8_t *mess, struct ccpacket *p) {
-	if(p->aux & AUX_1)
-		bit_set(mess, BIT_AUX_1);
-	if(p->aux & AUX_2)
-		bit_set(mess, BIT_AUX_2);
-	if(p->aux & AUX_3)
-		bit_set(mess, BIT_AUX_3);
-	if(p->aux & AUX_4)
-		bit_set(mess, BIT_AUX_4);
-	if(p->aux & AUX_5)
-		bit_set(mess, BIT_AUX_5);
-	if(p->aux & AUX_6)
-		bit_set(mess, BIT_AUX_6);
-}
-
-static void encode_preset(uint8_t *mess, struct ccpacket *p) {
-	if(p->command & CC_RECALL)
-		bit_set(mess, BIT_RECALL);
-	else if(p->command & CC_STORE)
-		bit_set(mess, BIT_STORE);
-	mess[5] |= p->preset & 0x0f;
+static inline void encode_checksum(uint8_t *mess) {
+	mess[6] = calculate_checksum(mess);
 }
 
 static void encode_command(struct combiner *c) {
-	uint8_t mess[6];
-	bzero(mess, 6);
+	uint8_t mess[7];
+	bzero(mess, 7);
 	encode_receiver(mess, c->packet.receiver);
-	bit_set(mess, BIT_COMMAND);
-	encode_pan_tilt(mess, &c->packet);
+	encode_pan(mess, &c->packet);
+	encode_tilt(mess, &c->packet);
 	encode_lens(mess, &c->packet);
-	encode_toggles(mess, &c->packet);
-	encode_aux(mess, &c->packet);
-	encode_preset(mess, &c->packet);
-	combiner_write(c, mess, 6);
+	encode_sense(mess, &c->packet);
+	encode_checksum(mess);
+	combiner_write(c, mess, 7);
 }
 
-static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
-	mess[6] = (p->pan >> 7) & 0x0f;
-	mess[7] = p->pan & 0x7f;
-	mess[8] = (p->tilt >> 7) & 0x0f;
-	mess[9] = p->tilt & 0x7f;
-}
-
+/*
 static void encode_extended_speed(struct combiner *c) {
 	uint8_t mess[10];
 	bzero(mess, 10);
@@ -355,44 +352,42 @@ static void encode_extended_preset(struct combiner *c) {
 	mess[8] |= c->packet.pan & 0x7f;
 	mess[9] |= c->packet.tilt & 0x7f;
 	combiner_write(c, mess, 10);
+}*/
+
+
+static inline bool has_sense(struct ccpacket *p) {
+	if(p->command & (CC_AUTO_PAN | CC_MANUAL_PAN))
+		return true;
+	if(p->command & (CC_CAMERA_ON | CC_CAMERA_OFF))
+		return true;
+	return false;
 }
 
-static void encode_status(struct combiner *c) {
-	uint8_t mess[10];
-	bzero(mess, 10);
-	encode_receiver(mess, c->packet.receiver);
-	if(c->packet.status & STATUS_EXTENDED) {
-		bit_set(mess, BIT_COMMAND);
-		bit_set(mess, BIT_EXTENDED);
-		bit_set(mess, BIT_EX_STATUS);
-		bit_set(mess, BIT_EX_REQUEST);
-		if(c->packet.status & STATUS_SECTOR)
-			bit_set(mess, BIT_STAT_SECTOR);
-		if(c->packet.status & STATUS_PRESET)
-			bit_set(mess, BIT_STAT_PRESET);
-		if(c->packet.status & STATUS_AUX_SET_2) {
-			bit_set(mess, BIT_STAT_V15UVS);
-			bit_set(mess, BIT_STAT_AUX_SET_2);
-		}
-		combiner_write(c, mess, 10);
-	} else
-		combiner_write(c, mess, 2);
+static inline bool has_command(struct ccpacket *p) {
+	if(p->command & CC_PAN_TILT)
+		return true;
+	if(p->zoom || p->focus || p->iris)
+		return true;
+	return has_sense(p);
 }
 
-int vicon_do_write(struct combiner *c) {
-	if(c->packet.receiver < 1 || c->packet.receiver > 255) {
+static inline bool has_extended(struct ccpacket *p) {
+	if(p->command & CC_PRESET)
+		return true;
+	if(p->aux)
+		return true;
+	else
+		return false;
+}
+
+int pelco_d_do_write(struct combiner *c) {
+	if(c->packet.receiver < 1 || c->packet.receiver > 254) {
 		combiner_drop(c);
 		return 0;
 	}
-	if(c->packet.status)
-		encode_status(c);
-	else if(c->packet.preset > 15)
-		encode_extended_preset(c);
-	else if(c->packet.preset && (c->packet.pan || c->packet.tilt))
-		encode_extended_preset(c);
-	else if(c->packet.command & CC_PAN_TILT)
-		encode_extended_speed(c);
-	else
+	if(has_command(&c->packet))
 		encode_command(c);
+//	if(has_extended(&c->packet))
+//		encode_extended(c);
 	return 1;
-} */
+}
