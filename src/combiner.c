@@ -91,6 +91,8 @@ void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
 }
 
 int combiner_process_packet(struct combiner *c) {
+	if(c->packet.receiver == 0)
+		return 0;
 	int r = c->do_write(c);
 	if(r > 0) {
 		ccpacket_debug(&c->packet);

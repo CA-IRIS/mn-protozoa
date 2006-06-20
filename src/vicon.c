@@ -216,7 +216,6 @@ static inline int vicon_decode_message(struct combiner *c,
 		printf("Vicon: unexpected byte %02X\n", buffer_get(rxbuf));
 		return 0;
 	}
-	ccpacket_init(&c->packet);
 	if(is_extended_command(rxbuf))
 		return vicon_decode_extended(c, rxbuf);
 	else if(is_command(rxbuf))

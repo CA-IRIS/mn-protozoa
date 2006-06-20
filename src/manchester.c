@@ -204,7 +204,7 @@ static inline int manchester_read_message(struct combiner *c,
 	}
 	manchester_decode_packet(c, rxbuf->pout);
 	buffer_skip(rxbuf, 3);
-	return 0;
+	return 1;
 }
 
 int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
@@ -214,6 +214,7 @@ int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 		if(manchester_read_message(c, rxbuf) < 0)
 			return -1;
 	}
+	/* If there's a partial packet in the buffer, don't process yet */
 	if(buffer_available(rxbuf))
 		return 0;
 	else
