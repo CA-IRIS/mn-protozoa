@@ -287,6 +287,8 @@ static void encode_toggles(uint8_t *mess, struct ccpacket *p) {
 }
 
 static void encode_aux(uint8_t *mess, struct ccpacket *p) {
+	if(p->aux & AUX_CLEAR)
+		return;
 	if(p->aux & AUX_1)
 		bit_set(mess, BIT_AUX_1);
 	if(p->aux & AUX_2)
@@ -384,6 +386,13 @@ static void encode_status(struct combiner *c) {
 		combiner_write(c, mess, 2);
 }
 
+static inline bool is_extended_preset(struct ccpacket *p) {
+	if(p->command & (CC_RECALL | CC_STORE))
+		return (p->preset > 15) || p->pan || p->tilt;
+	else
+		return false;
+}
+
 int vicon_do_write(struct combiner *c) {
 	if(c->packet.receiver < 1 || c->packet.receiver > 255) {
 		combiner_drop(c);
@@ -391,9 +400,7 @@ int vicon_do_write(struct combiner *c) {
 	}
 	if(c->packet.status)
 		encode_status(c);
-	else if(c->packet.preset > 15)
-		encode_extended_preset(c);
-	else if(c->packet.preset && (c->packet.pan || c->packet.tilt))
+	else if(is_extended_preset(&c->packet))
 		encode_extended_preset(c);
 	else if(c->packet.command & CC_PAN_TILT)
 		encode_extended_speed(c);

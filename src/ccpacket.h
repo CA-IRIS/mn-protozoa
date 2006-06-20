@@ -20,10 +20,14 @@ enum command_t {
 	CC_PAN_TILT = (CC_PAN | CC_TILT),
 	CC_RECALL = 1 << 4,
 	CC_STORE = 1 << 5,
-	CC_AUTO_IRIS = 1 << 6,
-	CC_AUTO_PAN = 1 << 7,
-	CC_LENS_SPEED = 1 << 8,
-	CC_ACK_ALARM = 1 << 9,
+	CC_CLEAR = 1 << 6,
+	CC_AUTO_IRIS = 1 << 7,
+	CC_AUTO_PAN = 1 << 8,
+	CC_MANUAL_PAN = 1 << 9,
+	CC_LENS_SPEED = 1 << 10,
+	CC_ACK_ALARM = 1 << 11,
+	CC_CAMERA_ON = 1 << 12,
+	CC_CAMERA_OFF = 1 << 13,
 };
 
 #define SPEED_MAX ((1 << 11) - 1)
@@ -54,6 +58,9 @@ enum aux_t {
 	AUX_4 = 1 << 3,
 	AUX_5 = 1 << 4,
 	AUX_6 = 1 << 5,
+	AUX_7 = 1 << 6,
+	AUX_8 = 1 << 7,
+	AUX_CLEAR = 1 << 8,
 };
 
 /*

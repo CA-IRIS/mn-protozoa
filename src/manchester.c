@@ -315,6 +315,8 @@ static const int LUT_AUX[] = {
 
 static inline void encode_aux(struct combiner *c) {
 	int i;
+	if(c->packet.aux & AUX_CLEAR)
+		return;
 	for(i = 0; i < 6; i++) {
 		if(c->packet.aux & AUX_MASK[i])
 			encode_aux_function(c, LUT_AUX[i]);
