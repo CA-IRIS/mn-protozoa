@@ -156,8 +156,8 @@ static inline void decode_store(struct ccpacket *p, int extra) {
 enum ex_function_t {
 	EX_LENS,	/* 00 */
 	EX_AUX,		/* 01 */
-	EX_RCL_PRESET,	/* 10 */
-	EX_STO_PRESET,	/* 11 */
+	EX_RECALL,	/* 10 */
+	EX_STORE,	/* 11 */
 };
 
 static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
@@ -170,10 +170,10 @@ static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
 		case EX_AUX:
 			decode_aux(p, extra);
 			break;
-		case EX_RCL_PRESET:
+		case EX_RECALL:
 			decode_recall(p, extra);
 			break;
-		case EX_STO_PRESET:
+		case EX_STORE:
 			decode_store(p, extra);
 			break;
 	}
@@ -321,6 +321,30 @@ static inline void encode_aux(struct combiner *c) {
 	}
 }
 
+static void encode_recall_function(struct combiner *c, int preset) {
+	uint8_t mess[3];
+	encode_receiver(mess, c->packet.receiver);
+	mess[1] |= (preset << 1) | (EX_RECALL << 4);
+	combiner_write(c, mess, 3);
+}
+
+static void encode_store_function(struct combiner *c, int preset) {
+	uint8_t mess[3];
+	encode_receiver(mess, c->packet.receiver);
+	mess[1] |= (preset << 1) | (EX_STORE << 4);
+	combiner_write(c, mess, 3);
+}
+
+static void encode_preset(struct combiner *c) {
+	int preset = c->packet.preset;
+	if(preset < 1 || preset > 8)
+		return;
+	if(c->packet.command & CC_RECALL)
+		encode_recall_function(c, preset - 1);
+	else if(c->packet.command & CC_STORE)
+		encode_store_function(c, preset - 1);
+}
+
 int manchester_do_write(struct combiner *c) {
 	if(c->packet.receiver < 1 || c->packet.receiver > 1024) {
 		combiner_drop(c);
@@ -332,5 +356,6 @@ int manchester_do_write(struct combiner *c) {
 	encode_focus(c);
 	encode_iris(c);
 	encode_aux(c);
+	encode_preset(c);
 	return 1;
 }

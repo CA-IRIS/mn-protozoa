@@ -27,11 +27,9 @@
 <p>
 	There are some parts which are not certain. The p/t speed ranges from
 	0-6, not 0-7 as expected. Also, strange bit patterns occur when holding
-	the joystick all the way left (80 0E 00), up (80 10 00) and down
-	(80 00 00). Holding all the way to the right produces 80 3C 02, which
-	is expected. These examples are all with camera receiver 1. This means
-	either the (third-party) encoder is buggy, or this is a very weird
-	protocol. More testing is needed.
+	the joystick all the way left (80 0E 00), right (80 12 00), up
+	(80 10 00) and down (80 00 00). These examples are all with camera
+	receiver 1. These are apparently full speed or "turbo" functions.
 </p>
 
 <div class="left">
@@ -332,12 +330,12 @@
 	<td>1</td>
 </tr>
 <tr>
-	<td>recall <a href="#preset">preset</a>?</td>
+	<td>recall <a href="#preset">preset</a></td>
 	<td>1</td>
 	<td>0</td>
 </tr>
 <tr>
-	<td>store <a href="#preset">preset</a>?</td>
+	<td>store <a href="#preset">preset</a></td>
 	<td>1</td>
 	<td>1</td>
 </tr>
@@ -384,7 +382,7 @@
 </table>
 
 <p class="stamp">
-	2006 June 16
+	2006 June 20
 </p>
 </body>
 </html>

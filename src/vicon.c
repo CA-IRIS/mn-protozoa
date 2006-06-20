@@ -33,6 +33,7 @@ enum vicon_bit_t {
 	BIT_RECALL = 45,
 	BIT_STORE = 46,
 	BIT_STAT_V15UVS = 48,
+	BIT_EX_STORE = 48,
 	BIT_EX_STATUS = 49,
 	BIT_EX_REQUEST = 52,
 	BIT_STAT_SECTOR = 56,
@@ -153,7 +154,13 @@ static inline void decode_ex_status(struct ccpacket *p, uint8_t *mess) {
 }
 
 static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
-	printf("vicon: FIXME extended preset\n");
+	if(bit_is_set(mess, BIT_EX_STORE))
+		p->command = CC_STORE;
+	else
+		p->command = CC_RECALL;
+	p->preset = mess[7] & 0x7f;
+	p->pan = mess[8] & 0x7f;
+	p->tilt = mess[9] & 0x7f;
 }
 
 static inline int vicon_decode_extended(struct combiner *c,
@@ -337,6 +344,24 @@ static void encode_extended_speed(struct combiner *c) {
 	combiner_write(c, mess, 10);
 }
 
+static void encode_extended_preset(struct combiner *c) {
+	uint8_t mess[10];
+	bzero(mess, 10);
+	encode_receiver(mess, c->packet.receiver);
+	bit_set(mess, BIT_COMMAND);
+	bit_set(mess, BIT_EXTENDED);
+	bit_set(mess, BIT_EX_REQUEST);
+	if(c->packet.command & CC_STORE)
+		bit_set(mess, BIT_EX_STORE);
+	encode_lens(mess, &c->packet);
+	encode_toggles(mess, &c->packet);
+	encode_aux(mess, &c->packet);
+	mess[7] |= c->packet.preset & 0x7f;
+	mess[8] |= c->packet.pan & 0x7f;
+	mess[9] |= c->packet.tilt & 0x7f;
+	combiner_write(c, mess, 10);
+}
+
 static void encode_status(struct combiner *c) {
 	uint8_t mess[10];
 	bzero(mess, 10);
@@ -366,6 +391,10 @@ int vicon_do_write(struct combiner *c) {
 	}
 	if(c->packet.status)
 		encode_status(c);
+	else if(c->packet.preset > 15)
+		encode_extended_preset(c);
+	else if(c->packet.preset && (c->packet.pan || c->packet.tilt))
+		encode_extended_preset(c);
 	else if(c->packet.command & CC_PAN_TILT)
 		encode_extended_speed(c);
 	else
