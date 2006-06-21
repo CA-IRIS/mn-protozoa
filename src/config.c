@@ -22,8 +22,8 @@ static struct sport *config_find_port(struct config *c, const char *port) {
 	return NULL;
 }
 
-static int config_inbound2(struct sport *port, const char *protocol) {
-	struct combiner *cmbnr = (struct combiner *)port->handler;
+static int config_set_inbound(struct sport *prt, const char *protocol) {
+	struct combiner *cmbnr = (struct combiner *)prt->handler;
 	if(cmbnr == NULL)
 		return -1;
 	return combiner_set_input_protocol(cmbnr, protocol);
@@ -69,7 +69,7 @@ static int config_directive(struct config *c, const char *in_out,
 	prt = config_find_port(c, port);
 	if(prt) {
 		if(strcasecmp(in_out, "IN") == 0) {
-			if(config_inbound2(prt, protocol) < 0)
+			if(config_set_inbound(prt, protocol) < 0)
 				goto fail;
 		} else {
 			fprintf(stderr, "Invalid directive: %s\n", in_out);
