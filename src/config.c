@@ -99,8 +99,10 @@ int config_read(struct config *c) {
 		if(config_directive(c, in_out, protocol, port, baud) < 0)
 			goto fail;
 	}
-	if(c->n_ports == 0)
-		printf("Error reading configuration file: %s\n", c->filename);
+	if(c->n_ports == 0) {
+		fprintf(stderr, "Error reading configuration file: %s\n",
+			c->filename);
+	}
 	fclose(f);
 	return c->n_ports;
 fail:
