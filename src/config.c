@@ -21,14 +21,14 @@ fail:
 	return NULL;
 }
 
-static int config_inbound(struct sport *port, const char *protocol,
+static struct combiner *config_inbound(struct sport *port, const char *protocol,
 	struct combiner *out)
 {
 	struct combiner *cmbnr = malloc(sizeof(struct combiner));
 	if(cmbnr == NULL)
-		return -1;
+		return NULL;
 	if(out == NULL) {
-		printf("Missing OUT directive");
+		fprintf(stderr, "Missing OUT directive\n");
 		goto fail;
 	}
 	combiner_init(cmbnr);
@@ -38,10 +38,10 @@ static int config_inbound(struct sport *port, const char *protocol,
 	cmbnr->txbuf = out->txbuf;
 	cmbnr->verbose = out->verbose;
 	port->handler = &cmbnr->handler;
-	return 0;
+	return cmbnr;
 fail:
 	free(cmbnr);
-	return -1;
+	return NULL;
 }
 
 static int config_inbound2(struct sport *port, const char *protocol) {
@@ -91,7 +91,7 @@ int config_read(const char *filename, struct sport *ports[], bool verbose) {
 				if(cmbnr == NULL)
 					goto fail;
 			} else if(strcasecmp(in_out, "IN") == 0) {
-				if(config_inbound(prt, protocol, cmbnr) < 0)
+				if(config_inbound(prt, protocol, cmbnr) == NULL)
 					goto fail;
 			} else
 				goto fail;
