@@ -199,7 +199,8 @@ static inline int manchester_read_message(struct combiner *c,
 	struct buffer *rxbuf)
 {
 	if((buffer_peek(rxbuf) & FLAG) == 0) {
-		printf("Manchester: unexpected byte %02X\n", buffer_get(rxbuf));
+		fprintf(stderr, "Manchester: unexpected byte %02X\n",
+			buffer_get(rxbuf));
 		return 0;
 	}
 	manchester_decode_packet(c, rxbuf->pout);

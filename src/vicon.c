@@ -220,7 +220,8 @@ static inline int vicon_decode_message(struct combiner *c,
 	struct buffer *rxbuf)
 {
 	if((buffer_peek(rxbuf) & FLAG) == 0) {
-		printf("Vicon: unexpected byte %02X\n", buffer_get(rxbuf));
+		fprintf(stderr, "Vicon: unexpected byte %02X\n",
+			buffer_get(rxbuf));
 		return 0;
 	}
 	if(is_extended_command(rxbuf))

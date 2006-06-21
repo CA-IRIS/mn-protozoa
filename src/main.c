@@ -35,6 +35,6 @@ int main(int argc, char* argv[])
 	poller_loop(&poll);
 fail:
 	if(errno)
-		printf("Error: %s\n", strerror(errno));
+		fprintf(stderr, "Error: %s\n", strerror(errno));
 	return errno;
 }

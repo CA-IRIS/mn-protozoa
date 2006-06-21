@@ -217,11 +217,12 @@ static inline int pelco_decode_message(struct combiner *c,
 	struct buffer *rxbuf)
 {
 	if(buffer_peek(rxbuf) != FLAG) {
-		printf("Pelco(D): unexpected byte %02X\n", buffer_get(rxbuf));
+		fprintf(stderr, "Pelco(D): unexpected byte %02X\n",
+			buffer_get(rxbuf));
 		return 0;
 	}
 	if(checksum_invalid(rxbuf)) {
-		printf("Pelco(D): invalid checksum\n");
+		fprintf(stderr, "Pelco(D): invalid checksum\n");
 		return 0;
 	}
 	if(is_extended(rxbuf))
