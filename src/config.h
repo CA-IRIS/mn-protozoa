@@ -16,6 +16,5 @@ struct config {
 void config_init(struct config *c, const char *filename, bool verbose,
 	bool debug);
 int config_read(struct config *c);
-void config_debug(int n_ports, struct sport *ports);
 
 #endif

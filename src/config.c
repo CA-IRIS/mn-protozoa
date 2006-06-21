@@ -109,11 +109,3 @@ fail:
 	fclose(f);
 	return -1;
 }
-
-void config_debug(int n_ports, struct sport *ports) {
-	int i;
-	for(i = 0; i < n_ports; i++) {
-		ports[i].rxbuf->debug = true;
-		ports[i].txbuf->debug = true;
-	}
-}
