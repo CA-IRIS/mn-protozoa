@@ -22,7 +22,9 @@ struct combiner {
 	long long		n_preset;	/* count of preset packets */
 };
 
-void combiner_init(struct combiner *cmbnr);
+void combiner_init(struct combiner *c);
+int combiner_set_output_protocol(struct combiner *c, const char *protocol);
+int combiner_set_input_protocol(struct combiner *c, const char *protocol);
 void combiner_count(struct combiner *c);
 void combiner_drop(struct combiner *c);
 void combiner_write(struct combiner *c, uint8_t *mess, size_t count);

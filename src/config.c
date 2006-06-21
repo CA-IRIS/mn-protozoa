@@ -1,39 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include "sport.h"
 #include "combiner.h"
-#include "manchester.h"
-#include "pelco_d.h"
-#include "vicon.h"
-
-static int config_do_write(struct combiner *cmbnr, const char *protocol) {
-	if(strcasecmp(protocol, "manchester") == 0)
-		cmbnr->do_write = manchester_do_write;
-	else if(strcasecmp(protocol, "pelco_d") == 0)
-		cmbnr->do_write = pelco_d_do_write;
-	else if(strcasecmp(protocol, "vicon") == 0)
-		cmbnr->do_write = vicon_do_write;
-	else {
-		printf("Unknown protocol: %s\n", protocol);
-		return -1;
-	}
-	return 0;
-}
-
-static int config_do_read(struct combiner *cmbnr, const char *protocol) {
-	if(strcasecmp(protocol, "manchester") == 0)
-		cmbnr->handler.do_read = manchester_do_read;
-	else if(strcasecmp(protocol, "pelco_d") == 0)
-		cmbnr->handler.do_read = pelco_d_do_read;
-	else if(strcasecmp(protocol, "vicon") == 0)
-		cmbnr->handler.do_read = vicon_do_read;
-	else {
-		printf("Unknown protocol: %s\n", protocol);
-		return -1;
-	}
-	return 0;
-}
 
 static struct combiner *config_outbound(struct sport *port,
 	char *protocol, bool verbose)
@@ -42,7 +10,7 @@ static struct combiner *config_outbound(struct sport *port,
 	if(cmbnr == NULL)
 		return NULL;
 	combiner_init(cmbnr);
-	if(config_do_write(cmbnr, protocol) < 0)
+	if(combiner_set_output_protocol(cmbnr, protocol) < 0)
 		goto fail;
 	cmbnr->txbuf = port->txbuf;
 	cmbnr->verbose = verbose;
@@ -53,33 +21,34 @@ fail:
 	return NULL;
 }
 
-static void config_inbound(struct sport *port, const char *protocol,
+static int config_inbound(struct sport *port, const char *protocol,
 	struct combiner *out)
 {
 	struct combiner *cmbnr = malloc(sizeof(struct combiner));
 	if(cmbnr == NULL)
-		return;
+		return -1;
 	if(out == NULL) {
 		printf("Missing OUT directive");
 		goto fail;
 	}
 	combiner_init(cmbnr);
-	if(config_do_read(cmbnr, protocol) < 0)
+	if(combiner_set_input_protocol(cmbnr, protocol) < 0)
 		goto fail;
 	cmbnr->do_write = out->do_write;
 	cmbnr->txbuf = out->txbuf;
 	cmbnr->verbose = out->verbose;
 	port->handler = &cmbnr->handler;
-	return;
+	return 0;
 fail:
 	free(cmbnr);
+	return -1;
 }
 
-static void config_inbound2(struct sport *port, const char *protocol) {
+static int config_inbound2(struct sport *port, const char *protocol) {
 	struct combiner *cmbnr = (struct combiner *)port->handler;
 	if(cmbnr == NULL)
-		return;
-	config_do_read(cmbnr, protocol);
+		return -1;
+	return combiner_set_input_protocol(cmbnr, protocol);
 }
 
 static struct sport *find_port(struct sport *ports[], int n_ports, char *port) {
@@ -121,14 +90,16 @@ int config_read(const char *filename, struct sport *ports[], bool verbose) {
 				cmbnr = config_outbound(prt, protocol, verbose);
 				if(cmbnr == NULL)
 					goto fail;
-			} else if(strcasecmp(in_out, "IN") == 0)
-				config_inbound(prt, protocol, cmbnr);
-			else
+			} else if(strcasecmp(in_out, "IN") == 0) {
+				if(config_inbound(prt, protocol, cmbnr) < 0)
+					goto fail;
+			} else
 				goto fail;
 		} else {
-			if(strcasecmp(in_out, "IN") == 0)
-				config_inbound2(prt, protocol);
-			else
+			if(strcasecmp(in_out, "IN") == 0) {
+				if(config_inbound2(prt, protocol) < 0)
+					goto fail;
+			} else
 				goto fail;
 		}
 	}

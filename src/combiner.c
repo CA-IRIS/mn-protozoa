@@ -1,5 +1,9 @@
 #include <stdio.h>
+#include <strings.h>
 #include "combiner.h"
+#include "manchester.h"
+#include "pelco_d.h"
+#include "vicon.h"
 
 static int combiner_do_read(struct handler *h, struct buffer *rxbuf) {
 	/* Do nothing */
@@ -27,7 +31,35 @@ void combiner_init(struct combiner *c) {
 	c->n_preset = 0;
 }
 
-void print_stats(const char *stat, long long count, long long total) {
+int combiner_set_output_protocol(struct combiner *c, const char *protocol) {
+	if(strcasecmp(protocol, "manchester") == 0)
+		c->do_write = manchester_do_write;
+	else if(strcasecmp(protocol, "pelco_d") == 0)
+		c->do_write = pelco_d_do_write;
+	else if(strcasecmp(protocol, "vicon") == 0)
+		c->do_write = vicon_do_write;
+	else {
+		fprintf(stderr, "Unknown protocol: %s\n", protocol);
+		return -1;
+	}
+	return 0;
+}
+
+int combiner_set_input_protocol(struct combiner *c, const char *protocol) {
+	if(strcasecmp(protocol, "manchester") == 0)
+		c->handler.do_read = manchester_do_read;
+	else if(strcasecmp(protocol, "pelco_d") == 0)
+		c->handler.do_read = pelco_d_do_read;
+	else if(strcasecmp(protocol, "vicon") == 0)
+		c->handler.do_read = vicon_do_read;
+	else {
+		fprintf(stderr, "Unknown protocol: %s\n", protocol);
+		return -1;
+	}
+	return 0;
+}
+
+static void print_stats(const char *stat, long long count, long long total) {
 	float percent = 100 * (float)count / (float)total;
 	printf("%10s: %10lld  %6.2f%%\n", stat, count, percent);
 }
@@ -77,7 +109,7 @@ void combiner_drop(struct combiner *c) {
 void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
 	int i;
 	if(buffer_remaining(c->txbuf) < count) {
-		printf("protozoa: output buffer full\n");
+		fprintf(stderr, "protozoa: output buffer full\n");
 		combiner_drop(c);
 		return;
 	} else if(c->packet.status) {
