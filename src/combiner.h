@@ -9,6 +9,7 @@ struct combiner {
 	int	(*do_write)	(struct combiner *c);
 	struct	ccpacket	packet;		/* camera control packet */
 	struct	buffer		*txbuf;		/* transmit buffer */
+	int			base;		/* receiver address base */
 	bool			verbose;	/* verbose flag */
 
 	long long		n_dropped;	/* count of dropped packets */

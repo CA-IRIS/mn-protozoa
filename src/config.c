@@ -23,11 +23,15 @@ static struct sport *config_find_port(struct config *c, const char *port) {
 	return NULL;
 }
 
-static int config_set_inbound(struct sport *prt, const char *protocol) {
+static struct combiner *config_set_inbound(struct sport *prt,
+	const char *protocol)
+{
 	struct combiner *cmbnr = (struct combiner *)prt->handler;
 	if(cmbnr == NULL)
-		return -1;
-	return combiner_set_input_protocol(cmbnr, protocol);
+		return NULL;
+	if(combiner_set_input_protocol(cmbnr, protocol) < 0)
+		return NULL;
+	return cmbnr;
 }
 
 static struct sport *config_new_port(struct config *c, const char *port,
@@ -62,16 +66,20 @@ static struct combiner *config_new_combiner(struct config *c, struct sport *prt,
 }
 
 static int config_directive(struct config *c, const char *in_out,
-	const char *protocol, const char *port, int baud)
+	const char *protocol, const char *port, int baud, int base)
 {
 	struct sport *prt;
+	struct combiner *cmbnr;
 
-	printf("protozoa: %s %s %s %d\n", in_out, protocol, port, baud);
+	printf("protozoa: %s %s %s %d %d\n", in_out, protocol, port, baud,base);
 	prt = config_find_port(c, port);
 	if(prt) {
+		/* Abnormal case where IN/OUT share same port */
 		if(strcasecmp(in_out, "IN") == 0) {
-			if(config_set_inbound(prt, protocol) < 0)
+			cmbnr = config_set_inbound(prt, protocol);
+			if(cmbnr == NULL)
 				goto fail;
+			cmbnr->base = base;
 		} else {
 			fprintf(stderr, "Invalid directive: %s\n", in_out);
 			goto fail;
@@ -80,8 +88,10 @@ static int config_directive(struct config *c, const char *in_out,
 		prt = config_new_port(c, port, baud);
 		if(prt == NULL)
 			goto fail;
-		if(config_new_combiner(c, prt, in_out, protocol) == NULL)
+		cmbnr = config_new_combiner(c, prt, in_out, protocol);
+		if(cmbnr == NULL)
 			goto fail;
+		cmbnr->base = base;
 	}
 	return 0;
 fail:
@@ -102,9 +112,11 @@ static int config_scan_directive(struct config *c) {
 	char protocol[16];
 	char port[16];
 	int baud = 9600;
-	i = sscanf(c->line, "%3s %15s %15s %6d", in_out, protocol, port, &baud);
+	int base = 0;
+	i = sscanf(c->line, "%3s %15s %15s %d %d", in_out, protocol, port,
+		&baud, &base);
 	if(i > 2)
-		return config_directive(c, in_out, protocol, port, baud);
+		return config_directive(c, in_out, protocol, port, baud, base);
 	else if(i <= 0)
 		return 0;
 	else {

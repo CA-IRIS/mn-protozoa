@@ -19,6 +19,7 @@ void combiner_init(struct combiner *c) {
 	c->handler.do_read = combiner_do_read;
 	c->do_write = combiner_do_write;
 	c->txbuf = NULL;
+	c->base = 0;
 	ccpacket_init(&c->packet);
 	c->n_dropped = 0;
 	c->n_packets = 0;
@@ -124,6 +125,7 @@ void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
 int combiner_process_packet(struct combiner *c) {
 	if(c->packet.receiver == 0)
 		return 0;
+	c->packet.receiver += c->base;
 	int r = c->do_write(c);
 	if(r > 0) {
 		if(c->verbose)
