@@ -58,8 +58,18 @@
 	sending them out on /dev/ttyS0. Also, commands from /dev/ttyS4 and
 	/dev/ttyS5 are interleaved onto /dev/ttyS3.
 </p>
+<pre>
+	OUT manchester /dev/ttyS0 9600
+	IN vicon /dev/ttyS1 9600 0
+	IN vicon /dev/ttyS2 9600 256
+	IN vicon /dev/ttyS3 9600 512
+</pre>
+<p>
+	This configuration combines three vicon lines into one manchester line,
+	including receiver address translation.
+</p>
 <p class="stamp">
-	2006 June 14
+	2006 June 21
 </p>
 </body>
 </html>

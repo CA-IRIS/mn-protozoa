@@ -1,3 +1,2 @@
 *	Perform some sort of check for wrong protocol.
-*	Add address-translation ability when transcoding to manchester
 *	Add ability to read protocol streams from a TCP socket.
