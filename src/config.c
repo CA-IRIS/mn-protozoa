@@ -2,46 +2,13 @@
 #include <string.h>
 #include "sport.h"
 #include "combiner.h"
+#include "config.h"
 
-static struct combiner *config_outbound(struct sport *port,
-	char *protocol, bool verbose)
-{
-	struct combiner *cmbnr = malloc(sizeof(struct combiner));
-	if(cmbnr == NULL)
-		return NULL;
-	combiner_init(cmbnr);
-	if(combiner_set_output_protocol(cmbnr, protocol) < 0)
-		goto fail;
-	cmbnr->txbuf = port->txbuf;
-	cmbnr->verbose = verbose;
-	port->handler = &cmbnr->handler;
-	return cmbnr;
-fail:
-	free(cmbnr);
-	return NULL;
-}
-
-static struct combiner *config_inbound(struct sport *port, const char *protocol,
-	struct combiner *out)
-{
-	struct combiner *cmbnr = malloc(sizeof(struct combiner));
-	if(cmbnr == NULL)
-		return NULL;
-	if(out == NULL) {
-		fprintf(stderr, "Missing OUT directive\n");
-		goto fail;
-	}
-	combiner_init(cmbnr);
-	if(combiner_set_input_protocol(cmbnr, protocol) < 0)
-		goto fail;
-	cmbnr->do_write = out->do_write;
-	cmbnr->txbuf = out->txbuf;
-	cmbnr->verbose = out->verbose;
-	port->handler = &cmbnr->handler;
-	return cmbnr;
-fail:
-	free(cmbnr);
-	return NULL;
+void config_init(struct config *c, const char *filename, bool verbose) {
+	c->filename = filename;
+	c->ports = NULL;
+	c->n_ports = 0;
+	c->verbose = verbose;
 }
 
 static int config_inbound2(struct sport *port, const char *protocol) {
@@ -87,11 +54,13 @@ int config_read(const char *filename, struct sport *ports[], bool verbose) {
 				goto fail;
 			}
 			if(strcasecmp(in_out, "OUT") == 0) {
-				cmbnr = config_outbound(prt, protocol, verbose);
+				cmbnr = combiner_create_outbound(prt, protocol,
+					verbose);
 				if(cmbnr == NULL)
 					goto fail;
 			} else if(strcasecmp(in_out, "IN") == 0) {
-				if(config_inbound(prt, protocol, cmbnr) == NULL)
+				if(combiner_create_inbound(prt, protocol,
+					cmbnr) == NULL)
 					goto fail;
 			} else
 				goto fail;

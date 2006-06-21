@@ -29,5 +29,9 @@ void combiner_count(struct combiner *c);
 void combiner_drop(struct combiner *c);
 void combiner_write(struct combiner *c, uint8_t *mess, size_t count);
 int combiner_process_packet(struct combiner *c);
+struct combiner *combiner_create_outbound(struct sport *port,
+	const char *protocol, bool verbose);
+struct combiner *combiner_create_inbound(struct sport *port,
+	const char *protocol, struct combiner *out);
 
 #endif

@@ -133,3 +133,44 @@ int combiner_process_packet(struct combiner *c) {
 	ccpacket_init(&c->packet);
 	return r;
 }
+
+struct combiner *combiner_create_outbound(struct sport *port,
+	const char *protocol, bool verbose)
+{
+	struct combiner *cmbnr = malloc(sizeof(struct combiner));
+	if(cmbnr == NULL)
+		return NULL;
+	combiner_init(cmbnr);
+	if(combiner_set_output_protocol(cmbnr, protocol) < 0)
+		goto fail;
+	cmbnr->txbuf = port->txbuf;
+	cmbnr->verbose = verbose;
+	port->handler = &cmbnr->handler;
+	return cmbnr;
+fail:
+	free(cmbnr);
+	return NULL;
+}
+
+struct combiner *combiner_create_inbound(struct sport *port,
+	const char *protocol, struct combiner *out)
+{
+	struct combiner *cmbnr = malloc(sizeof(struct combiner));
+	if(cmbnr == NULL)
+		return NULL;
+	if(out == NULL) {
+		fprintf(stderr, "Missing OUT directive\n");
+		goto fail;
+	}
+	combiner_init(cmbnr);
+	if(combiner_set_input_protocol(cmbnr, protocol) < 0)
+		goto fail;
+	cmbnr->do_write = out->do_write;
+	cmbnr->txbuf = out->txbuf;
+	cmbnr->verbose = out->verbose;
+	port->handler = &cmbnr->handler;
+	return cmbnr;
+fail:
+	free(cmbnr);
+	return NULL;
+}
