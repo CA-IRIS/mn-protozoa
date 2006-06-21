@@ -6,6 +6,7 @@ void config_init(struct config *c, const char *filename, bool verbose,
 	bool debug)
 {
 	c->filename = filename;
+	c->line = malloc(LINE_LENGTH);
 	c->ports = NULL;
 	c->n_ports = 0;
 	c->verbose = verbose;
@@ -87,16 +88,37 @@ fail:
 	return -1;
 }
 
-int config_read(struct config *c) {
+static void config_skip_comments(struct config *c) {
+	int i;
+	for(i = 0; i < LINE_LENGTH; i++) {
+		if(c->line[i] == '#')
+			c->line[i] = '\0';
+	}
+}
+
+static int config_scan_directive(struct config *c) {
+	int i;
 	char in_out[4];
 	char protocol[16];
 	char port[16];
-	int baud;
+	int baud = 9600;
+	i = sscanf(c->line, "%3s %15s %15s %6d", in_out, protocol, port, &baud);
+	if(i > 2)
+		return config_directive(c, in_out, protocol, port, baud);
+	else if(i <= 0)
+		return 0;
+	else {
+		fprintf(stderr, "Invalid directive: %s\n", c->line);
+		return -1;
+	}
+}
+
+int config_read(struct config *c) {
 	FILE *f = fopen(c->filename, "r");
 
-	while(fscanf(f, "%3s %15s %15s %6d", in_out, protocol, port, &baud)==4)
-	{
-		if(config_directive(c, in_out, protocol, port, baud) < 0)
+	while(fgets(c->line, LINE_LENGTH, f) == c->line) {
+		config_skip_comments(c);
+		if(config_scan_directive(c))
 			goto fail;
 	}
 	if(c->n_ports == 0) {

@@ -4,8 +4,11 @@
 #include "sport.h"
 #include "combiner.h"
 
+#define LINE_LENGTH (80)
+
 struct config {
 	const char	*filename;
+	char		*line;
 	struct sport	*ports;
 	int		n_ports;
 	bool		verbose;
