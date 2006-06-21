@@ -13,7 +13,7 @@ extern int errno;
 int main(int argc, char* argv[])
 {
 	int n_ports, i;
-	struct sport *port;
+	struct config conf;
 	struct poller poll;
 	bool debug = false;
 	bool verbose = false;
@@ -25,12 +25,11 @@ int main(int argc, char* argv[])
 			verbose = true;
 	}
 
-	n_ports = config_read(CONF_FILE, &port, verbose);
+	config_init(&conf, CONF_FILE, verbose, debug);
+	n_ports = config_read(&conf);
 	if(n_ports <= 0)
 		goto fail;
-	if(debug)
-		config_debug(n_ports, port);
-	if(poller_init(&poll, n_ports, port) == NULL)
+	if(poller_init(&poll, n_ports, conf.ports) == NULL)
 		goto fail;
 
 	poller_loop(&poll);
