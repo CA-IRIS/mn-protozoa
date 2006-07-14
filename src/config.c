@@ -23,14 +23,15 @@ static struct sport *config_find_port(struct config *c, const char *port) {
 	return NULL;
 }
 
-static struct combiner *config_set_inbound(struct sport *prt,
+static struct combiner *config_set_inbound(struct config *c, struct sport *prt,
 	const char *protocol)
 {
-	struct combiner *cmbnr = (struct combiner *)prt->handler;
+	struct combiner *cmbnr = c->out;
 	if(cmbnr == NULL)
 		return NULL;
 	if(combiner_set_input_protocol(cmbnr, protocol) < 0)
 		return NULL;
+	prt->handler = &cmbnr->handler;
 	return cmbnr;
 }
 
@@ -74,13 +75,10 @@ static int config_directive(struct config *c, const char *in_out,
 	printf("protozoa: %s %s %s %d %d\n", in_out, protocol, port, baud,base);
 	prt = config_find_port(c, port);
 	if(prt) {
-		/* Abnormal case where IN/OUT share same port */
-		if(strcasecmp(in_out, "IN") == 0) {
-			cmbnr = config_set_inbound(prt, protocol);
-			if(cmbnr == NULL)
-				goto fail;
-			cmbnr->base = base;
-		} else {
+		/* Abnormal case where IN shares port with earlier OUT */
+		if(strcasecmp(in_out, "IN") == 0)
+			cmbnr = config_set_inbound(c, prt, protocol);
+		else {
 			fprintf(stderr, "Invalid directive: %s\n", in_out);
 			goto fail;
 		}
@@ -89,10 +87,10 @@ static int config_directive(struct config *c, const char *in_out,
 		if(prt == NULL)
 			goto fail;
 		cmbnr = config_new_combiner(c, prt, in_out, protocol);
-		if(cmbnr == NULL)
-			goto fail;
-		cmbnr->base = base;
 	}
+	if(cmbnr == NULL)
+		goto fail;
+	cmbnr->base = base;
 	return 0;
 fail:
 	return -1;

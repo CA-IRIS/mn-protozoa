@@ -68,8 +68,21 @@
 	This configuration combines three vicon lines into one manchester line,
 	including receiver address translation.
 </p>
+<pre>
+	OUT manchester /dev/ttya03 9600
+	IN vicon /dev/ttya01 9600
+	OUT pelco_d /dev/ttya02 9600
+	IN manchester /dev/ttya03 9600
+</pre>
+<p>
+	It is possible to use a loopback plug on one port, and send / receive
+	data to / from that port. This is a good method of testing the
+	protocol handlers. The configuration above is one example of this. For
+	this type of configuration, the OUT directive for the port must be
+	declared before the IN directive.
+</p>
 <p class="stamp">
-	2006 June 21
+	2006 July 14
 </p>
 </body>
 </html>
