@@ -6,7 +6,7 @@
 #include "combiner.h"
 
 #define FLAG (0xff)
-#define TURBO_SPEED (0xff)
+#define TURBO_SPEED (1 << 6)
 
 enum pelco_bit_t {
 	BIT_FOCUS_NEAR = 16,
@@ -251,7 +251,7 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 
 static void encode_pan(uint8_t *mess, struct ccpacket *p) {
 	int pan = p->pan >> 5;
-	if(p->pan == SPEED_MAX)
+	if(p->pan > SPEED_MAX - 8)
 		pan = TURBO_SPEED;
 	mess[4] = pan;
 	if(pan) {
