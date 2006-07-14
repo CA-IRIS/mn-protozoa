@@ -20,9 +20,9 @@ void ccpacket_debug(struct ccpacket *p) {
 		printf(" status: %d", p->status);
 	if(p->command)
 		printf(" command: %d", p->command);
-	if(p->pan)
+	if(p->command & CC_PAN)
 		printf(" pan: %d", p->pan);
-	if(p->tilt)
+	if(p->command & CC_TILT)
 		printf(" tilt: %d", p->tilt);
 	if(p->zoom)
 		printf(" zoom: %d", p->zoom);

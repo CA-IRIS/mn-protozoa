@@ -74,6 +74,9 @@ static inline void decode_pan(struct ccpacket *p, uint8_t *mess) {
 	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
 		p->command |= CC_PAN_LEFT;
 		p->pan = SPEED_MAX;
+	} else {
+		p->command |= CC_PAN_LEFT;
+		p->pan = 0;
 	}
 }
 
@@ -84,6 +87,9 @@ static inline void decode_tilt(struct ccpacket *p, uint8_t *mess) {
 	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
 		p->command |= CC_TILT_DOWN;
 		p->tilt = SPEED_MAX;
+	} else {
+		p->command |= CC_TILT_DOWN;
+		p->tilt = 0;
 	}
 }
 
@@ -251,14 +257,18 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 }
 
 static void encode_pan_tilt(uint8_t *mess, struct ccpacket *p) {
-	if(p->command & CC_PAN_LEFT)
-		bit_set(mess, BIT_PAN_LEFT);
-	else if(p->command & CC_PAN_RIGHT)
-		bit_set(mess, BIT_PAN_RIGHT);
-	if(p->command & CC_TILT_UP)
-		bit_set(mess, BIT_TILT_UP);
-	else if(p->command & CC_TILT_DOWN)
-		bit_set(mess, BIT_TILT_DOWN);
+	if(p->pan) {
+		if(p->command & CC_PAN_LEFT)
+			bit_set(mess, BIT_PAN_LEFT);
+		else if(p->command & CC_PAN_RIGHT)
+			bit_set(mess, BIT_PAN_RIGHT);
+	}
+	if(p->tilt) {
+		if(p->command & CC_TILT_UP)
+			bit_set(mess, BIT_TILT_UP);
+		else if(p->command & CC_TILT_DOWN)
+			bit_set(mess, BIT_TILT_DOWN);
+	}
 }
 
 static void encode_lens(uint8_t *mess, struct ccpacket *p) {

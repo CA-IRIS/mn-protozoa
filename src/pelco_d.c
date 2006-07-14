@@ -253,26 +253,30 @@ static void encode_pan(uint8_t *mess, struct ccpacket *p) {
 	int pan = p->pan >> 5;
 	if(p->pan == SPEED_MAX)
 		pan = TURBO_SPEED;
-	if(p->command & CC_PAN_LEFT)
-		bit_set(mess, BIT_PAN_LEFT);
-	else if(p->command & CC_PAN_RIGHT)
-		bit_set(mess, BIT_PAN_RIGHT);
-	else
-		return;
 	mess[4] = pan;
+	if(pan) {
+		if(p->command & CC_PAN_LEFT)
+			bit_set(mess, BIT_PAN_LEFT);
+		else if(p->command & CC_PAN_RIGHT)
+			bit_set(mess, BIT_PAN_RIGHT);
+		else
+			mess[4] = 0;
+	}
 }
 
 static void encode_tilt(uint8_t *mess, struct ccpacket *p) {
 	int tilt = p->tilt >> 5;
 	if(p->tilt == SPEED_MAX)
 		tilt = TURBO_SPEED;
-	if(p->command & CC_TILT_UP)
-		bit_set(mess, BIT_TILT_UP);
-	else if(p->command & CC_TILT_DOWN)
-		bit_set(mess, BIT_TILT_DOWN);
-	else
-		return;
 	mess[5] = tilt;
+	if(tilt) {
+		if(p->command & CC_TILT_UP)
+			bit_set(mess, BIT_TILT_UP);
+		else if(p->command & CC_TILT_DOWN)
+			bit_set(mess, BIT_TILT_DOWN);
+		else
+			mess[5] = 0;
+	}
 }
 
 static void encode_lens(uint8_t *mess, struct ccpacket *p) {
