@@ -64,6 +64,9 @@ static inline void decode_pan(struct ccpacket *p, uint8_t *mess) {
 	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
 		p->command |= CC_PAN_LEFT;
 		p->pan = pan;
+	} else {
+		p->command |= CC_PAN_LEFT;
+		p->pan = 0;
 	}
 }
 
@@ -77,6 +80,9 @@ static inline void decode_tilt(struct ccpacket *p, uint8_t *mess) {
 	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
 		p->command |= CC_TILT_DOWN;
 		p->tilt = tilt;
+	} else {
+		p->command |= CC_TILT_DOWN;
+		p->tilt = 0;
 	}
 }
 
