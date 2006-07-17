@@ -1,5 +1,6 @@
 #include <stdio.h>	/* for printf */
 #include <string.h>	/* for strerror */
+#include <unistd.h>	/* for daemon */
 #include <sys/errno.h>	/* for errno */
 
 #include "sport.h"
@@ -27,6 +28,9 @@ int main(int argc, char* argv[])
 		if(strcmp(argv[i], "--stats") == 0)
 			stats = true;
 	}
+
+	if(!(debug || verbose || stats))
+		daemon(0, 0);
 
 	config_init(&conf, CONF_FILE, verbose, debug, stats);
 	n_ports = config_read(&conf);
