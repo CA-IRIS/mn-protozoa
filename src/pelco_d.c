@@ -272,8 +272,6 @@ static void encode_pan(uint8_t *mess, struct ccpacket *p) {
 
 static void encode_tilt(uint8_t *mess, struct ccpacket *p) {
 	int tilt = p->tilt >> 5;
-	if(p->tilt == SPEED_MAX)
-		tilt = TURBO_SPEED;
 	mess[5] = tilt;
 	if(tilt) {
 		if(p->command & CC_TILT_UP)
