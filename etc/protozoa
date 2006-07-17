@@ -1,0 +1,75 @@
+#!/bin/sh
+# Startup script for protozoa
+#
+# chkconfig: 2345 96 04
+# description: CCTV camera control translator and mixer
+# pidfile: /var/run/protozoa.pid
+#
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+[ -f /usr/bin/protozoa ] || exit 0
+
+prog="protozoa"
+PIDFILE=/var/run/${prog}.pid
+LOCKFILE=/var/lock/subsys/$prog
+
+start() {
+    echo -n $"Starting $prog: " 
+    /usr/bin/protozoa
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]; then
+	failure;
+    fi;
+    echo
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    if [ -f $PIDFILE ]; then
+	killproc protozoa
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]; then 
+	    failure;
+	fi;
+    else
+	RETVAL=1
+	failure;
+    fi
+    echo
+    return $RETVAL
+}
+
+case "$1" in
+	start)
+	    start
+	    ;;
+	
+	stop)
+	    stop
+	    ;;
+	
+	status)
+	    status protozoa
+	    ;;
+
+	restart)
+	    stop
+	    start
+	    ;;
+
+	condrestart)
+	    if [ -f $LOCKFILE ]; then
+		stop
+		start
+	    fi
+	    ;;
+	
+	*)
+	    echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+	    exit 1
+
+esac
+
+exit $RETVAL
