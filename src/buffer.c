@@ -108,20 +108,23 @@ inline uint8_t buffer_peek(const struct buffer *buf) {
 	return *buf->pout;
 }
 
-static void buffer_debug(const char *prefix, uint8_t *start, uint8_t *stop) {
+static void buffer_debug(struct buffer *buf, const char *name,
+	const char *prefix, uint8_t *start)
+{
 	uint8_t *mess;
+	fprintf(stderr, name);
 	fprintf(stderr, prefix);
-	for(mess = start; mess < stop; mess++)
+	for(mess = start; mess < buf->pin; mess++)
 		fprintf(stderr, " %02x", *mess);
 	fprintf(stderr, "\n");
 }
 
-void buffer_debug_in(struct buffer *buf, int n_bytes) {
+void buffer_debug_in(struct buffer *buf, int n_bytes, const char *name) {
 	if(buf->debug)
-		buffer_debug(" in:", buf->pin - n_bytes, buf->pin);
+		buffer_debug(buf, name, "  in:", buf->pin - n_bytes);
 }
 
-void buffer_debug_out(struct buffer *buf) {
+void buffer_debug_out(struct buffer *buf, const char *name) {
 	if(buf->debug)
-		buffer_debug("out:", buf->pout, buf->pin);
+		buffer_debug(buf, name, " out:", buf->pout);
 }

@@ -80,13 +80,13 @@ ssize_t sport_read(struct sport *port) {
 	ssize_t n_bytes = buffer_read(port->rxbuf, port->fd);
 	if(n_bytes <= 0)
 		return n_bytes;
-	buffer_debug_in(port->rxbuf, n_bytes);
+	buffer_debug_in(port->rxbuf, n_bytes, port->name);
 	if(port->handler->do_read(port->handler, port->rxbuf) < 0)
 		return -1;
 	return n_bytes;
 }
 
 ssize_t sport_write(struct sport *port) {
-	buffer_debug_out(port->txbuf);
+	buffer_debug_out(port->txbuf, port->name);
 	return buffer_write(port->txbuf, port->fd);
 }
