@@ -76,7 +76,7 @@ int combiner_process_packet(struct combiner *c) {
 			ccpacket_debug(&c->packet);
 		r = 0;
 	}
-	ccpacket_init(&c->packet);
+	ccpacket_clear(&c->packet);
 	return r;
 }
 

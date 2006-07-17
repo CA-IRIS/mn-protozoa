@@ -40,7 +40,27 @@ static void counter_display(const struct packet_counter *c) {
 		counter_print(c, "preset", c->n_preset);
 }
 
-void ccpacket_init(struct ccpacket *p) {
+static void counter_count(struct packet_counter *c, struct ccpacket *p) {
+	c->n_packets++;
+	if(p->status)
+		c->n_status++;
+	if(p->command & (CC_PAN_LEFT | CC_PAN_RIGHT))
+		c->n_pan++;
+	if(p->command & (CC_TILT_UP | CC_TILT_DOWN))
+		c->n_tilt++;
+	if(p->zoom)
+		c->n_zoom++;
+	if(p->focus | p->iris)
+		c->n_lens++;
+	if(p->aux)
+		c->n_aux++;
+	if(p->command & (CC_RECALL | CC_STORE))
+		c->n_preset++;
+	if((c->n_packets % 100) == 0)
+		counter_display(c);
+}
+
+void ccpacket_clear(struct ccpacket *p) {
 	p->receiver = 0;
 	p->status = STATUS_NONE;
 	p->command = 0;
@@ -51,6 +71,11 @@ void ccpacket_init(struct ccpacket *p) {
 	p->iris = IRIS_NONE;
 	p->aux = 0;
 	p->preset = 0;
+}
+
+void ccpacket_init(struct ccpacket *p) {
+	p->counter = NULL;
+	ccpacket_clear(p);
 }
 
 void ccpacket_debug(struct ccpacket *p) {
@@ -77,26 +102,13 @@ void ccpacket_debug(struct ccpacket *p) {
 }
 
 void ccpacket_count(struct ccpacket *p) {
-	p->counter->n_packets++;
-	if(p->status)
-		p->counter->n_status++;
-	if(p->command & (CC_PAN_LEFT | CC_PAN_RIGHT))
-		p->counter->n_pan++;
-	if(p->command & (CC_TILT_UP | CC_TILT_DOWN))
-		p->counter->n_tilt++;
-	if(p->zoom)
-		p->counter->n_zoom++;
-	if(p->focus | p->iris)
-		p->counter->n_lens++;
-	if(p->aux)
-		p->counter->n_aux++;
-	if(p->command & (CC_RECALL | CC_STORE))
-		p->counter->n_preset++;
-	if((p->counter->n_packets % 100) == 0)
-		counter_display(p->counter);
+	if(p->counter)
+		counter_count(p->counter, p);
 }
 
 void ccpacket_drop(struct ccpacket *p) {
-	p->counter->n_dropped++;
-	ccpacket_count(p);
+	if(p->counter) {
+		p->counter->n_dropped++;
+		ccpacket_count(p);
+	}
 }

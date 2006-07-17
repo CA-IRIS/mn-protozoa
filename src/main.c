@@ -17,15 +17,18 @@ int main(int argc, char* argv[])
 	struct poller poll;
 	bool debug = false;
 	bool verbose = false;
+	bool stats = false;
 
 	for(i = 0; i < argc; i++) {
 		if(strcmp(argv[i], "--debug") == 0)
 			debug = true;
 		if(strcmp(argv[i], "--verbose") == 0)
 			verbose = true;
+		if(strcmp(argv[i], "--stats") == 0)
+			stats = true;
 	}
 
-	config_init(&conf, CONF_FILE, verbose, debug);
+	config_init(&conf, CONF_FILE, verbose, debug, stats);
 	n_ports = config_read(&conf);
 	if(n_ports <= 0)
 		goto fail;

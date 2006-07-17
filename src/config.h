@@ -19,7 +19,7 @@ struct config {
 };
 
 void config_init(struct config *c, const char *filename, bool verbose,
-	bool debug);
+	bool debug, bool stats);
 int config_read(struct config *c);
 
 #endif

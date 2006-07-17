@@ -3,7 +3,7 @@
 #include "config.h"
 
 void config_init(struct config *c, const char *filename, bool verbose,
-	bool debug)
+	bool debug, bool stats)
 {
 	c->filename = filename;
 	c->line = malloc(LINE_LENGTH);
@@ -12,8 +12,11 @@ void config_init(struct config *c, const char *filename, bool verbose,
 	c->verbose = verbose;
 	c->debug = debug;
 	c->out = NULL;
-	c->counter = malloc(sizeof(struct packet_counter));
-	counter_init(c->counter);
+	if(stats) {
+		c->counter = malloc(sizeof(struct packet_counter));
+		counter_init(c->counter);
+	} else
+		c->counter = NULL;
 }
 
 static struct sport *config_find_port(struct config *c, const char *port) {
