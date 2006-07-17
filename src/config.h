@@ -2,6 +2,7 @@
 #define __CONFIG_H__
 
 #include "sport.h"
+#include "ccpacket.h"
 #include "combiner.h"
 
 #define LINE_LENGTH (80)
@@ -14,6 +15,7 @@ struct config {
 	bool		verbose;
 	bool		debug;
 	struct combiner *out;		/* most recent OUT combiner */
+	struct packet_counter *counter;
 };
 
 void config_init(struct config *c, const char *filename, bool verbose,

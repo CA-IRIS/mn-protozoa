@@ -1,6 +1,18 @@
 #ifndef __CCPACKET_H__
 #define __CCPACKET_H__
 
+struct packet_counter {
+	long long	n_packets;	/* total count of packets */
+	long long	n_dropped;	/* count of dropped packets */
+	long long	n_status;	/* count of status packets */
+	long long	n_pan;		/* count of pan packets */
+	long long	n_tilt;		/* count of tilt packets */
+	long long	n_zoom;		/* count of zoom packets */
+	long long	n_lens;		/* count of lens packets */
+	long long	n_aux;		/* count of aux packets */
+	long long	n_preset;	/* count of preset packets */
+};
+
 enum status_t {
 	STATUS_NONE = 0,
 	STATUS_REQUEST = 1 << 0,
@@ -79,9 +91,13 @@ struct ccpacket {
 	enum iris_t	iris;	/* -1 (close), 0 (no change), or 1 (open) */
 	enum aux_t	aux;	/* bitmask of aux functions */
 	int		preset;	/* preset number */
+	struct packet_counter *counter;	/* packet counter */
 };
 
+void counter_init(struct packet_counter *c);
 void ccpacket_init(struct ccpacket *p);
 void ccpacket_debug(struct ccpacket *p);
+void ccpacket_count(struct ccpacket *p);
+void ccpacket_drop(struct ccpacket *p);
 
 #endif

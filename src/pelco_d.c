@@ -406,7 +406,7 @@ static inline bool has_aux(struct ccpacket *p) {
 
 int pelco_d_do_write(struct combiner *c) {
 	if(c->packet.receiver < 1 || c->packet.receiver > 254) {
-		combiner_drop(c);
+		ccpacket_drop(&c->packet);
 		return 0;
 	}
 	if(has_command(&c->packet))

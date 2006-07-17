@@ -21,15 +21,6 @@ void combiner_init(struct combiner *c) {
 	c->txbuf = NULL;
 	c->base = 0;
 	ccpacket_init(&c->packet);
-	c->n_dropped = 0;
-	c->n_packets = 0;
-	c->n_status = 0;
-	c->n_pan = 0;
-	c->n_tilt = 0;
-	c->n_zoom = 0;
-	c->n_lens = 0;
-	c->n_aux = 0;
-	c->n_preset = 0;
 }
 
 int combiner_set_output_protocol(struct combiner *c, const char *protocol) {
@@ -60,64 +51,17 @@ int combiner_set_input_protocol(struct combiner *c, const char *protocol) {
 	return 0;
 }
 
-static void print_stats(const char *stat, long long count, long long total) {
-	float percent = 100 * (float)count / (float)total;
-	printf("%10s: %10lld  %6.2f%%\n", stat, count, percent);
-}
-
-void combiner_count(struct combiner *c) {
-	c->n_packets++;
-	if(c->packet.status)
-		c->n_status++;
-	if(c->packet.command & (CC_PAN_LEFT | CC_PAN_RIGHT))
-		c->n_pan++;
-	if(c->packet.command & (CC_TILT_UP | CC_TILT_DOWN))
-		c->n_tilt++;
-	if(c->packet.zoom)
-		c->n_zoom++;
-	if(c->packet.focus | c->packet.iris)
-		c->n_lens++;
-	if(c->packet.aux)
-		c->n_aux++;
-	if(c->packet.command & (CC_RECALL | CC_STORE))
-		c->n_preset++;
-	if((c->n_packets % 100) == 0) {
-		printf("protozoa statistics: %lld packets\n", c->n_packets);
-		if(c->n_dropped)
-			print_stats("dropped", c->n_dropped, c->n_packets);
-		if(c->n_status)
-			print_stats("status", c->n_status, c->n_packets);
-		if(c->n_pan)
-			print_stats("pan", c->n_pan, c->n_packets);
-		if(c->n_tilt)
-			print_stats("tilt", c->n_tilt, c->n_packets);
-		if(c->n_zoom)
-			print_stats("zoom", c->n_zoom, c->n_packets);
-		if(c->n_lens)
-			print_stats("lens", c->n_lens, c->n_packets);
-		if(c->n_aux)
-			print_stats("aux", c->n_aux, c->n_packets);
-		if(c->n_preset)
-			print_stats("preset", c->n_preset, c->n_packets);
-	}
-}
-
-void combiner_drop(struct combiner *c) {
-	c->n_dropped++;
-	combiner_count(c);
-}
-
 void combiner_write(struct combiner *c, uint8_t *mess, size_t count) {
 	int i;
 	if(buffer_remaining(c->txbuf) < count) {
 		fprintf(stderr, "protozoa: output buffer full\n");
-		combiner_drop(c);
+		ccpacket_drop(&c->packet);
 		return;
 	} else if(c->packet.status) {
-		combiner_drop(c);
+		ccpacket_drop(&c->packet);
 		return;
 	}
-	combiner_count(c);
+	ccpacket_count(&c->packet);
 	for(i = 0; i < count; i++)
 		buffer_put(c->txbuf, mess[i]);
 }

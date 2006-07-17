@@ -12,6 +12,8 @@ void config_init(struct config *c, const char *filename, bool verbose,
 	c->verbose = verbose;
 	c->debug = debug;
 	c->out = NULL;
+	c->counter = malloc(sizeof(struct packet_counter));
+	counter_init(c->counter);
 }
 
 static struct sport *config_find_port(struct config *c, const char *port) {
@@ -91,6 +93,7 @@ static int config_directive(struct config *c, const char *in_out,
 	if(cmbnr == NULL)
 		goto fail;
 	cmbnr->base = base;
+	cmbnr->packet.counter = c->counter;
 	return 0;
 fail:
 	return -1;

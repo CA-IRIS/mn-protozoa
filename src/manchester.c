@@ -350,7 +350,7 @@ static void encode_preset(struct combiner *c) {
 
 int manchester_do_write(struct combiner *c) {
 	if(c->packet.receiver < 1 || c->packet.receiver > 1024) {
-		combiner_drop(c);
+		ccpacket_drop(&c->packet);
 		return 0;
 	}
 	encode_pan(c);

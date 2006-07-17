@@ -406,7 +406,7 @@ static inline bool is_extended_preset(struct ccpacket *p) {
 
 int vicon_do_write(struct combiner *c) {
 	if(c->packet.receiver < 1 || c->packet.receiver > 255) {
-		combiner_drop(c);
+		ccpacket_drop(&c->packet);
 		return 0;
 	}
 	if(c->packet.status)
