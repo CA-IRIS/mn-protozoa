@@ -77,7 +77,10 @@ static int config_directive(struct config *c, const char *in_out,
 	struct sport *prt;
 	struct combiner *cmbnr;
 
-	printf("protozoa: %s %s %s %d %d\n", in_out, protocol, port, baud,base);
+	if(c->verbose) {
+		printf("protozoa: %s %s %s %d %d\n", in_out, protocol, port,
+			baud, base);
+	}
 	prt = config_find_port(c, port);
 	if(prt) {
 		/* Abnormal case where IN shares port with earlier OUT */
