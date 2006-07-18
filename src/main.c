@@ -29,15 +29,16 @@ int main(int argc, char* argv[])
 			stats = true;
 	}
 
-	if(!(debug || verbose || stats))
-		daemon(0, 0);
-
 	config_init(&conf, CONF_FILE, verbose, debug, stats);
 	n_ports = config_read(&conf);
 	if(n_ports <= 0)
 		goto fail;
 	if(poller_init(&poll, n_ports, conf.ports) == NULL)
 		goto fail;
+	if(!(debug || verbose || stats)) {
+		if(daemon(0, 0) < 0)
+			goto fail;
+	}
 
 	poller_loop(&poll);
 fail:
