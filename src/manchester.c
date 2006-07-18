@@ -1,8 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
-#include "sport.h"
-#include "ccpacket.h"
-#include "combiner.h"
+#include "ccreader.h"
+#include "manchester.h"
 
 #define FLAG 0x80
 #define PT_COMMAND 0x02
@@ -187,15 +186,15 @@ static inline void decode_packet(struct ccpacket *p, uint8_t *mess) {
 		decode_extended(p, cmnd, pt_extra(mess));
 }
 
-static inline void manchester_decode_packet(struct combiner *c, uint8_t *mess) {
+static inline void manchester_decode_packet(struct ccreader *r, uint8_t *mess) {
 	int receiver = decode_receiver(mess);
-	if(c->packet.receiver != receiver)
-		combiner_process_packet(c);
-	c->packet.receiver = receiver;
-	decode_packet(&c->packet, mess);
+	if(r->packet.receiver != receiver)
+		ccreader_process_packet(r);
+	r->packet.receiver = receiver;
+	decode_packet(&r->packet, mess);
 }
 
-static inline int manchester_read_message(struct combiner *c,
+static inline int manchester_read_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	if((buffer_peek(rxbuf) & FLAG) == 0) {
@@ -203,23 +202,23 @@ static inline int manchester_read_message(struct combiner *c,
 			buffer_get(rxbuf));
 		return 0;
 	}
-	manchester_decode_packet(c, rxbuf->pout);
+	manchester_decode_packet(r, rxbuf->pout);
 	buffer_skip(rxbuf, 3);
 	return 1;
 }
 
 int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
-	struct combiner *c = (struct combiner *)h;
+	struct ccreader *r = (struct ccreader *)h;
 
 	while(buffer_available(rxbuf) >= 3) {
-		if(manchester_read_message(c, rxbuf) < 0)
+		if(manchester_read_message(r, rxbuf) < 0)
 			return -1;
 	}
 	/* If there's a partial packet in the buffer, don't process yet */
 	if(buffer_available(rxbuf))
 		return 0;
 	else
-		return combiner_process_packet(c);
+		return ccreader_process_packet(r);
 }
 
 static inline void encode_receiver(uint8_t *mess, int receiver) {
@@ -229,79 +228,83 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[2] = (r & 0x1f) << 2;
 }
 
-static void encode_pan_tilt_command(struct combiner *c, enum pt_command_t cmnd,
-	int speed)
+static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *p,
+	enum pt_command_t cmnd, int speed)
 {
 	uint8_t mess[3];
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	mess[1] |= (cmnd << 4) | (speed << 1);
 	mess[2] |= PT_COMMAND;
-	combiner_write(c, mess, 3);
+	ccwriter_write(w, mess, 3);
 }
 
-static void encode_lens_function(struct combiner *c, enum lens_t func) {
+static void encode_lens_function(struct ccwriter *w, struct ccpacket *p,
+	enum lens_t func)
+{
 	uint8_t mess[3];
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	mess[1] |= (func << 1) | (EX_LENS << 4);
-	combiner_write(c, mess, 3);
+	ccwriter_write(w, mess, 3);
 }
 
-static void encode_aux_function(struct combiner *c, int aux) {
+static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
+	int aux)
+{
 	uint8_t mess[3];
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	mess[1] |= (aux << 1) | (EX_AUX << 4);
-	combiner_write(c, mess, 3);
+	ccwriter_write(w, mess, 3);
 }
 
-static void encode_pan(struct combiner *c) {
-	int speed = (c->packet.pan >> 8) & 0x07;
-	if(c->packet.command & CC_PAN_LEFT) {
+static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
+	int speed = (p->pan >> 8) & 0x07;
+	if(p->command & CC_PAN_LEFT) {
 		if(speed == SPEED_FULL)
-			encode_lens_function(c, XL_PAN_LEFT);
+			encode_lens_function(w, p, XL_PAN_LEFT);
 		else
-			encode_pan_tilt_command(c, PAN_LEFT, speed);
-	} else if(c->packet.command & CC_PAN_RIGHT) {
+			encode_pan_tilt_command(w, p, PAN_LEFT, speed);
+	} else if(p->command & CC_PAN_RIGHT) {
 		if(speed == SPEED_FULL)
-			encode_aux_function(c, EX_AUX_FULL_RIGHT);
+			encode_aux_function(w, p, EX_AUX_FULL_RIGHT);
 		else
-			encode_pan_tilt_command(c, PAN_RIGHT, speed);
+			encode_pan_tilt_command(w, p, PAN_RIGHT, speed);
 	}
 }
 
-static void encode_tilt(struct combiner *c) {
-	int speed = (c->packet.tilt >> 8) & 0x07;
-	if(c->packet.command & CC_TILT_DOWN) {
+static void encode_tilt(struct ccwriter *w, struct ccpacket *p) {
+	int speed = (p->tilt >> 8) & 0x07;
+	if(p->command & CC_TILT_DOWN) {
 		if(speed == SPEED_FULL)
-			encode_lens_function(c, XL_TILT_DOWN);
+			encode_lens_function(w, p, XL_TILT_DOWN);
 		else
-			encode_pan_tilt_command(c, TILT_DOWN, speed);
-	} else if(c->packet.command & CC_TILT_UP) {
+			encode_pan_tilt_command(w, p, TILT_DOWN, speed);
+	} else if(p->command & CC_TILT_UP) {
 		if(speed == SPEED_FULL)
-			encode_aux_function(c, EX_AUX_FULL_UP);
+			encode_aux_function(w, p, EX_AUX_FULL_UP);
 		else
-			encode_pan_tilt_command(c, TILT_UP, speed);
+			encode_pan_tilt_command(w, p, TILT_UP, speed);
 	}
 }
 
-static inline void encode_zoom(struct combiner *c) {
-	if(c->packet.zoom < 0)
-		encode_lens_function(c, XL_ZOOM_OUT);
-	else if(c->packet.zoom > 0)
-		encode_lens_function(c, XL_ZOOM_IN);
+static inline void encode_zoom(struct ccwriter *w, struct ccpacket *p) {
+	if(p->zoom < 0)
+		encode_lens_function(w, p, XL_ZOOM_OUT);
+	else if(p->zoom > 0)
+		encode_lens_function(w, p, XL_ZOOM_IN);
 }
 
-static inline void encode_focus(struct combiner *c) {
-	if(c->packet.focus < 0)
-		encode_lens_function(c, XL_FOCUS_NEAR);
-	else if(c->packet.focus > 0)
-		encode_lens_function(c, XL_FOCUS_FAR);
+static inline void encode_focus(struct ccwriter *w, struct ccpacket *p) {
+	if(p->focus < 0)
+		encode_lens_function(w, p, XL_FOCUS_NEAR);
+	else if(p->focus > 0)
+		encode_lens_function(w, p, XL_FOCUS_FAR);
 }
 
-static inline void encode_iris(struct combiner *c) {
-	if(c->packet.iris < 0)
-		encode_lens_function(c, XL_IRIS_CLOSE);
-	else if(c->packet.iris > 0)
-		encode_lens_function(c, XL_IRIS_OPEN);
+static inline void encode_iris(struct ccwriter *w, struct ccpacket *p) {
+	if(p->iris < 0)
+		encode_lens_function(w, p, XL_IRIS_CLOSE);
+	else if(p->iris > 0)
+		encode_lens_function(w, p, XL_IRIS_OPEN);
 }
 
 /* Masks for each aux function */
@@ -314,51 +317,56 @@ static const int LUT_AUX[] = {
 	2, 4, 6, 3, 5, 7
 };
 
-static inline void encode_aux(struct combiner *c) {
+static inline void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	int i;
-	if(c->packet.aux & AUX_CLEAR)
+	if(p->aux & AUX_CLEAR)
 		return;
 	for(i = 0; i < 6; i++) {
-		if(c->packet.aux & AUX_MASK[i])
-			encode_aux_function(c, LUT_AUX[i]);
+		if(p->aux & AUX_MASK[i])
+			encode_aux_function(w, p, LUT_AUX[i]);
 	}
 }
 
-static void encode_recall_function(struct combiner *c, int preset) {
+static void encode_recall_function(struct ccwriter *w, struct ccpacket *p,
+	int preset)
+{
 	uint8_t mess[3];
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	mess[1] |= (preset << 1) | (EX_RECALL << 4);
-	combiner_write(c, mess, 3);
+	ccwriter_write(w, mess, 3);
 }
 
-static void encode_store_function(struct combiner *c, int preset) {
+static void encode_store_function(struct ccwriter *w, struct ccpacket *p,
+	int preset)
+{
 	uint8_t mess[3];
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	mess[1] |= (preset << 1) | (EX_STORE << 4);
-	combiner_write(c, mess, 3);
+	ccwriter_write(w, mess, 3);
 }
 
-static void encode_preset(struct combiner *c) {
-	int preset = c->packet.preset;
+static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
+	int preset = p->preset;
 	if(preset < 1 || preset > 8)
 		return;
-	if(c->packet.command & CC_RECALL)
-		encode_recall_function(c, preset - 1);
-	else if(c->packet.command & CC_STORE)
-		encode_store_function(c, preset - 1);
+	if(p->command & CC_RECALL)
+		encode_recall_function(w, p, preset - 1);
+	else if(p->command & CC_STORE)
+		encode_store_function(w, p, preset - 1);
 }
 
-int manchester_do_write(struct combiner *c) {
-	if(c->packet.receiver < 1 || c->packet.receiver > 1024) {
-		ccpacket_drop(&c->packet);
+int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
+	int receiver = p->receiver + w->base;
+	if(receiver < 1 || receiver > 1024) {
+		ccpacket_drop(p);
 		return 0;
 	}
-	encode_pan(c);
-	encode_tilt(c);
-	encode_zoom(c);
-	encode_focus(c);
-	encode_iris(c);
-	encode_aux(c);
-	encode_preset(c);
+	encode_pan(w, p);
+	encode_tilt(w, p);
+	encode_zoom(w, p);
+	encode_focus(w, p);
+	encode_iris(w, p);
+	encode_aux(w, p);
+	encode_preset(w, p);
 	return 1;
 }

@@ -1,9 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <strings.h>
-#include "sport.h"
-#include "ccpacket.h"
-#include "combiner.h"
+#include "ccreader.h"
+#include "pelco_d.h"
 #include "bitarray.h"
 
 #define FLAG (0xff)
@@ -105,17 +104,17 @@ static inline void decode_sense(struct ccpacket *p, uint8_t *mess) {
 	}
 }
 
-static inline int pelco_decode_command(struct combiner *c,
+static inline int pelco_decode_command(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
-	c->packet.receiver = decode_receiver(mess);
-	decode_pan(&c->packet, mess);
-	decode_tilt(&c->packet, mess);
-	decode_lens(&c->packet, mess);
-	decode_sense(&c->packet, mess);
+	r->packet.receiver = decode_receiver(mess);
+	decode_pan(&r->packet, mess);
+	decode_tilt(&r->packet, mess);
+	decode_lens(&r->packet, mess);
+	decode_sense(&r->packet, mess);
 	buffer_skip(rxbuf, MSG_SIZE);
-	return combiner_process_packet(c);
+	return ccreader_process_packet(r);
 }
 
 enum extended_t {
@@ -191,17 +190,17 @@ static inline void decode_extended(struct ccpacket *p, enum extended_t ex,
 	}
 }
 
-static inline int pelco_decode_extended(struct combiner *c,
+static inline int pelco_decode_extended(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
-	c->packet.receiver = decode_receiver(mess);
+	r->packet.receiver = decode_receiver(mess);
 	int ex = mess[3] >> 1 & 0x1f;
 	int p0 = mess[5];
 	int p1 = mess[4];
-	decode_extended(&c->packet, ex, p0, p1);
+	decode_extended(&r->packet, ex, p0, p1);
 	buffer_skip(rxbuf, MSG_SIZE);
-	return combiner_process_packet(c);
+	return ccreader_process_packet(r);
 }
 
 static inline bool checksum_invalid(struct buffer *rxbuf) {
@@ -209,7 +208,7 @@ static inline bool checksum_invalid(struct buffer *rxbuf) {
 	return calculate_checksum(mess) != mess[6];
 }
 
-static inline int pelco_decode_message(struct combiner *c,
+static inline int pelco_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	if(buffer_peek(rxbuf) != FLAG) {
@@ -222,16 +221,16 @@ static inline int pelco_decode_message(struct combiner *c,
 		return 0;
 	}
 	if(is_extended(rxbuf))
-		return pelco_decode_extended(c, rxbuf);
+		return pelco_decode_extended(r, rxbuf);
 	else
-		return pelco_decode_command(c, rxbuf);
+		return pelco_decode_command(r, rxbuf);
 }
 
 int pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
-	struct combiner *c = (struct combiner *)h;
+	struct ccreader *r = (struct ccreader *)h;
 
 	while(buffer_available(rxbuf) >= MSG_SIZE) {
-		int m = pelco_decode_message(c, rxbuf);
+		int m = pelco_decode_message(r, rxbuf);
 		if(m < 0)
 			return m;
 		else if(m > 0)
@@ -307,62 +306,62 @@ static inline void encode_checksum(uint8_t *mess) {
 	mess[6] = calculate_checksum(mess);
 }
 
-static void encode_command(struct combiner *c) {
+static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t mess[MSG_SIZE];
 	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, c->packet.receiver);
-	encode_pan(mess, &c->packet);
-	encode_tilt(mess, &c->packet);
-	encode_lens(mess, &c->packet);
-	encode_sense(mess, &c->packet);
+	encode_receiver(mess, p->receiver);
+	encode_pan(mess, p);
+	encode_tilt(mess, p);
+	encode_lens(mess, p);
+	encode_sense(mess, p);
 	encode_checksum(mess);
-	combiner_write(c, mess, MSG_SIZE);
+	ccwriter_write(w, mess, MSG_SIZE);
 }
 
-static void encode_preset(struct combiner *c) {
+static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t mess[MSG_SIZE];
 	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	bit_set(mess, BIT_EXTENDED);
-	if(c->packet.command & CC_RECALL)
+	if(p->command & CC_RECALL)
 		mess[3] |= EX_RECALL << 1;
-	else if(c->packet.command & CC_STORE)
+	else if(p->command & CC_STORE)
 		mess[3] |= EX_STORE << 1;
-	else if(c->packet.command & CC_CLEAR)
+	else if(p->command & CC_CLEAR)
 		mess[3] |= EX_CLEAR << 1;
-	mess[5] = c->packet.preset;
+	mess[5] = p->preset;
 	encode_checksum(mess);
-	combiner_write(c, mess, MSG_SIZE);
+	ccwriter_write(w, mess, MSG_SIZE);
 }
 
-static void encode_aux(struct combiner *c) {
+static void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t mess[MSG_SIZE];
 	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	bit_set(mess, BIT_EXTENDED);
-	if(c->packet.aux & AUX_CLEAR)
+	if(p->aux & AUX_CLEAR)
 		mess[3] |= EX_AUX_CLEAR << 1;
 	else
 		mess[3] |= EX_AUX_SET << 1;
 	/* FIXME: use a lookup table; loop through bits */
-	if(c->packet.aux & AUX_1)
+	if(p->aux & AUX_1)
 		mess[5] = 1;
-	else if(c->packet.aux & AUX_2)
+	else if(p->aux & AUX_2)
 		mess[5] = 2;
-	else if(c->packet.aux & AUX_3)
+	else if(p->aux & AUX_3)
 		mess[5] = 3;
-	else if(c->packet.aux & AUX_4)
+	else if(p->aux & AUX_4)
 		mess[5] = 4;
-	else if(c->packet.aux & AUX_5)
+	else if(p->aux & AUX_5)
 		mess[5] = 5;
-	else if(c->packet.aux & AUX_6)
+	else if(p->aux & AUX_6)
 		mess[5] = 6;
-	else if(c->packet.aux & AUX_7)
+	else if(p->aux & AUX_7)
 		mess[5] = 7;
-	else if(c->packet.aux & AUX_8)
+	else if(p->aux & AUX_8)
 		mess[5] = 8;
 	encode_checksum(mess);
-	combiner_write(c, mess, MSG_SIZE);
+	ccwriter_write(w, mess, MSG_SIZE);
 }
 
 static inline bool has_sense(struct ccpacket *p) {
@@ -392,16 +391,17 @@ static inline bool has_aux(struct ccpacket *p) {
 		return false;
 }
 
-int pelco_d_do_write(struct combiner *c) {
-	if(c->packet.receiver < 1 || c->packet.receiver > 254) {
-		ccpacket_drop(&c->packet);
+int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
+	int receiver = p->receiver + w->base;
+	if(receiver < 1 || receiver > 254) {
+		ccpacket_drop(p);
 		return 0;
 	}
-	if(has_command(&c->packet))
-		encode_command(c);
-	if(has_preset(&c->packet))
-		encode_preset(c);
-	if(has_aux(&c->packet))
-		encode_aux(c);
+	if(has_command(p))
+		encode_command(w, p);
+	if(has_preset(p))
+		encode_preset(w, p);
+	if(has_aux(p))
+		encode_aux(w, p);
 	return 1;
 }

@@ -7,7 +7,7 @@
 #include "config.h"
 #include "poller.h"
 
-static const char *CONF_FILE = "/etc/protozoa.conf";
+static const char *CONF_FILE = "protozoa.conf";
 
 extern int errno;
 

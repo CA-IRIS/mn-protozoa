@@ -1,9 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <strings.h>
-#include "sport.h"
-#include "ccpacket.h"
-#include "combiner.h"
+#include "ccreader.h"
+#include "vicon.h"
 #include "bitarray.h"
 
 #define FLAG 0x80
@@ -158,60 +157,60 @@ static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
 	p->tilt = mess[9] & 0x7f;
 }
 
-static inline int vicon_decode_extended(struct combiner *c,
+static inline int vicon_decode_extended(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
 	if(buffer_available(rxbuf) < 10)
 		return 1;
-	c->packet.receiver = decode_receiver(mess);
-	decode_pan(&c->packet, mess);
-	decode_tilt(&c->packet, mess);
-	decode_lens(&c->packet, mess);
-	decode_toggles(&c->packet, mess);
-	decode_aux(&c->packet, mess);
-	decode_preset(&c->packet, mess);
+	r->packet.receiver = decode_receiver(mess);
+	decode_pan(&r->packet, mess);
+	decode_tilt(&r->packet, mess);
+	decode_lens(&r->packet, mess);
+	decode_toggles(&r->packet, mess);
+	decode_aux(&r->packet, mess);
+	decode_preset(&r->packet, mess);
 	if(bit_is_set(mess, BIT_EX_REQUEST)) {
 		if(bit_is_set(mess, BIT_EX_STATUS))
-			decode_ex_status(&c->packet, mess);
+			decode_ex_status(&r->packet, mess);
 		else
-			decode_ex_preset(&c->packet, mess);
+			decode_ex_preset(&r->packet, mess);
 	} else
-		decode_ex_speed(&c->packet, mess);
+		decode_ex_speed(&r->packet, mess);
 	buffer_skip(rxbuf, 10);
-	return combiner_process_packet(c);
+	return ccreader_process_packet(r);
 }
 
-static inline int vicon_decode_command(struct combiner *c,
+static inline int vicon_decode_command(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
 	if(buffer_available(rxbuf) < 6)
 		return 1;
-	c->packet.receiver = decode_receiver(mess);
-	decode_pan(&c->packet, mess);
-	decode_tilt(&c->packet, mess);
-	decode_lens(&c->packet, mess);
-	decode_toggles(&c->packet, mess);
-	decode_aux(&c->packet, mess);
-	decode_preset(&c->packet, mess);
+	r->packet.receiver = decode_receiver(mess);
+	decode_pan(&r->packet, mess);
+	decode_tilt(&r->packet, mess);
+	decode_lens(&r->packet, mess);
+	decode_toggles(&r->packet, mess);
+	decode_aux(&r->packet, mess);
+	decode_preset(&r->packet, mess);
 	buffer_skip(rxbuf, 6);
-	return combiner_process_packet(c);
+	return ccreader_process_packet(r);
 }
 
-static inline int vicon_decode_status(struct combiner *c,
+static inline int vicon_decode_status(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
 	if(buffer_available(rxbuf) < 2)
 		return 1;
-	c->packet.receiver = decode_receiver(mess);
-	c->packet.status = STATUS_REQUEST;
+	r->packet.receiver = decode_receiver(mess);
+	r->packet.status = STATUS_REQUEST;
 	buffer_skip(rxbuf, 2);
-	return combiner_process_packet(c);
+	return ccreader_process_packet(r);
 }
 
-static inline int vicon_decode_message(struct combiner *c,
+static inline int vicon_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	if((buffer_peek(rxbuf) & FLAG) == 0) {
@@ -220,18 +219,18 @@ static inline int vicon_decode_message(struct combiner *c,
 		return 0;
 	}
 	if(is_extended_command(rxbuf))
-		return vicon_decode_extended(c, rxbuf);
+		return vicon_decode_extended(r, rxbuf);
 	else if(is_command(rxbuf))
-		return vicon_decode_command(c, rxbuf);
+		return vicon_decode_command(r, rxbuf);
 	else
-		return vicon_decode_status(c, rxbuf);
+		return vicon_decode_status(r, rxbuf);
 }
 
 int vicon_do_read(struct handler *h, struct buffer *rxbuf) {
-	struct combiner *c = (struct combiner *)h;
+	struct ccreader *r = (struct ccreader *)h;
 
 	while(buffer_available(rxbuf) >= 2) {
-		int m = vicon_decode_message(c, rxbuf);
+		int m = vicon_decode_message(r, rxbuf);
 		if(m < 0)
 			return m;
 		else if(m > 0)
@@ -311,17 +310,17 @@ static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 	mess[5] |= p->preset & 0x0f;
 }
 
-static void encode_command(struct combiner *c) {
+static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t mess[6];
 	bzero(mess, 6);
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	bit_set(mess, BIT_COMMAND);
-	encode_pan_tilt(mess, &c->packet);
-	encode_lens(mess, &c->packet);
-	encode_toggles(mess, &c->packet);
-	encode_aux(mess, &c->packet);
-	encode_preset(mess, &c->packet);
-	combiner_write(c, mess, 6);
+	encode_pan_tilt(mess, p);
+	encode_lens(mess, p);
+	encode_toggles(mess, p);
+	encode_aux(mess, p);
+	encode_preset(mess, p);
+	ccwriter_write(w, mess, 6);
 }
 
 static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
@@ -331,59 +330,59 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 	mess[9] = p->tilt & 0x7f;
 }
 
-static void encode_extended_speed(struct combiner *c) {
+static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t mess[10];
 	bzero(mess, 10);
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
-	encode_pan_tilt(mess, &c->packet);
-	encode_lens(mess, &c->packet);
-	encode_toggles(mess, &c->packet);
-	encode_aux(mess, &c->packet);
-	encode_preset(mess, &c->packet);
-	encode_speeds(mess, &c->packet);
-	combiner_write(c, mess, 10);
+	encode_pan_tilt(mess, p);
+	encode_lens(mess, p);
+	encode_toggles(mess, p);
+	encode_aux(mess, p);
+	encode_preset(mess, p);
+	encode_speeds(mess, p);
+	ccwriter_write(w, mess, 10);
 }
 
-static void encode_extended_preset(struct combiner *c) {
+static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t mess[10];
 	bzero(mess, 10);
-	encode_receiver(mess, c->packet.receiver);
+	encode_receiver(mess, p->receiver);
 	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
 	bit_set(mess, BIT_EX_REQUEST);
-	if(c->packet.command & CC_STORE)
+	if(p->command & CC_STORE)
 		bit_set(mess, BIT_EX_STORE);
-	encode_lens(mess, &c->packet);
-	encode_toggles(mess, &c->packet);
-	encode_aux(mess, &c->packet);
-	mess[7] |= c->packet.preset & 0x7f;
-	mess[8] |= c->packet.pan & 0x7f;
-	mess[9] |= c->packet.tilt & 0x7f;
-	combiner_write(c, mess, 10);
+	encode_lens(mess, p);
+	encode_toggles(mess, p);
+	encode_aux(mess, p);
+	mess[7] |= p->preset & 0x7f;
+	mess[8] |= p->pan & 0x7f;
+	mess[9] |= p->tilt & 0x7f;
+	ccwriter_write(w, mess, 10);
 }
 
-static void encode_status(struct combiner *c) {
+static void encode_status(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t mess[10];
 	bzero(mess, 10);
-	encode_receiver(mess, c->packet.receiver);
-	if(c->packet.status & STATUS_EXTENDED) {
+	encode_receiver(mess, p->receiver);
+	if(p->status & STATUS_EXTENDED) {
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_STATUS);
 		bit_set(mess, BIT_EX_REQUEST);
-		if(c->packet.status & STATUS_SECTOR)
+		if(p->status & STATUS_SECTOR)
 			bit_set(mess, BIT_STAT_SECTOR);
-		if(c->packet.status & STATUS_PRESET)
+		if(p->status & STATUS_PRESET)
 			bit_set(mess, BIT_STAT_PRESET);
-		if(c->packet.status & STATUS_AUX_SET_2) {
+		if(p->status & STATUS_AUX_SET_2) {
 			bit_set(mess, BIT_STAT_V15UVS);
 			bit_set(mess, BIT_STAT_AUX_SET_2);
 		}
-		combiner_write(c, mess, 10);
+		ccwriter_write(w, mess, 10);
 	} else
-		combiner_write(c, mess, 2);
+		ccwriter_write(w, mess, 2);
 }
 
 static inline bool is_extended_preset(struct ccpacket *p) {
@@ -393,18 +392,19 @@ static inline bool is_extended_preset(struct ccpacket *p) {
 		return false;
 }
 
-int vicon_do_write(struct combiner *c) {
-	if(c->packet.receiver < 1 || c->packet.receiver > 255) {
-		ccpacket_drop(&c->packet);
+int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
+	int receiver = p->receiver + w->base;
+	if(receiver < 1 || receiver > 255) {
+		ccpacket_drop(p);
 		return 0;
 	}
-	if(c->packet.status)
-		encode_status(c);
-	else if(is_extended_preset(&c->packet))
-		encode_extended_preset(c);
-	else if(c->packet.command & CC_PAN_TILT)
-		encode_extended_speed(c);
+	if(p->status)
+		encode_status(w, p);
+	else if(is_extended_preset(p))
+		encode_extended_preset(w, p);
+	else if(p->command & CC_PAN_TILT)
+		encode_extended_speed(w, p);
 	else
-		encode_command(c);
+		encode_command(w, p);
 	return 1;
 }

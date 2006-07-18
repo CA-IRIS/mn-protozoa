@@ -47,33 +47,31 @@ static struct sport* sport_configure(struct sport *port, int baud) {
 	return port;
 }
 
-static int sport_do_read(struct handler *h, struct buffer *rxbuf) {
-	/* Do nothing */
-	return 0;
-}
-
-static struct handler null_handler = {
-	.do_read = sport_do_read,
-};
-
 struct sport* sport_init(struct sport *port, const char *name, int baud) {
+	bzero(port, sizeof(struct sport));
 	port->name = malloc(strlen(name) + 1);
 	strcpy(port->name, name);
+	port->baud = baud;
 	port->rxbuf = malloc(BUFFER_SIZE);
 	if(port->rxbuf == NULL)
-		return NULL;
+		goto fail;
 	if(buffer_init(port->rxbuf, BUFFER_SIZE) == NULL)
-		return NULL;
+		goto fail;
 	port->txbuf = malloc(BUFFER_SIZE);
 	if(port->txbuf == NULL)
-		return NULL;
+		goto fail;
 	if(buffer_init(port->txbuf, BUFFER_SIZE) == NULL)
-		return NULL;
-	port->handler = &null_handler;
+		goto fail;
+	port->handler = NULL;
 	port->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if(port->fd < 0)
-		return NULL;
+		goto fail;
 	return sport_configure(port, baud);
+fail:
+	free(port->name);
+	free(port->rxbuf);
+	free(port->txbuf);
+	return NULL;
 }
 
 ssize_t sport_read(struct sport *port) {
@@ -81,7 +79,10 @@ ssize_t sport_read(struct sport *port) {
 	if(n_bytes <= 0)
 		return n_bytes;
 	buffer_debug_in(port->rxbuf, n_bytes, port->name);
-	if(port->handler->do_read(port->handler, port->rxbuf) < 0)
+	if(port->handler) {
+		if(port->handler->do_read(port->handler, port->rxbuf) < 0)
+			return -1;
+	} else
 		return -1;
 	return n_bytes;
 }

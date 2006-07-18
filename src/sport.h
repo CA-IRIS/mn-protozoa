@@ -12,17 +12,14 @@ struct handler {
 struct sport {
 	char		*name;
 	int		fd;
+	int		baud;
 	struct buffer	*rxbuf;
 	struct buffer	*txbuf;
 
 	struct handler	*handler;
 };
 
-struct sport* sport_init(
-	struct sport	*port,
-	const char	*name,
-	int		baud);
-
+struct sport* sport_init(struct sport *port, const char *name, int baud); 
 ssize_t sport_read(struct sport *port);
 ssize_t sport_write(struct sport *port);
 
