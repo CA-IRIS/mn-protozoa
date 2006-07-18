@@ -31,14 +31,13 @@
 <h3>Configuration File</h3>
 <p>
 	The configuration file, /etc/protozoa.conf, contains a series of
-	serial data control directives. Each directive describes a serial
-	port and protocol parameters. First, an OUT directive must be declared,
-	for the output port and protocol. Following that, each IN directive
-	will be attached to that output.
+	serial data control directives. Each directive describes an input and
+	output serial port and protocol parameters. First, the input protocol,
+	port and baud rate are specified. Then comes the output protocol, port
+	and baud rate.
 </p>
 <pre>
-	OUT vicon /dev/ttyS0 9600
-	IN manchester /dev/ttyS1 4800
+	manchester /dev/ttyS1 4800	vicon /dev/ttyS0 9600
 </pre>
 <p>
 	The above configuration reads camera control commands on /dev/ttyS1
@@ -46,12 +45,10 @@
 	the vicon protocol and sends them out on /dev/ttyS0 at 9600 baud.
 </p>
 <pre>
-	OUT pelco_d /dev/ttyS0 9600
-	IN manchester /dev/ttyS1 9600
-	IN vicon /dev/ttyS2 4800
-	OUT vicon /dev/ttyS3 9600
-	IN manchester /dev/ttyS4 9600
-	IN vicon /dev/ttyS5 9600
+	manchester /dev/ttyS1 9600	pelco_d /dev/ttyS0 9600
+	vicon /dev/ttyS2 4800		pelco_d /dev/ttyS0 9600
+	manchester /dev/ttyS4 9600	vicon /dev/ttyS3 9600
+	vicon /dev/ttyS5 9600		vicon /dev/ttyS3 9600
 </pre>
 <p>
 	This configuration interleaves commands from /dev/ttyS1 and /dev/ttyS2,
@@ -59,30 +56,25 @@
 	/dev/ttyS5 are interleaved onto /dev/ttyS3.
 </p>
 <pre>
-	OUT manchester /dev/ttyS0 9600
-	IN vicon /dev/ttyS1 9600 0
-	IN vicon /dev/ttyS2 9600 256
-	IN vicon /dev/ttyS3 9600 512
+	vicon /dev/ttyS1 9600		manchester /dev/ttyS0 9600	0
+	vicon /dev/ttyS2 9600		manchester /dev/ttyS0 9600	256
+	vicon /dev/ttyS3 9600		manchester /dev/ttyS0 9600	512
 </pre>
 <p>
 	This configuration combines three vicon lines into one manchester line,
 	including receiver address translation.
 </p>
 <pre>
-	OUT manchester /dev/ttya03 9600
-	IN vicon /dev/ttya01 9600
-	OUT pelco_d /dev/ttya02 9600
-	IN manchester /dev/ttya03 9600
+	vicon /dev/ttya01 9600		manchester /dev/ttya03 9600
+	manchester /dev/ttya03 9600	pelco_d /dev/ttya02 9600
 </pre>
 <p>
 	It is possible to use a loopback plug on one port, and send / receive
 	data to / from that port. This is a good method of testing the
-	protocol handlers. The configuration above is one example of this. For
-	this type of configuration, the OUT directive for the port must be
-	declared before the IN directive.
+	protocol handlers. The configuration above is one example of this.
 </p>
 <p class="stamp">
-	2006 July 14
+	2006 July 18
 </p>
 </body>
 </html>
