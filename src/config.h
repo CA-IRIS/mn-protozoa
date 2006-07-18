@@ -3,7 +3,6 @@
 
 #include "sport.h"
 #include "ccpacket.h"
-#include "combiner.h"
 
 #define LINE_LENGTH (80)
 
