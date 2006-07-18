@@ -6,6 +6,7 @@
 #include "combiner.h"
 
 #define FLAG (0xff)
+#define MSG_SIZE (7)
 #define TURBO_SPEED (1 << 6)
 
 enum pelco_bit_t {
@@ -124,7 +125,7 @@ static inline int pelco_decode_command(struct combiner *c,
 	decode_tilt(&c->packet, mess);
 	decode_lens(&c->packet, mess);
 	decode_sense(&c->packet, mess);
-	buffer_skip(rxbuf, 7);
+	buffer_skip(rxbuf, MSG_SIZE);
 	return combiner_process_packet(c);
 }
 
@@ -210,7 +211,7 @@ static inline int pelco_decode_extended(struct combiner *c,
 	int p0 = mess[5];
 	int p1 = mess[4];
 	decode_extended(&c->packet, ex, p0, p1);
-	buffer_skip(rxbuf, 7);
+	buffer_skip(rxbuf, MSG_SIZE);
 	return combiner_process_packet(c);
 }
 
@@ -240,7 +241,7 @@ static inline int pelco_decode_message(struct combiner *c,
 int pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct combiner *c = (struct combiner *)h;
 
-	while(buffer_available(rxbuf) >= 7) {
+	while(buffer_available(rxbuf) >= MSG_SIZE) {
 		int m = pelco_decode_message(c, rxbuf);
 		if(m < 0)
 			return m;
@@ -318,20 +319,20 @@ static inline void encode_checksum(uint8_t *mess) {
 }
 
 static void encode_command(struct combiner *c) {
-	uint8_t mess[7];
-	bzero(mess, 7);
+	uint8_t mess[MSG_SIZE];
+	bzero(mess, MSG_SIZE);
 	encode_receiver(mess, c->packet.receiver);
 	encode_pan(mess, &c->packet);
 	encode_tilt(mess, &c->packet);
 	encode_lens(mess, &c->packet);
 	encode_sense(mess, &c->packet);
 	encode_checksum(mess);
-	combiner_write(c, mess, 7);
+	combiner_write(c, mess, MSG_SIZE);
 }
 
 static void encode_preset(struct combiner *c) {
-	uint8_t mess[7];
-	bzero(mess, 7);
+	uint8_t mess[MSG_SIZE];
+	bzero(mess, MSG_SIZE);
 	encode_receiver(mess, c->packet.receiver);
 	bit_set(mess, BIT_EXTENDED);
 	if(c->packet.command & CC_RECALL)
@@ -342,12 +343,12 @@ static void encode_preset(struct combiner *c) {
 		mess[3] |= EX_CLEAR << 1;
 	mess[5] = c->packet.preset;
 	encode_checksum(mess);
-	combiner_write(c, mess, 7);
+	combiner_write(c, mess, MSG_SIZE);
 }
 
 static void encode_aux(struct combiner *c) {
-	uint8_t mess[7];
-	bzero(mess, 7);
+	uint8_t mess[MSG_SIZE];
+	bzero(mess, MSG_SIZE);
 	encode_receiver(mess, c->packet.receiver);
 	bit_set(mess, BIT_EXTENDED);
 	if(c->packet.aux & AUX_CLEAR)
@@ -372,7 +373,7 @@ static void encode_aux(struct combiner *c) {
 	else if(c->packet.aux & AUX_8)
 		mess[5] = 8;
 	encode_checksum(mess);
-	combiner_write(c, mess, 7);
+	combiner_write(c, mess, MSG_SIZE);
 }
 
 static inline bool has_sense(struct ccpacket *p) {
