@@ -1,6 +1,7 @@
 CC = gcc
 CFLAGS = -Os -Wall -combine -fwhole-program
 #CFLAGS = -Wall -ggdb
+#CFLAGS = -Os -Wall -S -combine
 TARGET = protozoa
 
 all:  $(TARGET)

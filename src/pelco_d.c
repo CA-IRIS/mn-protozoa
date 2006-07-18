@@ -4,6 +4,7 @@
 #include "sport.h"
 #include "ccpacket.h"
 #include "combiner.h"
+#include "bitarray.h"
 
 #define FLAG (0xff)
 #define MSG_SIZE (7)
@@ -25,18 +26,6 @@ enum pelco_bit_t {
 	BIT_ZOOM_OUT = 30,
 	BIT_FOCUS_FAR = 31,
 };
-
-static inline bool bit_is_set(uint8_t *mess, enum pelco_bit_t bit) {
-	int by = bit / 8;
-	int mask = 1 << (bit % 8);
-	return (mess[by] & mask) != 0;
-}
-
-static inline void bit_set(uint8_t *mess, enum pelco_bit_t bit) {
-	int by = bit / 8;
-	int mask = 1 << (bit % 8);
-	mess[by] |= mask;
-}
 
 static inline int decode_receiver(uint8_t *mess) {
 	return mess[1];

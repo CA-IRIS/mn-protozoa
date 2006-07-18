@@ -4,6 +4,7 @@
 #include "sport.h"
 #include "ccpacket.h"
 #include "combiner.h"
+#include "bitarray.h"
 
 #define FLAG 0x80
 
@@ -43,18 +44,6 @@ enum vicon_bit_t {
 
 static inline int decode_receiver(uint8_t *mess) {
 	return ((mess[0] & 0x0f) << 4) | (mess[1] & 0x0f);
-}
-
-static inline bool bit_is_set(uint8_t *mess, enum vicon_bit_t bit) {
-	int by = bit / 8;
-	int mask = 1 << (bit % 8);
-	return (mess[by] & mask) != 0;
-}
-
-static inline void bit_set(uint8_t *mess, enum vicon_bit_t bit) {
-	int by = bit / 8;
-	int mask = 1 << (bit % 8);
-	mess[by] |= mask;
 }
 
 static inline bool is_command(struct buffer *rxbuf) {
