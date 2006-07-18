@@ -21,19 +21,6 @@ void config_init(struct config *c, const char *filename, bool verbose,
 		c->counter = NULL;
 }
 
-/*
-static struct combiner *config_set_inbound(struct config *c, struct sport *prt,
-	const char *protocol)
-{
-	struct combiner *cmbnr = c->out;
-	if(cmbnr == NULL)
-		return NULL;
-	if(combiner_set_input_protocol(cmbnr, protocol) < 0)
-		return NULL;
-	prt->handler = &cmbnr->handler;
-	return cmbnr;
-} */
-
 static struct sport *config_find_port(struct config *c, const char *port) {
 	int i;
 	for(i = 0; i < c->n_ports; i++) {
@@ -77,19 +64,6 @@ static struct sport *config_get_port(struct config *c, const char *port,
 	} else
 		return config_new_port(c, port, baud);
 }
-
-/*
-static struct combiner *config_new_combiner(struct config *c, struct sport *prt,
-	const char *in_out, const char *protocol)
-{
-	if(strcasecmp(in_out, "OUT") == 0) {
-		c->out = combiner_create_outbound(prt, protocol, c->verbose);
-		return c->out;
-	} else if(strcasecmp(in_out, "IN") == 0)
-		return combiner_create_inbound(prt, protocol, c->out);
-	else
-		return NULL;
-} */
 
 static int config_directive(struct config *c, const char *protocol_in,
 	const char *port_in, int baud_in, const char *protocol_out,
