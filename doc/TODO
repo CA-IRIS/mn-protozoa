@@ -1,2 +1,3 @@
 *	Perform some sort of check for wrong protocol.
 *	Add ability to read protocol streams from a TCP socket.
+*	Add protocol driver for NTCIP camera control.
