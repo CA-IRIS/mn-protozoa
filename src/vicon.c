@@ -5,7 +5,10 @@
 #include "vicon.h"
 #include "bitarray.h"
 
-#define FLAG 0x80
+#define FLAG (0x80)
+#define SIZE_STATUS (2)
+#define SIZE_COMMAND (6)
+#define SIZE_EXTENDED (10)
 
 enum vicon_bit_t {
 	BIT_COMMAND = 12,
@@ -161,7 +164,7 @@ static inline int vicon_decode_extended(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
-	if(buffer_available(rxbuf) < 10)
+	if(buffer_available(rxbuf) < SIZE_EXTENDED)
 		return 1;
 	r->packet.receiver = decode_receiver(mess);
 	decode_pan(&r->packet, mess);
@@ -177,7 +180,7 @@ static inline int vicon_decode_extended(struct ccreader *r,
 			decode_ex_preset(&r->packet, mess);
 	} else
 		decode_ex_speed(&r->packet, mess);
-	buffer_skip(rxbuf, 10);
+	buffer_skip(rxbuf, SIZE_EXTENDED);
 	return ccreader_process_packet(r);
 }
 
@@ -185,7 +188,7 @@ static inline int vicon_decode_command(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
-	if(buffer_available(rxbuf) < 6)
+	if(buffer_available(rxbuf) < SIZE_COMMAND)
 		return 1;
 	r->packet.receiver = decode_receiver(mess);
 	decode_pan(&r->packet, mess);
@@ -194,7 +197,7 @@ static inline int vicon_decode_command(struct ccreader *r,
 	decode_toggles(&r->packet, mess);
 	decode_aux(&r->packet, mess);
 	decode_preset(&r->packet, mess);
-	buffer_skip(rxbuf, 6);
+	buffer_skip(rxbuf, SIZE_COMMAND);
 	return ccreader_process_packet(r);
 }
 
@@ -202,11 +205,11 @@ static inline int vicon_decode_status(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = rxbuf->pout;
-	if(buffer_available(rxbuf) < 2)
+	if(buffer_available(rxbuf) < SIZE_STATUS)
 		return 1;
 	r->packet.receiver = decode_receiver(mess);
 	r->packet.status = STATUS_REQUEST;
-	buffer_skip(rxbuf, 2);
+	buffer_skip(rxbuf, SIZE_STATUS);
 	return ccreader_process_packet(r);
 }
 
@@ -229,7 +232,7 @@ static inline int vicon_decode_message(struct ccreader *r,
 int vicon_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct ccreader *r = (struct ccreader *)h;
 
-	while(buffer_available(rxbuf) >= 2) {
+	while(buffer_available(rxbuf) >= SIZE_STATUS) {
 		int m = vicon_decode_message(r, rxbuf);
 		if(m < 0)
 			return m;
@@ -313,8 +316,8 @@ static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 static void encode_command(struct ccwriter *w, struct ccpacket *p,
 	int receiver)
 {
-	uint8_t mess[6];
-	bzero(mess, 6);
+	uint8_t mess[SIZE_COMMAND];
+	bzero(mess, SIZE_COMMAND);
 	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_COMMAND);
 	encode_pan_tilt(mess, p);
@@ -322,7 +325,7 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p,
 	encode_toggles(mess, p);
 	encode_aux(mess, p);
 	encode_preset(mess, p);
-	ccwriter_write(w, mess, 6);
+	ccwriter_write(w, mess, SIZE_COMMAND);
 }
 
 static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
@@ -335,8 +338,8 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p,
 	int receiver)
 {
-	uint8_t mess[10];
-	bzero(mess, 10);
+	uint8_t mess[SIZE_EXTENDED];
+	bzero(mess, SIZE_EXTENDED);
 	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
@@ -346,14 +349,14 @@ static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p,
 	encode_aux(mess, p);
 	encode_preset(mess, p);
 	encode_speeds(mess, p);
-	ccwriter_write(w, mess, 10);
+	ccwriter_write(w, mess, SIZE_EXTENDED);
 }
 
 static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p,
 	int receiver)
 {
-	uint8_t mess[10];
-	bzero(mess, 10);
+	uint8_t mess[SIZE_EXTENDED];
+	bzero(mess, SIZE_EXTENDED);
 	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
@@ -366,13 +369,13 @@ static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p,
 	mess[7] |= p->preset & 0x7f;
 	mess[8] |= p->pan & 0x7f;
 	mess[9] |= p->tilt & 0x7f;
-	ccwriter_write(w, mess, 10);
+	ccwriter_write(w, mess, SIZE_EXTENDED);
 }
 
 static void encode_status(struct ccwriter *w, struct ccpacket *p, int receiver)
 {
-	uint8_t mess[10];
-	bzero(mess, 10);
+	uint8_t mess[SIZE_EXTENDED];
+	bzero(mess, SIZE_EXTENDED);
 	encode_receiver(mess, receiver);
 	if(p->status & STATUS_EXTENDED) {
 		bit_set(mess, BIT_COMMAND);
@@ -387,9 +390,9 @@ static void encode_status(struct ccwriter *w, struct ccpacket *p, int receiver)
 			bit_set(mess, BIT_STAT_V15UVS);
 			bit_set(mess, BIT_STAT_AUX_SET_2);
 		}
-		ccwriter_write(w, mess, 10);
+		ccwriter_write(w, mess, SIZE_EXTENDED);
 	} else
-		ccwriter_write(w, mess, 2);
+		ccwriter_write(w, mess, SIZE_STATUS);
 }
 
 static inline bool is_extended_preset(struct ccpacket *p) {
