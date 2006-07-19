@@ -49,7 +49,7 @@ static inline int ccreader_do_writers(struct ccreader *r) {
 	}
 	if(res && r->verbose)
 		ccpacket_debug(&r->packet);
-	return 0;
+	return res;
 }
 
 int ccreader_process_packet(struct ccreader *r) {
@@ -60,7 +60,10 @@ int ccreader_process_packet(struct ccreader *r) {
 		ccpacket_drop(&r->packet);
 	else {
 		res = ccreader_do_writers(r);
-		ccpacket_count(&r->packet);
+		if(res)
+			ccpacket_count(&r->packet);
+		else
+			ccpacket_drop(&r->packet);
 	}
 	ccpacket_clear(&r->packet);
 	return res;

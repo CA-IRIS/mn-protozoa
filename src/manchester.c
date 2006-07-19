@@ -357,10 +357,8 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 
 int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int receiver = p->receiver + w->base;
-	if(receiver < 1 || receiver > 1024) {
-		ccpacket_drop(p);
+	if(receiver < 1 || receiver > 1024)
 		return 0;
-	}
 	encode_pan(w, p);
 	encode_tilt(w, p);
 	encode_zoom(w, p);

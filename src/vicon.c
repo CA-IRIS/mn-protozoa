@@ -394,10 +394,8 @@ static inline bool is_extended_preset(struct ccpacket *p) {
 
 int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int receiver = p->receiver + w->base;
-	if(receiver < 1 || receiver > 255) {
-		ccpacket_drop(p);
+	if(receiver < 1 || receiver > 255)
 		return 0;
-	}
 	if(p->status)
 		encode_status(w, p);
 	else if(is_extended_preset(p))
