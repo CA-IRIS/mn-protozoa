@@ -55,8 +55,8 @@ static inline int ccreader_do_writers(struct ccreader *r) {
 int ccreader_process_packet(struct ccreader *r) {
 	int res = 0;
 	if(r->packet.receiver == 0)
-		return 0;
-	if(r->packet.status)
+		return 0;	// Ignore if receiver is zero
+	else if(r->packet.status)
 		ccpacket_drop(&r->packet);
 	else {
 		res = ccreader_do_writers(r);
