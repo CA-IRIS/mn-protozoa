@@ -7,12 +7,14 @@
 #include "config.h"
 #include "poller.h"
 
-static const char *CONF_FILE = "protozoa.conf";
+#define VERSION "0.2"
+
+static const char *CONF_FILE = "/etc/protozoa.conf";
 
 extern int errno;
 
 static void print_version() {
-	printf("protozoa 0.1\n");
+	printf("protozoa " VERSION "\n");
 	printf("Copyright (C) 2006 Minnesota Department of Transportation\n");
 }
 
