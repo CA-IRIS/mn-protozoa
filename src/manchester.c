@@ -232,7 +232,8 @@ static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *p,
 	enum pt_command_t cmnd, int speed)
 {
 	uint8_t mess[3];
-	encode_receiver(mess, p->receiver);
+	int receiver = p->receiver + w->base;
+	encode_receiver(mess, receiver);
 	mess[1] |= (cmnd << 4) | (speed << 1);
 	mess[2] |= PT_COMMAND;
 	ccwriter_write(w, mess, 3);
@@ -242,7 +243,8 @@ static void encode_lens_function(struct ccwriter *w, struct ccpacket *p,
 	enum lens_t func)
 {
 	uint8_t mess[3];
-	encode_receiver(mess, p->receiver);
+	int receiver = p->receiver + w->base;
+	encode_receiver(mess, receiver);
 	mess[1] |= (func << 1) | (EX_LENS << 4);
 	ccwriter_write(w, mess, 3);
 }
@@ -251,7 +253,8 @@ static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
 	int aux)
 {
 	uint8_t mess[3];
-	encode_receiver(mess, p->receiver);
+	int receiver = p->receiver + w->base;
+	encode_receiver(mess, receiver);
 	mess[1] |= (aux << 1) | (EX_AUX << 4);
 	ccwriter_write(w, mess, 3);
 }
@@ -331,7 +334,8 @@ static void encode_recall_function(struct ccwriter *w, struct ccpacket *p,
 	int preset)
 {
 	uint8_t mess[3];
-	encode_receiver(mess, p->receiver);
+	int receiver = p->receiver + w->base;
+	encode_receiver(mess, receiver);
 	mess[1] |= (preset << 1) | (EX_RECALL << 4);
 	ccwriter_write(w, mess, 3);
 }
@@ -340,7 +344,8 @@ static void encode_store_function(struct ccwriter *w, struct ccpacket *p,
 	int preset)
 {
 	uint8_t mess[3];
-	encode_receiver(mess, p->receiver);
+	int receiver = p->receiver + w->base;
+	encode_receiver(mess, receiver);
 	mess[1] |= (preset << 1) | (EX_STORE << 4);
 	ccwriter_write(w, mess, 3);
 }

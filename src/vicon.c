@@ -310,10 +310,12 @@ static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 	mess[5] |= p->preset & 0x0f;
 }
 
-static void encode_command(struct ccwriter *w, struct ccpacket *p) {
+static void encode_command(struct ccwriter *w, struct ccpacket *p,
+	int receiver)
+{
 	uint8_t mess[6];
 	bzero(mess, 6);
-	encode_receiver(mess, p->receiver);
+	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_COMMAND);
 	encode_pan_tilt(mess, p);
 	encode_lens(mess, p);
@@ -330,10 +332,12 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 	mess[9] = p->tilt & 0x7f;
 }
 
-static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
+static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p,
+	int receiver)
+{
 	uint8_t mess[10];
 	bzero(mess, 10);
-	encode_receiver(mess, p->receiver);
+	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
 	encode_pan_tilt(mess, p);
@@ -345,10 +349,12 @@ static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
 	ccwriter_write(w, mess, 10);
 }
 
-static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p) {
+static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p,
+	int receiver)
+{
 	uint8_t mess[10];
 	bzero(mess, 10);
-	encode_receiver(mess, p->receiver);
+	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_COMMAND);
 	bit_set(mess, BIT_EXTENDED);
 	bit_set(mess, BIT_EX_REQUEST);
@@ -363,10 +369,11 @@ static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p) {
 	ccwriter_write(w, mess, 10);
 }
 
-static void encode_status(struct ccwriter *w, struct ccpacket *p) {
+static void encode_status(struct ccwriter *w, struct ccpacket *p, int receiver)
+{
 	uint8_t mess[10];
 	bzero(mess, 10);
-	encode_receiver(mess, p->receiver);
+	encode_receiver(mess, receiver);
 	if(p->status & STATUS_EXTENDED) {
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
@@ -397,12 +404,12 @@ int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(receiver < 1 || receiver > 255)
 		return 0;
 	if(p->status)
-		encode_status(w, p);
+		encode_status(w, p, receiver);
 	else if(is_extended_preset(p))
-		encode_extended_preset(w, p);
+		encode_extended_preset(w, p, receiver);
 	else if(p->command & CC_PAN_TILT)
-		encode_extended_speed(w, p);
+		encode_extended_speed(w, p, receiver);
 	else
-		encode_command(w, p);
+		encode_command(w, p, receiver);
 	return 1;
 }

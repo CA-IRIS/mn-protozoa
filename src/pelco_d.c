@@ -306,10 +306,12 @@ static inline void encode_checksum(uint8_t *mess) {
 	mess[6] = calculate_checksum(mess);
 }
 
-static void encode_command(struct ccwriter *w, struct ccpacket *p) {
+static void encode_command(struct ccwriter *w, struct ccpacket *p,
+	int receiver)
+{
 	uint8_t mess[MSG_SIZE];
 	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, p->receiver);
+	encode_receiver(mess, receiver);
 	encode_pan(mess, p);
 	encode_tilt(mess, p);
 	encode_lens(mess, p);
@@ -318,10 +320,11 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	ccwriter_write(w, mess, MSG_SIZE);
 }
 
-static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
+static void encode_preset(struct ccwriter *w, struct ccpacket *p, int receiver)
+{
 	uint8_t mess[MSG_SIZE];
 	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, p->receiver);
+	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_EXTENDED);
 	if(p->command & CC_RECALL)
 		mess[3] |= EX_RECALL << 1;
@@ -334,10 +337,10 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 	ccwriter_write(w, mess, MSG_SIZE);
 }
 
-static void encode_aux(struct ccwriter *w, struct ccpacket *p) {
+static void encode_aux(struct ccwriter *w, struct ccpacket *p, int receiver) {
 	uint8_t mess[MSG_SIZE];
 	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, p->receiver);
+	encode_receiver(mess, receiver);
 	bit_set(mess, BIT_EXTENDED);
 	if(p->aux & AUX_CLEAR)
 		mess[3] |= EX_AUX_CLEAR << 1;
@@ -396,10 +399,10 @@ int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(receiver < 1 || receiver > 254)
 		return 0;
 	if(has_command(p))
-		encode_command(w, p);
+		encode_command(w, p, receiver);
 	if(has_preset(p))
-		encode_preset(w, p);
+		encode_preset(w, p, receiver);
 	if(has_aux(p))
-		encode_aux(w, p);
+		encode_aux(w, p, receiver);
 	return 1;
 }
