@@ -11,6 +11,11 @@ static const char *CONF_FILE = "protozoa.conf";
 
 extern int errno;
 
+static void print_version() {
+	printf("protozoa 0.1\n");
+	printf("Copyright (C) 2006 Minnesota Department of Transportation\n");
+}
+
 int main(int argc, char* argv[])
 {
 	int n_ports, i;
@@ -27,6 +32,10 @@ int main(int argc, char* argv[])
 			verbose = true;
 		if(strcmp(argv[i], "--stats") == 0)
 			stats = true;
+		if(strcmp(argv[i], "--version") == 0) {
+			print_version();
+			exit(0);
+		}
 	}
 
 	config_init(&conf, CONF_FILE, verbose, debug, stats);
