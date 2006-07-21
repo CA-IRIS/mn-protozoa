@@ -91,7 +91,7 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
 	return nbytes;
 }
 
-uint8_t *buffer_append(struct buffer *buf, int count) {
+uint8_t *buffer_append(struct buffer *buf, size_t count) {
 	uint8_t *pin = buf->pin;
 	if(buffer_remaining(buf) < count) {
 		errno = ENOBUFS;
@@ -101,8 +101,8 @@ uint8_t *buffer_append(struct buffer *buf, int count) {
 	return pin;
 }
 
-inline uint8_t buffer_peek(const struct buffer *buf) {
-	return *buf->pout;
+inline uint8_t *buffer_current(struct buffer *buf) {
+	return buf->pout;
 }
 
 static void buffer_debug(struct buffer *buf, const char *name,
@@ -116,7 +116,7 @@ static void buffer_debug(struct buffer *buf, const char *name,
 	fprintf(stderr, "\n");
 }
 
-void buffer_debug_in(struct buffer *buf, int n_bytes, const char *name) {
+void buffer_debug_in(struct buffer *buf, size_t n_bytes, const char *name) {
 	if(buf->debug)
 		buffer_debug(buf, name, "  in:", buf->pin - n_bytes);
 }

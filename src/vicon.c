@@ -216,9 +216,9 @@ static inline int vicon_decode_status(struct ccreader *r,
 static inline int vicon_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
-	if((buffer_peek(rxbuf) & FLAG) == 0) {
-		fprintf(stderr, "Vicon: unexpected byte %02X\n",
-			buffer_peek(rxbuf));
+	uint8_t *mess = buffer_current(rxbuf);
+	if((mess[0] & FLAG) == 0) {
+		fprintf(stderr, "Vicon: unexpected byte %02X\n", mess[0]);
 		buffer_skip(rxbuf, 1);
 		return 0;
 	}
