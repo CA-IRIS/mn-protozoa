@@ -23,15 +23,15 @@ struct buffer {
 struct buffer *buffer_init(struct buffer *buf, size_t n_bytes);
 void buffer_destroy(struct buffer *buf);
 void buffer_clear(struct buffer *buf);
+size_t buffer_available(const struct buffer *buf);
 bool buffer_is_empty(const struct buffer *buf);
-int buffer_available(const struct buffer *buf);
-void buffer_skip(struct buffer *buf, size_t n_bytes);
+size_t buffer_space(const struct buffer *buf);
 bool buffer_is_full(const struct buffer *buf);
-int buffer_remaining(const struct buffer *buf);
 ssize_t buffer_read(struct buffer *buf, int fd);
 ssize_t buffer_write(struct buffer *buf, int fd);
 uint8_t *buffer_append(struct buffer *buf, size_t n_bytes);
 uint8_t *buffer_current(struct buffer *buf);
+void buffer_skip(struct buffer *buf, size_t n_bytes);
 void buffer_debug_in(struct buffer *buf, size_t n_bytes, const char *name);
 void buffer_debug_out(struct buffer *buf, const char *name);
 

@@ -30,7 +30,7 @@ void buffer_clear(struct buffer *buf) {
 	buf->pout = buf->base;
 }
 
-inline int buffer_available(const struct buffer *buf) {
+inline size_t buffer_available(const struct buffer *buf) {
 	return buf->pin - buf->pout;
 }
 
@@ -38,32 +38,26 @@ inline bool buffer_is_empty(const struct buffer *buf) {
 	return buffer_available(buf) <= 0;
 }
 
-void buffer_skip(struct buffer *buf, size_t n_bytes) {
-	buf->pout += n_bytes;
-	if(buf->pout >= buf->pin)
-		buffer_clear(buf);
-}
-
-inline bool buffer_is_full(const struct buffer *buf) {
-	return buf->pin >= buf->end;
-}
-
-inline int buffer_remaining(const struct buffer *buf) {
+inline size_t buffer_space(const struct buffer *buf) {
 	return buf->end - buf->pin;
 }
 
-int buffer_compact(struct buffer *buf) {
-	int a = buffer_available(buf);
+inline bool buffer_is_full(const struct buffer *buf) {
+	return buffer_space(buf) <= 0;
+}
+
+static inline void buffer_compact(struct buffer *buf) {
+	size_t a = buffer_available(buf);
 	memmove(buf->base, buf->pout, a);
 	buf->pout = buf->base;
 	buf->pin = buf->pout + a;
-	return buffer_remaining(buf);
 }
 
 ssize_t buffer_read(struct buffer *buf, int fd) {
-	size_t count = buffer_remaining(buf);
+	size_t count = buffer_space(buf);
 	if(count <= 0) {
-		count = buffer_compact(buf);
+		buffer_compact(buf);
+		count = buffer_space(buf);
 		if(count <= 0) {
 			errno = ENOBUFS;
 			return -1;
@@ -93,7 +87,7 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
 
 uint8_t *buffer_append(struct buffer *buf, size_t n_bytes) {
 	uint8_t *pin = buf->pin;
-	if(buffer_remaining(buf) < n_bytes) {
+	if(buffer_space(buf) < n_bytes) {
 		errno = ENOBUFS;
 		return NULL;
 	}
@@ -103,6 +97,12 @@ uint8_t *buffer_append(struct buffer *buf, size_t n_bytes) {
 
 inline uint8_t *buffer_current(struct buffer *buf) {
 	return buf->pout;
+}
+
+void buffer_skip(struct buffer *buf, size_t n_bytes) {
+	buf->pout += n_bytes;
+	if(buf->pout >= buf->pin)
+		buffer_clear(buf);
 }
 
 static void buffer_debug(struct buffer *buf, const char *name,
