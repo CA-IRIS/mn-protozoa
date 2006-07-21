@@ -6,11 +6,11 @@
 
 extern int errno;
 
-struct buffer *buffer_init(struct buffer *buf, size_t size) {
-	buf->base = malloc(size);
+struct buffer *buffer_init(struct buffer *buf, size_t n_bytes) {
+	buf->base = malloc(n_bytes);
 	if(buf->base == NULL)
 		return NULL;
-	buf->end = buf->base + size;
+	buf->end = buf->base + n_bytes;
 	buf->pin = buf->base;
 	buf->pout = buf->base;
 	buf->debug = false;
@@ -38,8 +38,8 @@ inline bool buffer_is_empty(const struct buffer *buf) {
 	return buffer_available(buf) <= 0;
 }
 
-void buffer_skip(struct buffer *buf, size_t count) {
-	buf->pout += count;
+void buffer_skip(struct buffer *buf, size_t n_bytes) {
+	buf->pout += n_bytes;
 	if(buf->pout >= buf->pin)
 		buffer_clear(buf);
 }
@@ -91,13 +91,13 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
 	return nbytes;
 }
 
-uint8_t *buffer_append(struct buffer *buf, size_t count) {
+uint8_t *buffer_append(struct buffer *buf, size_t n_bytes) {
 	uint8_t *pin = buf->pin;
-	if(buffer_remaining(buf) < count) {
+	if(buffer_remaining(buf) < n_bytes) {
 		errno = ENOBUFS;
 		return NULL;
 	}
-	buf->pin += count;
+	buf->pin += n_bytes;
 	return pin;
 }
 
