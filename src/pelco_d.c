@@ -236,8 +236,19 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[1] = receiver;
 }
 
+static int encode_speed(int speed) {
+	int s = speed >> 5;
+	/* round up to the next speed level */
+	if(speed % 32)
+		s++;
+	if(s < TURBO_SPEED)
+		return s;
+	else
+		return TURBO_SPEED - 1;
+}
+
 static void encode_pan(uint8_t *mess, struct ccpacket *p) {
-	int pan = p->pan >> 5;
+	int pan = encode_speed(p->pan);
 	if(p->pan > SPEED_MAX - 8)
 		pan = TURBO_SPEED;
 	mess[4] = pan;
@@ -252,7 +263,7 @@ static void encode_pan(uint8_t *mess, struct ccpacket *p) {
 }
 
 static void encode_tilt(uint8_t *mess, struct ccpacket *p) {
-	int tilt = p->tilt >> 5;
+	int tilt = encode_speed(p->tilt);
 	mess[5] = tilt;
 	if(tilt) {
 		if(p->command & CC_TILT_UP)

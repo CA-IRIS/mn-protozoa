@@ -36,7 +36,6 @@ static const int SPEED[] = {
 	SPEED_MAX,
 };
 
-#define SPEED_HALF_STEP (SPEED[0] / 2)
 #define SPEED_FULL (0x07)
 
 static inline int pt_speed(uint8_t *mess) {
@@ -44,11 +43,13 @@ static inline int pt_speed(uint8_t *mess) {
 }
 
 static int speed_code(int speed) {
-	int s = (speed + SPEED_HALF_STEP) >> 8;
-	if(s > SPEED_FULL)
-		return SPEED_FULL;
-	else
-		return s;
+	int s;
+	for(s = 0; s < SPEED_FULL; s++) {
+		/* round up to the next higher speed level */
+		if(SPEED[s] >= speed)
+			return s;
+	}
+	return SPEED_FULL;
 }
 
 enum pt_command_t {
