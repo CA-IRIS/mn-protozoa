@@ -38,8 +38,7 @@ static uint8_t calculate_checksum(uint8_t *mess) {
 	return checksum;
 }
 
-static inline bool is_extended(struct buffer *rxbuf) {
-	uint8_t *mess = rxbuf->pout;
+static inline bool is_extended(uint8_t *mess) {
 	return bit_is_set(mess, BIT_EXTENDED);
 }
 
@@ -104,16 +103,12 @@ static inline void decode_sense(struct ccpacket *p, uint8_t *mess) {
 	}
 }
 
-static inline int pelco_decode_command(struct ccreader *r,
-	struct buffer *rxbuf)
-{
-	uint8_t *mess = rxbuf->pout;
+static inline int pelco_decode_command(struct ccreader *r, uint8_t *mess) {
 	r->packet.receiver = decode_receiver(mess);
 	decode_pan(&r->packet, mess);
 	decode_tilt(&r->packet, mess);
 	decode_lens(&r->packet, mess);
 	decode_sense(&r->packet, mess);
-	buffer_skip(rxbuf, SIZE_MSG);
 	return ccreader_process_packet(r);
 }
 
@@ -190,21 +185,16 @@ static inline void decode_extended(struct ccpacket *p, enum extended_t ex,
 	}
 }
 
-static inline int pelco_decode_extended(struct ccreader *r,
-	struct buffer *rxbuf)
-{
-	uint8_t *mess = rxbuf->pout;
+static inline int pelco_decode_extended(struct ccreader *r, uint8_t *mess) {
 	r->packet.receiver = decode_receiver(mess);
 	int ex = mess[3] >> 1 & 0x1f;
 	int p0 = mess[5];
 	int p1 = mess[4];
 	decode_extended(&r->packet, ex, p0, p1);
-	buffer_skip(rxbuf, SIZE_MSG);
 	return ccreader_process_packet(r);
 }
 
-static inline bool checksum_invalid(struct buffer *rxbuf) {
-	uint8_t *mess = rxbuf->pout;
+static inline bool checksum_invalid(uint8_t *mess) {
 	return calculate_checksum(mess) != mess[6];
 }
 
@@ -217,14 +207,15 @@ static inline int pelco_decode_message(struct ccreader *r,
 		buffer_skip(rxbuf, 1);
 		return 0;
 	}
-	if(checksum_invalid(rxbuf)) {
+	buffer_skip(rxbuf, SIZE_MSG);
+	if(checksum_invalid(mess)) {
 		fprintf(stderr, "Pelco(D): invalid checksum\n");
 		return 0;
 	}
-	if(is_extended(rxbuf))
-		return pelco_decode_extended(r, rxbuf);
+	if(is_extended(mess))
+		return pelco_decode_extended(r, mess);
 	else
-		return pelco_decode_command(r, rxbuf);
+		return pelco_decode_command(r, mess);
 }
 
 int pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
