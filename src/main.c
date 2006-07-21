@@ -7,7 +7,7 @@
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.2"
+#define VERSION "0.3"
 
 static const char *CONF_FILE = "/etc/protozoa.conf";
 

@@ -91,17 +91,14 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
 	return nbytes;
 }
 
-inline void buffer_put(struct buffer *buf, uint8_t value) {
-	*buf->pin = value;
-	buf->pin++;
-}
-
-inline uint8_t buffer_get(struct buffer *buf) {
-	uint8_t value = *buf->pout;
-	buf->pout++;
-	if(buf->pout == buf->pin)
-		buffer_clear(buf);
-	return value;
+int buffer_put(struct buffer *buf, uint8_t *data, int count) {
+	if(buffer_remaining(buf) < count) {
+		errno = ENOBUFS;
+		return -1;
+	}
+	memcpy(buf->pin, data, count);
+	buf->pin += count;
+	return 0;
 }
 
 inline uint8_t buffer_peek(const struct buffer *buf) {

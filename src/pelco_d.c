@@ -213,7 +213,8 @@ static inline int pelco_decode_message(struct ccreader *r,
 {
 	if(buffer_peek(rxbuf) != FLAG) {
 		fprintf(stderr, "Pelco(D): unexpected byte %02X\n",
-			buffer_get(rxbuf));
+			buffer_peek(rxbuf));
+		buffer_skip(rxbuf, 1);
 		return 0;
 	}
 	if(checksum_invalid(rxbuf)) {

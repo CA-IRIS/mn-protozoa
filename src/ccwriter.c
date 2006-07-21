@@ -31,14 +31,13 @@ int ccwriter_set_protocol(struct ccwriter *w, const char *protocol) {
 	return 0;
 }
 
-void ccwriter_write(struct ccwriter *w, uint8_t *mess, size_t count) {
-	int i;
-	if(buffer_remaining(w->txbuf) < count) {
+int ccwriter_write(struct ccwriter *w, uint8_t *mess, size_t count) {
+	int i = buffer_put(w->txbuf, mess, count);
+	if(i < 0) {
 		fprintf(stderr, "protozoa: output buffer full\n");
-		return;
-	}
-	for(i = 0; i < count; i++)
-		buffer_put(w->txbuf, mess[i]);
+		return i;
+	} else
+		return 1;
 }
 
 struct ccwriter *ccwriter_create(struct sport *port, const char *protocol,

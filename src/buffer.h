@@ -30,9 +30,8 @@ bool buffer_is_full(const struct buffer *buf);
 int buffer_remaining(const struct buffer *buf);
 ssize_t buffer_read(struct buffer *buf, int fd);
 ssize_t buffer_write(struct buffer *buf, int fd);
-void buffer_put(struct buffer *buf, uint8_t value);
+int buffer_put(struct buffer *buf, uint8_t *data, int count);
 uint8_t buffer_peek(const struct buffer *buf);
-uint8_t buffer_get(struct buffer *buf);
 void buffer_debug_in(struct buffer *buf, int n_bytes, const char *name);
 void buffer_debug_out(struct buffer *buf, const char *name);
 

@@ -13,7 +13,7 @@ struct ccwriter {
 
 void ccwriter_init(struct ccwriter *w);
 int ccwriter_set_protocol(struct ccwriter *w, const char *protocol);
-void ccwriter_write(struct ccwriter *w, uint8_t *mess, size_t count);
+int ccwriter_write(struct ccwriter *w, uint8_t *mess, size_t count);
 struct ccwriter *ccwriter_create(struct sport *port, const char *protocol,
 	int base);
 
