@@ -48,13 +48,11 @@ static inline int decode_receiver(uint8_t *mess) {
 	return ((mess[0] & 0x0f) << 4) | (mess[1] & 0x0f);
 }
 
-static inline bool is_command(struct buffer *rxbuf) {
-	uint8_t *mess = rxbuf->pout;
+static inline bool is_command(uint8_t *mess) {
 	return bit_is_set(mess, BIT_COMMAND);
 }
 
-static inline bool is_extended_command(struct buffer *rxbuf) {
-	uint8_t *mess = rxbuf->pout;
+static inline bool is_extended_command(uint8_t *mess) {
 	return bit_is_set(mess, BIT_COMMAND) && bit_is_set(mess, BIT_EXTENDED);
 }
 
@@ -160,10 +158,9 @@ static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
 	p->tilt = mess[9] & 0x7f;
 }
 
-static inline int vicon_decode_extended(struct ccreader *r,
+static inline int vicon_decode_extended(struct ccreader *r, uint8_t *mess,
 	struct buffer *rxbuf)
 {
-	uint8_t *mess = rxbuf->pout;
 	if(buffer_available(rxbuf) < SIZE_EXTENDED)
 		return 1;
 	r->packet.receiver = decode_receiver(mess);
@@ -184,10 +181,9 @@ static inline int vicon_decode_extended(struct ccreader *r,
 	return ccreader_process_packet(r);
 }
 
-static inline int vicon_decode_command(struct ccreader *r,
+static inline int vicon_decode_command(struct ccreader *r, uint8_t *mess,
 	struct buffer *rxbuf)
 {
-	uint8_t *mess = rxbuf->pout;
 	if(buffer_available(rxbuf) < SIZE_COMMAND)
 		return 1;
 	r->packet.receiver = decode_receiver(mess);
@@ -201,10 +197,9 @@ static inline int vicon_decode_command(struct ccreader *r,
 	return ccreader_process_packet(r);
 }
 
-static inline int vicon_decode_status(struct ccreader *r,
+static inline int vicon_decode_status(struct ccreader *r, uint8_t *mess,
 	struct buffer *rxbuf)
 {
-	uint8_t *mess = rxbuf->pout;
 	if(buffer_available(rxbuf) < SIZE_STATUS)
 		return 1;
 	r->packet.receiver = decode_receiver(mess);
@@ -222,12 +217,12 @@ static inline int vicon_decode_message(struct ccreader *r,
 		buffer_skip(rxbuf, 1);
 		return 0;
 	}
-	if(is_extended_command(rxbuf))
-		return vicon_decode_extended(r, rxbuf);
-	else if(is_command(rxbuf))
-		return vicon_decode_command(r, rxbuf);
+	if(is_extended_command(mess))
+		return vicon_decode_extended(r, mess, rxbuf);
+	else if(is_command(mess))
+		return vicon_decode_command(r, mess, rxbuf);
 	else
-		return vicon_decode_status(r, rxbuf);
+		return vicon_decode_status(r, mess, rxbuf);
 }
 
 int vicon_do_read(struct handler *h, struct buffer *rxbuf) {
