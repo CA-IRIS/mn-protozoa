@@ -36,11 +36,20 @@ static const int SPEED[] = {
 	SPEED_MAX,
 };
 
+#define SPEED_HALF_STEP (SPEED[0] / 2)
+#define SPEED_FULL (0x07)
+
 static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
-#define SPEED_FULL (0x07)
+static int speed_code(int speed) {
+	int s = (speed + SPEED_HALF_STEP) >> 8;
+	if(s > SPEED_FULL)
+		return SPEED_FULL;
+	else
+		return s;
+}
 
 enum pt_command_t {
 	TILT_DOWN,	/* 00 */
@@ -265,7 +274,7 @@ static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
 }
 
 static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
-	int speed = (p->pan >> 8) & 0x07;
+	int speed = speed_code(p->pan);
 	if(p->command & CC_PAN_LEFT) {
 		if(speed == SPEED_FULL)
 			encode_lens_function(w, p, XL_PAN_LEFT);
@@ -280,7 +289,7 @@ static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
 }
 
 static void encode_tilt(struct ccwriter *w, struct ccpacket *p) {
-	int speed = (p->tilt >> 8) & 0x07;
+	int speed = speed_code(p->tilt);
 	if(p->command & CC_TILT_DOWN) {
 		if(speed == SPEED_FULL)
 			encode_lens_function(w, p, XL_TILT_DOWN);
