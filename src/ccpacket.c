@@ -78,7 +78,8 @@ void ccpacket_init(struct ccpacket *p) {
 	ccpacket_clear(p);
 }
 
-void ccpacket_debug(struct ccpacket *p) {
+void ccpacket_debug(struct ccpacket *p, const char *name) {
+	printf("%s ", name);
 	printf("rcv: %d", p->receiver);
 	if(p->status)
 		printf(" status: %d", p->status);

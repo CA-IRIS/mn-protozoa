@@ -48,7 +48,7 @@ static inline int ccreader_do_writers(struct ccreader *r) {
 		w = w->next;
 	}
 	if(res && r->verbose)
-		ccpacket_debug(&r->packet);
+		ccpacket_debug(&r->packet, r->name);
 	return res;
 }
 
@@ -79,6 +79,8 @@ struct ccreader *ccreader_create(struct sport *port, const char *protocol,
 	if(ccreader_set_protocol(r, protocol) < 0)
 		goto fail;
 	port->handler = &r->handler;
+	r->name = port->name;
+	r->verbose = verbose;
 	return r;
 fail:
 	free(r);

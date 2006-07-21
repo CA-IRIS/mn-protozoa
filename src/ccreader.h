@@ -8,6 +8,7 @@ struct ccreader {
 	struct	handler		handler;	/* "sub-struct" of handler */
 	struct	ccpacket	packet;		/* camera control packet */
 	struct	ccwriter	*writer;	/* head of writer list */
+	char			*name;		/* port name */
 	bool			verbose;	/* verbose flag */
 };
 

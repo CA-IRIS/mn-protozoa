@@ -97,7 +97,7 @@ struct ccpacket {
 void counter_init(struct packet_counter *c);
 void ccpacket_init(struct ccpacket *p);
 void ccpacket_clear(struct ccpacket *p);
-void ccpacket_debug(struct ccpacket *p);
+void ccpacket_debug(struct ccpacket *p, const char *name);
 void ccpacket_count(struct ccpacket *p);
 void ccpacket_drop(struct ccpacket *p);
 
