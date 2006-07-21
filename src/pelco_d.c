@@ -6,7 +6,7 @@
 #include "bitarray.h"
 
 #define FLAG (0xff)
-#define MSG_SIZE (7)
+#define SIZE_MSG (7)
 #define TURBO_SPEED (1 << 6)
 
 enum pelco_bit_t {
@@ -113,7 +113,7 @@ static inline int pelco_decode_command(struct ccreader *r,
 	decode_tilt(&r->packet, mess);
 	decode_lens(&r->packet, mess);
 	decode_sense(&r->packet, mess);
-	buffer_skip(rxbuf, MSG_SIZE);
+	buffer_skip(rxbuf, SIZE_MSG);
 	return ccreader_process_packet(r);
 }
 
@@ -199,7 +199,7 @@ static inline int pelco_decode_extended(struct ccreader *r,
 	int p0 = mess[5];
 	int p1 = mess[4];
 	decode_extended(&r->packet, ex, p0, p1);
-	buffer_skip(rxbuf, MSG_SIZE);
+	buffer_skip(rxbuf, SIZE_MSG);
 	return ccreader_process_packet(r);
 }
 
@@ -230,7 +230,7 @@ static inline int pelco_decode_message(struct ccreader *r,
 int pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct ccreader *r = (struct ccreader *)h;
 
-	while(buffer_available(rxbuf) >= MSG_SIZE) {
+	while(buffer_available(rxbuf) >= SIZE_MSG) {
 		int m = pelco_decode_message(r, rxbuf);
 		if(m < 0)
 			return m;
@@ -310,62 +310,65 @@ static inline void encode_checksum(uint8_t *mess) {
 static void encode_command(struct ccwriter *w, struct ccpacket *p,
 	int receiver)
 {
-	uint8_t mess[MSG_SIZE];
-	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, receiver);
-	encode_pan(mess, p);
-	encode_tilt(mess, p);
-	encode_lens(mess, p);
-	encode_sense(mess, p);
-	encode_checksum(mess);
-	ccwriter_write(w, mess, MSG_SIZE);
+	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	if(mess) {
+		bzero(mess, SIZE_MSG);
+		encode_receiver(mess, receiver);
+		encode_pan(mess, p);
+		encode_tilt(mess, p);
+		encode_lens(mess, p);
+		encode_sense(mess, p);
+		encode_checksum(mess);
+	}
 }
 
 static void encode_preset(struct ccwriter *w, struct ccpacket *p, int receiver)
 {
-	uint8_t mess[MSG_SIZE];
-	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, receiver);
-	bit_set(mess, BIT_EXTENDED);
-	if(p->command & CC_RECALL)
-		mess[3] |= EX_RECALL << 1;
-	else if(p->command & CC_STORE)
-		mess[3] |= EX_STORE << 1;
-	else if(p->command & CC_CLEAR)
-		mess[3] |= EX_CLEAR << 1;
-	mess[5] = p->preset;
-	encode_checksum(mess);
-	ccwriter_write(w, mess, MSG_SIZE);
+	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	if(mess) {
+		bzero(mess, SIZE_MSG);
+		encode_receiver(mess, receiver);
+		bit_set(mess, BIT_EXTENDED);
+		if(p->command & CC_RECALL)
+			mess[3] |= EX_RECALL << 1;
+		else if(p->command & CC_STORE)
+			mess[3] |= EX_STORE << 1;
+		else if(p->command & CC_CLEAR)
+			mess[3] |= EX_CLEAR << 1;
+		mess[5] = p->preset;
+		encode_checksum(mess);
+	}
 }
 
 static void encode_aux(struct ccwriter *w, struct ccpacket *p, int receiver) {
-	uint8_t mess[MSG_SIZE];
-	bzero(mess, MSG_SIZE);
-	encode_receiver(mess, receiver);
-	bit_set(mess, BIT_EXTENDED);
-	if(p->aux & AUX_CLEAR)
-		mess[3] |= EX_AUX_CLEAR << 1;
-	else
-		mess[3] |= EX_AUX_SET << 1;
-	/* FIXME: use a lookup table; loop through bits */
-	if(p->aux & AUX_1)
-		mess[5] = 1;
-	else if(p->aux & AUX_2)
-		mess[5] = 2;
-	else if(p->aux & AUX_3)
-		mess[5] = 3;
-	else if(p->aux & AUX_4)
-		mess[5] = 4;
-	else if(p->aux & AUX_5)
-		mess[5] = 5;
-	else if(p->aux & AUX_6)
-		mess[5] = 6;
-	else if(p->aux & AUX_7)
-		mess[5] = 7;
-	else if(p->aux & AUX_8)
-		mess[5] = 8;
-	encode_checksum(mess);
-	ccwriter_write(w, mess, MSG_SIZE);
+	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	if(mess) {
+		bzero(mess, SIZE_MSG);
+		encode_receiver(mess, receiver);
+		bit_set(mess, BIT_EXTENDED);
+		if(p->aux & AUX_CLEAR)
+			mess[3] |= EX_AUX_CLEAR << 1;
+		else
+			mess[3] |= EX_AUX_SET << 1;
+		/* FIXME: use a lookup table; loop through bits */
+		if(p->aux & AUX_1)
+			mess[5] = 1;
+		else if(p->aux & AUX_2)
+			mess[5] = 2;
+		else if(p->aux & AUX_3)
+			mess[5] = 3;
+		else if(p->aux & AUX_4)
+			mess[5] = 4;
+		else if(p->aux & AUX_5)
+			mess[5] = 5;
+		else if(p->aux & AUX_6)
+			mess[5] = 6;
+		else if(p->aux & AUX_7)
+			mess[5] = 7;
+		else if(p->aux & AUX_8)
+			mess[5] = 8;
+		encode_checksum(mess);
+	}
 }
 
 static inline bool has_sense(struct ccpacket *p) {

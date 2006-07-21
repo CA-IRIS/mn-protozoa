@@ -91,14 +91,14 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
 	return nbytes;
 }
 
-int buffer_put(struct buffer *buf, uint8_t *data, int count) {
+uint8_t *buffer_append(struct buffer *buf, int count) {
+	uint8_t *pin = buf->pin;
 	if(buffer_remaining(buf) < count) {
 		errno = ENOBUFS;
-		return -1;
+		return NULL;
 	}
-	memcpy(buf->pin, data, count);
 	buf->pin += count;
-	return 0;
+	return pin;
 }
 
 inline uint8_t buffer_peek(const struct buffer *buf) {

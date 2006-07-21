@@ -317,16 +317,17 @@ static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 static void encode_command(struct ccwriter *w, struct ccpacket *p,
 	int receiver)
 {
-	uint8_t mess[SIZE_COMMAND];
-	bzero(mess, SIZE_COMMAND);
-	encode_receiver(mess, receiver);
-	bit_set(mess, BIT_COMMAND);
-	encode_pan_tilt(mess, p);
-	encode_lens(mess, p);
-	encode_toggles(mess, p);
-	encode_aux(mess, p);
-	encode_preset(mess, p);
-	ccwriter_write(w, mess, SIZE_COMMAND);
+	uint8_t *mess = ccwriter_append(w, SIZE_COMMAND);
+	if(mess) {
+		bzero(mess, SIZE_COMMAND);
+		encode_receiver(mess, receiver);
+		bit_set(mess, BIT_COMMAND);
+		encode_pan_tilt(mess, p);
+		encode_lens(mess, p);
+		encode_toggles(mess, p);
+		encode_aux(mess, p);
+		encode_preset(mess, p);
+	}
 }
 
 static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
@@ -339,46 +340,59 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p,
 	int receiver)
 {
-	uint8_t mess[SIZE_EXTENDED];
-	bzero(mess, SIZE_EXTENDED);
-	encode_receiver(mess, receiver);
-	bit_set(mess, BIT_COMMAND);
-	bit_set(mess, BIT_EXTENDED);
-	encode_pan_tilt(mess, p);
-	encode_lens(mess, p);
-	encode_toggles(mess, p);
-	encode_aux(mess, p);
-	encode_preset(mess, p);
-	encode_speeds(mess, p);
-	ccwriter_write(w, mess, SIZE_EXTENDED);
+	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
+	if(mess) {
+		bzero(mess, SIZE_EXTENDED);
+		encode_receiver(mess, receiver);
+		bit_set(mess, BIT_COMMAND);
+		bit_set(mess, BIT_EXTENDED);
+		encode_pan_tilt(mess, p);
+		encode_lens(mess, p);
+		encode_toggles(mess, p);
+		encode_aux(mess, p);
+		encode_preset(mess, p);
+		encode_speeds(mess, p);
+	}
 }
 
 static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p,
 	int receiver)
 {
-	uint8_t mess[SIZE_EXTENDED];
-	bzero(mess, SIZE_EXTENDED);
-	encode_receiver(mess, receiver);
-	bit_set(mess, BIT_COMMAND);
-	bit_set(mess, BIT_EXTENDED);
-	bit_set(mess, BIT_EX_REQUEST);
-	if(p->command & CC_STORE)
-		bit_set(mess, BIT_EX_STORE);
-	encode_lens(mess, p);
-	encode_toggles(mess, p);
-	encode_aux(mess, p);
-	mess[7] |= p->preset & 0x7f;
-	mess[8] |= p->pan & 0x7f;
-	mess[9] |= p->tilt & 0x7f;
-	ccwriter_write(w, mess, SIZE_EXTENDED);
+	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
+	if(mess) {
+		bzero(mess, SIZE_EXTENDED);
+		encode_receiver(mess, receiver);
+		bit_set(mess, BIT_COMMAND);
+		bit_set(mess, BIT_EXTENDED);
+		bit_set(mess, BIT_EX_REQUEST);
+		if(p->command & CC_STORE)
+			bit_set(mess, BIT_EX_STORE);
+		encode_lens(mess, p);
+		encode_toggles(mess, p);
+		encode_aux(mess, p);
+		mess[7] |= p->preset & 0x7f;
+		mess[8] |= p->pan & 0x7f;
+		mess[9] |= p->tilt & 0x7f;
+	}
 }
 
-static void encode_status(struct ccwriter *w, struct ccpacket *p, int receiver)
+static inline void encode_simple_status(struct ccwriter *w, struct ccpacket *p,
+	int receiver)
 {
-	uint8_t mess[SIZE_EXTENDED];
-	bzero(mess, SIZE_EXTENDED);
-	encode_receiver(mess, receiver);
-	if(p->status & STATUS_EXTENDED) {
+	uint8_t *mess = ccwriter_append(w, SIZE_STATUS);
+	if(mess) {
+		bzero(mess, SIZE_STATUS);
+		encode_receiver(mess, receiver);
+	}
+}
+
+static inline void encode_extended_status(struct ccwriter *w,
+	struct ccpacket *p, int receiver)
+{
+	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
+	if(mess) {
+		bzero(mess, SIZE_EXTENDED);
+		encode_receiver(mess, receiver);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_STATUS);
@@ -391,9 +405,15 @@ static void encode_status(struct ccwriter *w, struct ccpacket *p, int receiver)
 			bit_set(mess, BIT_STAT_V15UVS);
 			bit_set(mess, BIT_STAT_AUX_SET_2);
 		}
-		ccwriter_write(w, mess, SIZE_EXTENDED);
-	} else
-		ccwriter_write(w, mess, SIZE_STATUS);
+	}
+}
+
+static void encode_status(struct ccwriter *w, struct ccpacket *p, int receiver)
+{
+	if(p->status & STATUS_EXTENDED)
+		encode_extended_status(w, p, receiver);
+	else
+		encode_simple_status(w, p, receiver);
 }
 
 static inline bool is_extended_preset(struct ccpacket *p) {
