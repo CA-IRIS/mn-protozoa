@@ -31,8 +31,8 @@ int ccwriter_set_protocol(struct ccwriter *w, const char *protocol) {
 	return 0;
 }
 
-uint8_t *ccwriter_append(struct ccwriter *w, size_t count) {
-	uint8_t *mess = buffer_append(w->txbuf, count);
+uint8_t *ccwriter_append(struct ccwriter *w, size_t n_bytes) {
+	uint8_t *mess = buffer_append(w->txbuf, n_bytes);
 	if(mess)
 		return mess;
 	else {
