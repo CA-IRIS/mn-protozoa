@@ -63,26 +63,22 @@ ssize_t buffer_read(struct buffer *buf, int fd) {
 			return -1;
 		}
 	}
-	ssize_t nbytes = read(fd, buf->pin, count);
-	if(nbytes > 0)
-		buf->pin += nbytes;
-	return nbytes;
+	ssize_t n_bytes = read(fd, buf->pin, count);
+	if(n_bytes > 0)
+		buf->pin += n_bytes;
+	return n_bytes;
 }
 
 ssize_t buffer_write(struct buffer *buf, int fd) {
-	size_t count = buf->pin - buf->pout;
+	size_t count = buffer_available(buf);
 	if(count <= 0) {
 		errno = ENOBUFS;
 		return -1;
 	}
-	ssize_t nbytes = write(fd, buf->pout, count);
-	if(nbytes < 0)
-		return nbytes;
-	if(nbytes == count)
-		buffer_clear(buf);
-	else
-		buf->pout += nbytes;
-	return nbytes;
+	ssize_t n_bytes = write(fd, buf->pout, count);
+	if(n_bytes > 0)
+		buffer_skip(buf, n_bytes);
+	return n_bytes;
 }
 
 void *buffer_append(struct buffer *buf, size_t n_bytes) {
