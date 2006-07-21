@@ -85,8 +85,8 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
 	return nbytes;
 }
 
-uint8_t *buffer_append(struct buffer *buf, size_t n_bytes) {
-	uint8_t *pin = buf->pin;
+void *buffer_append(struct buffer *buf, size_t n_bytes) {
+	void *pin = buf->pin;
 	if(buffer_space(buf) < n_bytes) {
 		errno = ENOBUFS;
 		return NULL;
@@ -95,7 +95,7 @@ uint8_t *buffer_append(struct buffer *buf, size_t n_bytes) {
 	return pin;
 }
 
-inline uint8_t *buffer_current(struct buffer *buf) {
+inline void *buffer_current(struct buffer *buf) {
 	return buf->pout;
 }
 
@@ -106,12 +106,13 @@ void buffer_skip(struct buffer *buf, size_t n_bytes) {
 }
 
 static void buffer_debug(struct buffer *buf, const char *name,
-	const char *prefix, uint8_t *start)
+	const char *prefix, void *start)
 {
 	uint8_t *mess;
+	uint8_t *stop = buf->pin;
 	fprintf(stderr, name);
 	fprintf(stderr, prefix);
-	for(mess = start; mess < buf->pin; mess++)
+	for(mess = start; mess < stop; mess++)
 		fprintf(stderr, " %02x", *mess);
 	fprintf(stderr, "\n");
 }
