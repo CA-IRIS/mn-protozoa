@@ -26,20 +26,20 @@ static void poller_register_events(struct poller *p) {
 
 static int poller_do_poll(struct poller *p) {
 	int i;
-	ssize_t nbytes;
+	ssize_t n_bytes;
 
 	if(poll(p->pollfds, p->n_ports, -1) < 0)
 		return -1;
 	for(i = 0; i < p->n_ports; i++) {
-		if(p->pollfds[i].revents & POLLIN) {
-			nbytes = sport_read(p->port + i);
-			if(nbytes < 0)
-				return nbytes;
-		}
 		if(p->pollfds[i].revents & POLLOUT) {
-			nbytes = sport_write(p->port + i);
-			if(nbytes < 0)
-				return nbytes;
+			n_bytes = sport_write(p->port + i);
+			if(n_bytes < 0)
+				return n_bytes;
+		}
+		if(p->pollfds[i].revents & POLLIN) {
+			n_bytes = sport_read(p->port + i);
+			if(n_bytes < 0)
+				return n_bytes;
 		}
 	}
 	return 0;
