@@ -4,6 +4,12 @@
 #include "ccpacket.h"
 #include "sport.h"
 
+enum decode_t {
+	FAIL = -1,
+	MORE = 0,
+	DONE = 1,
+};
+
 struct ccreader {
 	struct	handler		handler;	/* "sub-struct" of handler */
 	struct	ccpacket	packet;		/* camera control packet */

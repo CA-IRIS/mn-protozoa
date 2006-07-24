@@ -205,26 +205,26 @@ static inline void manchester_decode_packet(struct ccreader *r, uint8_t *mess) {
 	decode_packet(&r->packet, mess);
 }
 
-static inline int manchester_read_message(struct ccreader *r,
+static inline enum decode_t manchester_read_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_current(rxbuf);
 	if((mess[0] & FLAG) == 0) {
 		fprintf(stderr, "Manchester: unexpected byte %02X\n", mess[0]);
 		buffer_skip(rxbuf, 1);
-		return 0;
+		return MORE;
 	}
 	manchester_decode_packet(r, mess);
 	buffer_skip(rxbuf, SIZE_MSG);
-	return 1;
+	return MORE;
 }
 
 int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct ccreader *r = (struct ccreader *)h;
 
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
-		if(manchester_read_message(r, rxbuf) < 0)
-			return -1;
+		if(manchester_read_message(r, rxbuf) == FAIL)
+			return FAIL;
 	}
 	/* If there's a partial packet in the buffer, don't process yet */
 	if(buffer_available(rxbuf))

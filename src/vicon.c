@@ -158,11 +158,11 @@ static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
 	p->tilt = mess[9] & 0x7f;
 }
 
-static inline int vicon_decode_extended(struct ccreader *r, uint8_t *mess,
-	struct buffer *rxbuf)
+static inline enum decode_t vicon_decode_extended(struct ccreader *r,
+	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_EXTENDED)
-		return 1;
+		return DONE;
 	r->packet.receiver = decode_receiver(mess);
 	decode_pan(&r->packet, mess);
 	decode_tilt(&r->packet, mess);
@@ -178,14 +178,15 @@ static inline int vicon_decode_extended(struct ccreader *r, uint8_t *mess,
 	} else
 		decode_ex_speed(&r->packet, mess);
 	buffer_skip(rxbuf, SIZE_EXTENDED);
-	return ccreader_process_packet(r);
+	ccreader_process_packet(r);
+	return MORE;
 }
 
-static inline int vicon_decode_command(struct ccreader *r, uint8_t *mess,
-	struct buffer *rxbuf)
+static inline enum decode_t vicon_decode_command(struct ccreader *r,
+	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_COMMAND)
-		return 1;
+		return DONE;
 	r->packet.receiver = decode_receiver(mess);
 	decode_pan(&r->packet, mess);
 	decode_tilt(&r->packet, mess);
@@ -194,28 +195,30 @@ static inline int vicon_decode_command(struct ccreader *r, uint8_t *mess,
 	decode_aux(&r->packet, mess);
 	decode_preset(&r->packet, mess);
 	buffer_skip(rxbuf, SIZE_COMMAND);
-	return ccreader_process_packet(r);
+	ccreader_process_packet(r);
+	return MORE;
 }
 
-static inline int vicon_decode_status(struct ccreader *r, uint8_t *mess,
-	struct buffer *rxbuf)
+static inline enum decode_t vicon_decode_status(struct ccreader *r,
+	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_STATUS)
-		return 1;
+		return DONE;
 	r->packet.receiver = decode_receiver(mess);
 	r->packet.status = STATUS_REQUEST;
 	buffer_skip(rxbuf, SIZE_STATUS);
-	return ccreader_process_packet(r);
+	ccreader_process_packet(r);
+	return MORE;
 }
 
-static inline int vicon_decode_message(struct ccreader *r,
+static inline enum decode_t vicon_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_current(rxbuf);
 	if((mess[0] & FLAG) == 0) {
 		fprintf(stderr, "Vicon: unexpected byte %02X\n", mess[0]);
 		buffer_skip(rxbuf, 1);
-		return 0;
+		return MORE;
 	}
 	if(is_extended_command(mess))
 		return vicon_decode_extended(r, mess, rxbuf);
@@ -227,12 +230,13 @@ static inline int vicon_decode_message(struct ccreader *r,
 
 int vicon_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct ccreader *r = (struct ccreader *)h;
+	enum decode_t status;
 
 	while(buffer_available(rxbuf) >= SIZE_STATUS) {
-		int m = vicon_decode_message(r, rxbuf);
-		if(m < 0)
-			return m;
-		else if(m > 0)
+		status = vicon_decode_message(r, rxbuf);
+		if(status == FAIL)
+			return FAIL;
+		else if(status == DONE)
 			break;
 	}
 	return 0;
