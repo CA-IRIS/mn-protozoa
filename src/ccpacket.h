@@ -91,6 +91,7 @@ struct ccpacket {
 	enum iris_t	iris;	/* -1 (close), 0 (no change), or 1 (open) */
 	enum aux_t	aux;	/* bitmask of aux functions */
 	int		preset;	/* preset number */
+	long long	n_packet;	/* packet number */
 	struct packet_counter *counter;	/* packet counter */
 };
 

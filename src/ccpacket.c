@@ -75,11 +75,13 @@ void ccpacket_clear(struct ccpacket *p) {
 
 void ccpacket_init(struct ccpacket *p) {
 	p->counter = NULL;
+	p->n_packet = 0;
 	ccpacket_clear(p);
 }
 
 void ccpacket_debug(struct ccpacket *p, const char *name) {
 	printf("%s ", name);
+	printf("(%lld) ", p->n_packet++);
 	printf("rcv: %d", p->receiver);
 	if(p->status)
 		printf(" status: %d", p->status);
