@@ -228,18 +228,13 @@ static inline enum decode_t vicon_decode_message(struct ccreader *r,
 		return vicon_decode_status(r, mess, rxbuf);
 }
 
-int vicon_do_read(struct handler *h, struct buffer *rxbuf) {
+void vicon_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct ccreader *r = (struct ccreader *)h;
-	enum decode_t status;
 
 	while(buffer_available(rxbuf) >= SIZE_STATUS) {
-		status = vicon_decode_message(r, rxbuf);
-		if(status == FAIL)
-			return FAIL;
-		else if(status == DONE)
+		if(vicon_decode_message(r, rxbuf) == DONE)
 			break;
 	}
-	return 0;
 }
 
 static inline void encode_receiver(uint8_t *mess, int receiver) {
@@ -422,7 +417,7 @@ static inline bool is_extended_preset(struct ccpacket *p) {
 		return false;
 }
 
-int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
+unsigned int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int receiver = p->receiver + w->base;
 	if(receiver < 1 || receiver > 255)
 		return 0;

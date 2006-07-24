@@ -3,7 +3,7 @@
 
 #include "ccwriter.h"
 
-int pelco_d_do_read(struct handler *h, struct buffer *rxbuf);
-int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p);
+void pelco_d_do_read(struct handler *h, struct buffer *rxbuf);
+unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p);
 
 #endif

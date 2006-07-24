@@ -5,7 +5,7 @@
 #include "sport.h"
 
 struct ccwriter {
-	int	(*do_write)	(struct ccwriter *w, struct ccpacket *p);
+	unsigned int (*do_write) (struct ccwriter *w, struct ccpacket *p);
 	struct	buffer		*txbuf;		/* transmit buffer */
 	int			base;		/* receiver address base */
 	struct	ccwriter	*next;

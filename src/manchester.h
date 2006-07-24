@@ -3,7 +3,7 @@
 
 #include "ccwriter.h"
 
-int manchester_do_read(struct handler *h, struct buffer *rxbuf);
-int manchester_do_write(struct ccwriter *w, struct ccpacket *p);
+void manchester_do_read(struct handler *h, struct buffer *rxbuf);
+unsigned int manchester_do_write(struct ccwriter *w, struct ccpacket *p);
 
 #endif

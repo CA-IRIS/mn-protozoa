@@ -224,18 +224,13 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 		return pelco_decode_command(r, mess);
 }
 
-int pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
+void pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct ccreader *r = (struct ccreader *)h;
-	enum decode_t status;
 
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
-		status = pelco_decode_message(r, rxbuf);
-		if(status == FAIL)
-			return FAIL;
-		else if(status == DONE)
+		if(pelco_decode_message(r, rxbuf) == DONE)
 			break;
 	}
-	return 0;
 }
 
 static inline void encode_receiver(uint8_t *mess, int receiver) {
@@ -407,7 +402,7 @@ static inline bool has_aux(struct ccpacket *p) {
 		return false;
 }
 
-int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
+unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int receiver = p->receiver + w->base;
 	if(receiver < 1 || receiver > 254)
 		return 0;

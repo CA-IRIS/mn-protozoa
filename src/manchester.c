@@ -219,18 +219,16 @@ static inline enum decode_t manchester_read_message(struct ccreader *r,
 	return MORE;
 }
 
-int manchester_do_read(struct handler *h, struct buffer *rxbuf) {
+void manchester_do_read(struct handler *h, struct buffer *rxbuf) {
 	struct ccreader *r = (struct ccreader *)h;
 
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
-		if(manchester_read_message(r, rxbuf) == FAIL)
-			return FAIL;
+		if(manchester_read_message(r, rxbuf) == DONE)
+			break;
 	}
 	/* If there's a partial packet in the buffer, don't process yet */
-	if(buffer_available(rxbuf))
-		return 0;
-	else
-		return ccreader_process_packet(r);
+	if(!buffer_available(rxbuf))
+		ccreader_process_packet(r);
 }
 
 static inline void encode_receiver(uint8_t *mess, int receiver) {
@@ -377,7 +375,7 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 		encode_store_function(w, p, preset - 1);
 }
 
-int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
+unsigned int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int receiver = p->receiver + w->base;
 	if(receiver < 1 || receiver > 1024)
 		return 0;

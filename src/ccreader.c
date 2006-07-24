@@ -5,9 +5,8 @@
 #include "pelco_d.h"
 #include "vicon.h"
 
-static int ccreader_do_read(struct handler *h, struct buffer *rxbuf) {
+static void ccreader_do_read(struct handler *h, struct buffer *rxbuf) {
 	/* Do nothing */
-	return 0;
 }
 
 void ccreader_init(struct ccreader *r) {
@@ -36,15 +35,11 @@ static int ccreader_set_protocol(struct ccreader *r, const char *protocol) {
 	return 0;
 }
 
-static inline int ccreader_do_writers(struct ccreader *r) {
+static inline unsigned int ccreader_do_writers(struct ccreader *r) {
 	struct ccwriter *w = r->writer;
-	int res = 0;
+	unsigned int res = 0;
 	while(w) {
-		int i = w->do_write(w, &r->packet);
-		if(i < 0)
-			return i;
-		else if(i > 0)
-			res = i;
+		res += w->do_write(w, &r->packet);
 		w = w->next;
 	}
 	if(res && r->verbose)
@@ -52,8 +47,8 @@ static inline int ccreader_do_writers(struct ccreader *r) {
 	return res;
 }
 
-int ccreader_process_packet(struct ccreader *r) {
-	int res = 0;
+unsigned int ccreader_process_packet(struct ccreader *r) {
+	unsigned int res = 0;
 	if(r->packet.receiver == 0)
 		return 0;	// Ignore if receiver is zero
 	else if(r->packet.status)

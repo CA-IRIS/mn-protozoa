@@ -79,10 +79,9 @@ ssize_t sport_read(struct sport *port) {
 	if(n_bytes <= 0)
 		return n_bytes;
 	buffer_debug_in(port->rxbuf, n_bytes, port->name);
-	if(port->handler) {
-		if(port->handler->do_read(port->handler, port->rxbuf) < 0)
-			return -1;
-	} else
+	if(port->handler)
+		port->handler->do_read(port->handler, port->rxbuf);
+	else
 		return -1;
 	return n_bytes;
 }

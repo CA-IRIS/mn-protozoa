@@ -5,7 +5,7 @@
 #include "pelco_d.h"
 #include "vicon.h"
 
-static int ccwriter_do_write(struct ccwriter *w, struct ccpacket *p) {
+static unsigned int ccwriter_do_write(struct ccwriter *w, struct ccpacket *p) {
 	/* Do nothing */
 	return 0;
 }

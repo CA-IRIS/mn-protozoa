@@ -5,7 +5,6 @@
 #include "sport.h"
 
 enum decode_t {
-	FAIL = -1,
 	MORE = 0,
 	DONE = 1,
 };
@@ -20,7 +19,7 @@ struct ccreader {
 
 void ccreader_init(struct ccreader *r);
 void ccreader_add_writer(struct ccreader *r, struct ccwriter *w);
-int ccreader_process_packet(struct ccreader *r);
+unsigned int ccreader_process_packet(struct ccreader *r);
 struct ccreader *ccreader_create(struct sport *port, const char *protocol,
 	bool verbose);
 

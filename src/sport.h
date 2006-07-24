@@ -6,7 +6,7 @@
 #define BUFFER_SIZE 256
 
 struct handler {
-	int	(*do_read)	(struct handler *h, struct buffer *rxbuf);
+	void	(*do_read)	(struct handler *h, struct buffer *rxbuf);
 };
 
 struct sport {
