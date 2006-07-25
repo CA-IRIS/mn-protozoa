@@ -44,9 +44,9 @@ static void counter_count(struct packet_counter *c, struct ccpacket *p) {
 	c->n_packets++;
 	if(p->status)
 		c->n_status++;
-	if(p->command & (CC_PAN_LEFT | CC_PAN_RIGHT))
+	if(p->command & (CC_PAN_LEFT | CC_PAN_RIGHT) && p->pan)
 		c->n_pan++;
-	if(p->command & (CC_TILT_UP | CC_TILT_DOWN))
+	if(p->command & (CC_TILT_UP | CC_TILT_DOWN) && p->tilt)
 		c->n_tilt++;
 	if(p->zoom)
 		c->n_zoom++;
