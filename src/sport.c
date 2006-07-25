@@ -24,7 +24,7 @@ static inline int baud_mask(int baud) {
 	}
 }
 
-static struct sport* sport_configure(struct sport *port, int baud) {
+static inline struct sport* sport_configure(struct sport *port, int baud) {
 	struct termios ttyset;
 
 	ttyset.c_iflag = 0;
