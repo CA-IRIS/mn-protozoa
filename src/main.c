@@ -7,7 +7,7 @@
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.4"
+#define VERSION "0.5"
 
 static const char *CONF_FILE = "/etc/protozoa.conf";
 
@@ -42,8 +42,10 @@ int main(int argc, char* argv[])
 
 	config_init(&conf, CONF_FILE, verbose, debug, stats);
 	n_ports = config_read(&conf);
-	if(n_ports <= 0)
+	if(n_ports <= 0) {
+		fprintf(stderr, "Check configuration file: %s\n", CONF_FILE);
 		goto fail;
+	}
 	if(poller_init(&poll, n_ports, conf.ports) == NULL)
 		goto fail;
 	if(!(debug || verbose || stats)) {

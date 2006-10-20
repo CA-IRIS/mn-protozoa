@@ -131,6 +131,8 @@ static int config_scan_directive(struct config *c) {
 
 int config_read(struct config *c) {
 	FILE *f = fopen(c->filename, "r");
+	if(f == NULL)
+		return -1;
 
 	while(fgets(c->line, LINE_LENGTH, f) == c->line) {
 		config_skip_comments(c);
