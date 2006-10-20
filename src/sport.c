@@ -85,6 +85,7 @@ ssize_t sport_read(struct sport *port) {
 	} else {
 		/* Data is coming in on the port, but we're not set up to
 		 * handle it -- just ignore. */
+		buffer_clear(port->rxbuf);
 		return 0;
 	}
 }
