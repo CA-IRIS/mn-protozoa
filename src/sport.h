@@ -2,12 +2,9 @@
 #define __SPORT_H__
 
 #include "buffer.h"
+#include "ccreader.h"
 
 #define BUFFER_SIZE 256
-
-struct handler {
-	void	(*do_read)	(struct handler *h, struct buffer *rxbuf);
-};
 
 struct sport {
 	char		*name;
@@ -16,7 +13,7 @@ struct sport {
 	struct buffer	*rxbuf;
 	struct buffer	*txbuf;
 
-	struct handler	*handler;
+	struct ccreader *reader;
 };
 
 struct sport* sport_init(struct sport *port, const char *name, int baud); 

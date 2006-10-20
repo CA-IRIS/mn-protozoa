@@ -80,12 +80,13 @@ static int config_directive(struct config *c, const char *protocol_in,
 	prt_in = config_get_port(c, port_in, baud_in);
 	if(prt_in == NULL)
 		goto fail;
-	if(prt_in->handler == NULL) {
-		reader = ccreader_create(prt_in, protocol_in, c->verbose);
+	if(prt_in->reader == NULL) {
+		reader = ccreader_create(prt_in->name, protocol_in, c->verbose);
+		prt_in->reader = reader;
 		reader->packet.counter = c->counter;
 	} else {
 		// FIXME: check for redefined protocol
-		reader = (struct ccreader *)prt_in->handler;
+		reader = prt_in->reader;
 	}
 	prt_out = config_get_port(c, port_out, baud_out);
 	if(prt_out == NULL)

@@ -219,9 +219,7 @@ static inline enum decode_t manchester_read_message(struct ccreader *r,
 	return MORE;
 }
 
-void manchester_do_read(struct handler *h, struct buffer *rxbuf) {
-	struct ccreader *r = (struct ccreader *)h;
-
+void manchester_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
 		if(manchester_read_message(r, rxbuf) == DONE)
 			break;

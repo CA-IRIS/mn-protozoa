@@ -228,9 +228,7 @@ static inline enum decode_t vicon_decode_message(struct ccreader *r,
 		return vicon_decode_status(r, mess, rxbuf);
 }
 
-void vicon_do_read(struct handler *h, struct buffer *rxbuf) {
-	struct ccreader *r = (struct ccreader *)h;
-
+void vicon_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_STATUS) {
 		if(vicon_decode_message(r, rxbuf) == DONE)
 			break;

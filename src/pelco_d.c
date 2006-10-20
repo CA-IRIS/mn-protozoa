@@ -224,9 +224,7 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 		return pelco_decode_command(r, mess);
 }
 
-void pelco_d_do_read(struct handler *h, struct buffer *rxbuf) {
-	struct ccreader *r = (struct ccreader *)h;
-
+void pelco_d_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
 		if(pelco_decode_message(r, rxbuf) == DONE)
 			break;

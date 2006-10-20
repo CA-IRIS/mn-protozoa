@@ -62,7 +62,7 @@ struct sport* sport_init(struct sport *port, const char *name, int baud) {
 		goto fail;
 	if(buffer_init(name, port->txbuf, BUFFER_SIZE) == NULL)
 		goto fail;
-	port->handler = NULL;
+	port->reader = NULL;
 	port->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if(port->fd < 0)
 		goto fail;
@@ -78,9 +78,9 @@ ssize_t sport_read(struct sport *port) {
 	ssize_t n_bytes = buffer_read(port->rxbuf, port->fd);
 	if(n_bytes <= 0)
 		return n_bytes;
-	if(port->handler) {
+	if(port->reader) {
 		buffer_debug_in(port->rxbuf, n_bytes);
-		port->handler->do_read(port->handler, port->rxbuf);
+		port->reader->do_read(port->reader, port->rxbuf);
 		return n_bytes;
 	} else {
 		/* Data is coming in on the port, but we're not set up to

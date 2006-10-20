@@ -5,12 +5,12 @@
 #include "pelco_d.h"
 #include "vicon.h"
 
-static void ccreader_do_read(struct handler *h, struct buffer *rxbuf) {
+static void ccreader_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	/* Do nothing */
 }
 
 void ccreader_init(struct ccreader *r) {
-	r->handler.do_read = ccreader_do_read;
+	r->do_read = ccreader_do_read;
 	ccpacket_init(&r->packet);
 	r->writer = NULL;
 	r->verbose = false;
@@ -23,11 +23,11 @@ void ccreader_add_writer(struct ccreader *r, struct ccwriter *w) {
 
 static int ccreader_set_protocol(struct ccreader *r, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0)
-		r->handler.do_read = manchester_do_read;
+		r->do_read = manchester_do_read;
 	else if(strcasecmp(protocol, "pelco_d") == 0)
-		r->handler.do_read = pelco_d_do_read;
+		r->do_read = pelco_d_do_read;
 	else if(strcasecmp(protocol, "vicon") == 0)
-		r->handler.do_read = vicon_do_read;
+		r->do_read = vicon_do_read;
 	else {
 		fprintf(stderr, "Unknown protocol: %s\n", protocol);
 		return -1;
@@ -64,7 +64,7 @@ unsigned int ccreader_process_packet(struct ccreader *r) {
 	return res;
 }
 
-struct ccreader *ccreader_create(struct sport *port, const char *protocol,
+struct ccreader *ccreader_create(const char *name, const char *protocol,
 	bool verbose)
 {
 	struct ccreader *r = malloc(sizeof(struct ccreader));
@@ -73,8 +73,7 @@ struct ccreader *ccreader_create(struct sport *port, const char *protocol,
 	ccreader_init(r);
 	if(ccreader_set_protocol(r, protocol) < 0)
 		goto fail;
-	port->handler = &r->handler;
-	r->name = port->name;
+	r->name = name;
 	r->verbose = verbose;
 	return r;
 fail:
