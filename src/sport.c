@@ -55,12 +55,12 @@ struct sport* sport_init(struct sport *port, const char *name, int baud) {
 	port->rxbuf = malloc(BUFFER_SIZE);
 	if(port->rxbuf == NULL)
 		goto fail;
-	if(buffer_init(port->rxbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(name, port->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	port->txbuf = malloc(BUFFER_SIZE);
 	if(port->txbuf == NULL)
 		goto fail;
-	if(buffer_init(port->txbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(name, port->txbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	port->handler = NULL;
 	port->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -79,7 +79,7 @@ ssize_t sport_read(struct sport *port) {
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(port->handler) {
-		buffer_debug_in(port->rxbuf, n_bytes, port->name);
+		buffer_debug_in(port->rxbuf, n_bytes);
 		port->handler->do_read(port->handler, port->rxbuf);
 		return n_bytes;
 	} else {
@@ -90,6 +90,6 @@ ssize_t sport_read(struct sport *port) {
 }
 
 ssize_t sport_write(struct sport *port) {
-	buffer_debug_out(port->txbuf, port->name);
+	buffer_debug_out(port->txbuf);
 	return buffer_write(port->txbuf, port->fd);
 }
