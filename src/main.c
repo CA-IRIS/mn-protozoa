@@ -3,7 +3,6 @@
 #include <unistd.h>	/* for daemon */
 #include <sys/errno.h>	/* for errno */
 
-#include "sport.h"
 #include "config.h"
 #include "poller.h"
 
@@ -20,7 +19,7 @@ static void print_version() {
 
 int main(int argc, char* argv[])
 {
-	int n_ports, i;
+	int n_channels, i;
 	struct config conf;
 	struct poller poll;
 	bool debug = false;
@@ -41,12 +40,12 @@ int main(int argc, char* argv[])
 	}
 
 	config_init(&conf, CONF_FILE, verbose, debug, stats);
-	n_ports = config_read(&conf);
-	if(n_ports <= 0) {
+	n_channels = config_read(&conf);
+	if(n_channels <= 0) {
 		fprintf(stderr, "Check configuration file: %s\n", CONF_FILE);
 		goto fail;
 	}
-	if(poller_init(&poll, n_ports, conf.ports) == NULL)
+	if(poller_init(&poll, n_channels, conf.chns) == NULL)
 		goto fail;
 	if(!(debug || verbose || stats)) {
 		if(daemon(0, 0) < 0)

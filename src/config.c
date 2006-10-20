@@ -3,14 +3,15 @@
 #include "config.h"
 #include "ccreader.h"
 #include "ccwriter.h"
+#include "sport.h"
 
 void config_init(struct config *c, const char *filename, bool verbose,
 	bool debug, bool stats)
 {
 	c->filename = filename;
 	c->line = malloc(LINE_LENGTH);
-	c->ports = NULL;
-	c->n_ports = 0;
+	c->chns = NULL;
+	c->n_channels = 0;
 	c->verbose = verbose;
 	c->debug = debug;
 	c->out = NULL;
@@ -21,55 +22,51 @@ void config_init(struct config *c, const char *filename, bool verbose,
 		c->counter = NULL;
 }
 
-static struct sport *config_find_port(struct config *c, const char *port) {
+static struct channel *config_find_channel(struct config *c, const char *name) {
 	int i;
-	for(i = 0; i < c->n_ports; i++) {
-		if(strcmp(port, c->ports[i].name) == 0)
-			return c->ports + i;
+	for(i = 0; i < c->n_channels; i++) {
+		if(strcmp(name, c->chns[i].name) == 0)
+			return c->chns + i;
 	}
 	return NULL;
 }
 
-static struct sport *config_new_port(struct config *c, const char *port,
+static struct channel *config_new_channel(struct config *c, const char *name,
 	int baud)
 {
-	struct sport *prt;
-	c->n_ports++;
-	c->ports = realloc(c->ports, sizeof(struct sport) * c->n_ports);
-	if(c->ports == NULL)
+	struct channel *chn;
+	c->n_channels++;
+	c->chns = realloc(c->chns, sizeof(struct channel) * c->n_channels);
+	if(c->chns == NULL)
 		return NULL;
-	prt = c->ports + (c->n_ports - 1);
-	if(sport_init(prt, port, baud) == NULL) {
+	chn = c->chns + (c->n_channels - 1);
+	if(sport_init(chn, name, baud) == NULL) {
 		fprintf(stderr, "Error initializing serial port: %s\n",
-			port);
+			name);
 		return NULL;
 	}
-	prt->rxbuf->debug = c->debug;
-	prt->txbuf->debug = c->debug;
-	return prt;
+	chn->rxbuf->debug = c->debug;
+	chn->txbuf->debug = c->debug;
+	return chn;
 }
 
-static struct sport *config_get_port(struct config *c, const char *port,
+static struct channel *config_get_channel(struct config *c, const char *name,
 	int baud)
 {
-	struct sport *prt;
+	struct channel *chn;
 
-	prt = config_find_port(c, port);
-	if(prt) {
-		if(prt->baud != baud) {
-			fprintf(stderr, "Baud rate redefined for %s\n", port);
-			return NULL;
-		} else
-			return prt;
-	} else
-		return config_new_port(c, port, baud);
+	chn = config_find_channel(c, name);
+	if(chn)
+		return chn;
+	else
+		return config_new_channel(c, name, baud);
 }
 
 static int config_directive(struct config *c, const char *protocol_in,
 	const char *port_in, int baud_in, const char *protocol_out,
 	const char *port_out, int baud_out, int base)
 {
-	struct sport *prt_in, *prt_out;
+	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
 	struct ccwriter *writer;
 
@@ -77,21 +74,21 @@ static int config_directive(struct config *c, const char *protocol_in,
 		printf("protozoa: %s %s %d %s %s %d %d\n", protocol_in, port_in,
 			baud_in, protocol_out, port_out, baud_out, base);
 	}
-	prt_in = config_get_port(c, port_in, baud_in);
-	if(prt_in == NULL)
+	chn_in = config_get_channel(c, port_in, baud_in);
+	if(chn_in == NULL)
 		goto fail;
-	if(prt_in->reader == NULL) {
-		reader = ccreader_create(prt_in->name, protocol_in, c->verbose);
-		prt_in->reader = reader;
+	if(chn_in->reader == NULL) {
+		reader = ccreader_create(chn_in->name, protocol_in, c->verbose);
+		chn_in->reader = reader;
 		reader->packet.counter = c->counter;
 	} else {
 		// FIXME: check for redefined protocol
-		reader = prt_in->reader;
+		reader = chn_in->reader;
 	}
-	prt_out = config_get_port(c, port_out, baud_out);
-	if(prt_out == NULL)
+	chn_out = config_get_channel(c, port_out, baud_out);
+	if(chn_out == NULL)
 		goto fail;
-	writer = ccwriter_create(prt_out, protocol_out, base);
+	writer = ccwriter_create(chn_out, protocol_out, base);
 	if(writer == NULL)
 		goto fail;
 	ccreader_add_writer(reader, writer);
@@ -140,12 +137,12 @@ int config_read(struct config *c) {
 		if(config_scan_directive(c))
 			goto fail;
 	}
-	if(c->n_ports == 0) {
+	if(c->n_channels == 0) {
 		fprintf(stderr, "Error reading configuration file: %s\n",
 			c->filename);
 	}
 	fclose(f);
-	return c->n_ports;
+	return c->n_channels;
 fail:
 	fclose(f);
 	return -1;

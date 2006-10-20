@@ -1,23 +1,25 @@
 #include "poller.h"
 
-struct poller *poller_init(struct poller *p, int n_ports, struct sport *port) {
+struct poller *poller_init(struct poller *p, int n_channels,
+	struct channel *chn)
+{
 	int i;
 
-	p->n_ports = n_ports;
-	p->port = port;
-	p->pollfds = malloc(sizeof(struct pollfd) * n_ports);
+	p->n_channels = n_channels;
+	p->chn = chn;
+	p->pollfds = malloc(sizeof(struct pollfd) * n_channels);
 	if(p->pollfds == NULL)
 		return NULL;
-	for(i = 0; i < n_ports; i++)
-		p->pollfds[i].fd = port[i].fd;
+	for(i = 0; i < n_channels; i++)
+		p->pollfds[i].fd = chn[i].fd;
 	return p;
 }
 
 static void poller_register_events(struct poller *p) {
 	int i;
 
-	for(i = 0; i < p->n_ports; i++) {
-		if(buffer_is_empty(p->port[i].txbuf))
+	for(i = 0; i < p->n_channels; i++) {
+		if(buffer_is_empty(p->chn[i].txbuf))
 			p->pollfds[i].events = POLLIN;
 		else
 			p->pollfds[i].events = POLLIN | POLLOUT;
@@ -28,16 +30,16 @@ static int poller_do_poll(struct poller *p) {
 	int i;
 	ssize_t n_bytes;
 
-	if(poll(p->pollfds, p->n_ports, -1) < 0)
+	if(poll(p->pollfds, p->n_channels, -1) < 0)
 		return -1;
-	for(i = 0; i < p->n_ports; i++) {
+	for(i = 0; i < p->n_channels; i++) {
 		if(p->pollfds[i].revents & POLLOUT) {
-			n_bytes = sport_write(p->port + i);
+			n_bytes = channel_write(p->chn + i);
 			if(n_bytes < 0)
 				return n_bytes;
 		}
 		if(p->pollfds[i].revents & POLLIN) {
-			n_bytes = sport_read(p->port + i);
+			n_bytes = channel_read(p->chn + i);
 			if(n_bytes < 0)
 				return n_bytes;
 		}

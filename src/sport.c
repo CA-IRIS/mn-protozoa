@@ -1,6 +1,5 @@
 #include <fcntl.h>
 #include <stddef.h>
-#include <string.h>
 #include <termios.h>
 #include <sys/errno.h>
 #include "sport.h"
@@ -24,7 +23,7 @@ static inline int baud_mask(int baud) {
 	}
 }
 
-static inline struct sport* sport_configure(struct sport *port, int baud) {
+static inline struct channel* sport_configure(struct channel *chn, int baud) {
 	struct termios ttyset;
 
 	ttyset.c_iflag = 0;
@@ -41,56 +40,22 @@ static inline struct sport* sport_configure(struct sport *port, int baud) {
 		return NULL;
 	if(cfsetospeed(&ttyset, b) < 0)
 		return NULL;
-	if(tcsetattr(port->fd, TCSAFLUSH, &ttyset) < 0)
+	if(tcsetattr(chn->fd, TCSAFLUSH, &ttyset) < 0)
 		return NULL;
 
-	return port;
+	return chn;
 }
 
-struct sport* sport_init(struct sport *port, const char *name, int baud) {
-	bzero(port, sizeof(struct sport));
-	port->name = malloc(strlen(name) + 1);
-	strcpy(port->name, name);
-	port->baud = baud;
-	port->rxbuf = malloc(BUFFER_SIZE);
-	if(port->rxbuf == NULL)
+struct channel* sport_init(struct channel *chn, const char *name, int baud) {
+	if(channel_init(chn, name) == NULL)
+		return NULL;
+	chn->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
+	if(chn->fd < 0)
 		goto fail;
-	if(buffer_init(name, port->rxbuf, BUFFER_SIZE) == NULL)
+	if(sport_configure(chn, baud) == NULL)
 		goto fail;
-	port->txbuf = malloc(BUFFER_SIZE);
-	if(port->txbuf == NULL)
-		goto fail;
-	if(buffer_init(name, port->txbuf, BUFFER_SIZE) == NULL)
-		goto fail;
-	port->reader = NULL;
-	port->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
-	if(port->fd < 0)
-		goto fail;
-	return sport_configure(port, baud);
+	return chn;
 fail:
-	free(port->name);
-	free(port->rxbuf);
-	free(port->txbuf);
+	channel_destroy(chn);
 	return NULL;
-}
-
-ssize_t sport_read(struct sport *port) {
-	ssize_t n_bytes = buffer_read(port->rxbuf, port->fd);
-	if(n_bytes <= 0)
-		return n_bytes;
-	if(port->reader) {
-		buffer_debug_in(port->rxbuf, n_bytes);
-		port->reader->do_read(port->reader, port->rxbuf);
-		return n_bytes;
-	} else {
-		/* Data is coming in on the port, but we're not set up to
-		 * handle it -- just ignore. */
-		buffer_clear(port->rxbuf);
-		return 0;
-	}
-}
-
-ssize_t sport_write(struct sport *port) {
-	buffer_debug_out(port->txbuf);
-	return buffer_write(port->txbuf, port->fd);
 }

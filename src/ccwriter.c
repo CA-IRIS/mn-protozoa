@@ -41,7 +41,7 @@ uint8_t *ccwriter_append(struct ccwriter *w, size_t n_bytes) {
 	}
 }
 
-struct ccwriter *ccwriter_create(struct sport *port, const char *protocol,
+struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
 	int base)
 {
 	struct ccwriter *w = malloc(sizeof(struct ccwriter));
@@ -50,7 +50,7 @@ struct ccwriter *ccwriter_create(struct sport *port, const char *protocol,
 	ccwriter_init(w);
 	if(ccwriter_set_protocol(w, protocol) < 0)
 		goto fail;
-	w->txbuf = port->txbuf;
+	w->txbuf = chn->txbuf;
 	w->base = base;
 	return w;
 fail:
