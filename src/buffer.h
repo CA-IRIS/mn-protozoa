@@ -5,7 +5,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 /*
  * A buffer is used for I/O buffering. It consists of four pointers to a
