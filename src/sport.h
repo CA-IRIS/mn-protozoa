@@ -3,6 +3,6 @@
 
 #include "channel.h"
 
-struct channel* sport_init(struct channel *chn, const char *name, int baud); 
+struct channel* sport_init(struct channel *chn, const char *name, int baud);
 
 #endif
