@@ -4,6 +4,7 @@
 #include "ccreader.h"
 #include "ccwriter.h"
 #include "sport.h"
+#include "tcp.h"
 
 void config_init(struct config *c, const char *filename, bool verbose,
 	bool debug, bool stats)
@@ -31,8 +32,12 @@ static struct channel *config_find_channel(struct config *c, const char *name) {
 	return NULL;
 }
 
+static inline bool config_is_sport(const char *name) {
+	return name[0] == '/';
+}
+
 static struct channel *config_new_channel(struct config *c, const char *name,
-	int baud)
+	int extra)
 {
 	struct channel *chn;
 	c->n_channels++;
@@ -40,10 +45,17 @@ static struct channel *config_new_channel(struct config *c, const char *name,
 	if(c->chns == NULL)
 		return NULL;
 	chn = c->chns + (c->n_channels - 1);
-	if(sport_init(chn, name, baud) == NULL) {
-		fprintf(stderr, "Error initializing serial port: %s\n",
-			name);
-		return NULL;
+	if(config_is_sport(name)) {
+		if(sport_init(chn, name, extra) == NULL) {
+			fprintf(stderr, "Error initializing serial port: %s\n",
+				name);
+			return NULL;
+		}
+	} else {
+		if(tcp_init(chn, name, extra) == NULL) {
+			fprintf(stderr, "Error connecting tcp: %s\n", name);
+			return NULL;
+		}
 	}
 	chn->rxbuf->debug = c->debug;
 	chn->txbuf->debug = c->debug;
@@ -51,7 +63,7 @@ static struct channel *config_new_channel(struct config *c, const char *name,
 }
 
 static struct channel *config_get_channel(struct config *c, const char *name,
-	int baud)
+	int extra)
 {
 	struct channel *chn;
 
@@ -59,7 +71,7 @@ static struct channel *config_get_channel(struct config *c, const char *name,
 	if(chn)
 		return chn;
 	else
-		return config_new_channel(c, name, baud);
+		return config_new_channel(c, name, extra);
 }
 
 static int config_directive(struct config *c, const char *protocol_in,

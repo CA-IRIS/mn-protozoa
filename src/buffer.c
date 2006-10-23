@@ -111,6 +111,7 @@ void buffer_skip(struct buffer *buf, size_t n_bytes) {
 static void buffer_debug(struct buffer *buf, const char *prefix, void *start) {
 	uint8_t *mess;
 	uint8_t *stop = buf->pin;
+
 	fprintf(stderr, buf->name);
 	fprintf(stderr, prefix);
 	for(mess = start; mess < stop; mess++)
