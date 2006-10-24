@@ -75,8 +75,8 @@ static struct channel *config_get_channel(struct config *c, const char *name,
 }
 
 static int config_directive(struct config *c, const char *protocol_in,
-	const char *port_in, int baud_in, const char *protocol_out,
-	const char *port_out, int baud_out, int base, int range)
+	const char *port_in, int extra_in, const char *protocol_out,
+	const char *port_out, int extra_out, int base, int range)
 {
 	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
@@ -84,10 +84,10 @@ static int config_directive(struct config *c, const char *protocol_in,
 
 	if(c->verbose) {
 		printf("protozoa: %s %s %d %s %s %d %d %d\n", protocol_in,
-			port_in, baud_in, protocol_out, port_out, baud_out,
+			port_in, extra_in, protocol_out, port_out, extra_out,
 			base, range);
 	}
-	chn_in = config_get_channel(c, port_in, baud_in);
+	chn_in = config_get_channel(c, port_in, extra_in);
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
@@ -98,7 +98,7 @@ static int config_directive(struct config *c, const char *protocol_in,
 		// FIXME: check for redefined protocol
 		reader = chn_in->reader;
 	}
-	chn_out = config_get_channel(c, port_out, baud_out);
+	chn_out = config_get_channel(c, port_out, extra_out);
 	if(chn_out == NULL)
 		goto fail;
 	writer = ccwriter_create(chn_out, protocol_out, base, range);
@@ -122,19 +122,19 @@ static int config_scan_directive(struct config *c) {
 	int i;
 	char protocol_in[16], protocol_out[16];
 	char port_in[16], port_out[16];
-	int baud_in = 9600;
-	int baud_out = 9600;
+	int extra_in = 9600;	/* extra => baud rate for serial ports */
+	int extra_out = 9600;
 	int base = 0;
 	int range = 0;
 
 	i = sscanf(c->line, "%15s %15s %d %15s %15s %d %d %d", protocol_in,
-		port_in, &baud_in, protocol_out, port_out, &baud_out, &base,
+		port_in, &extra_in, protocol_out, port_out, &extra_out, &base,
 		&range);
 	if(i == 5)
-		baud_out = baud_in;
+		extra_out = extra_in;
 	if(i > 4)
-		return config_directive(c, protocol_in, port_in, baud_in,
-			protocol_out, port_out, baud_out, base, range);
+		return config_directive(c, protocol_in, port_in, extra_in,
+			protocol_out, port_out, extra_out, base, range);
 	else if(i <= 0)
 		return 0;
 	else {
