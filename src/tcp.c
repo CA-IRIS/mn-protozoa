@@ -12,7 +12,7 @@
 struct channel* tcp_init(struct channel *chn, const char *name, int port) {
 	struct hostent *host;
 	struct sockaddr_in sa;
-	int state = 1;
+	int on = 1;	// turn "on" TCP_NODELAY with setsockopt
 
 	if(channel_init(chn, name) == NULL)
 		return NULL;
@@ -22,24 +22,19 @@ struct channel* tcp_init(struct channel *chn, const char *name, int port) {
 		fprintf(stderr, "Host name lookup failed: %s\n", name);
 		goto fail;
 	}
-	sa.sin_family = AF_INET;
-	bcopy((char *)host->h_addr, (char *)&sa.sin_addr.s_addr,
-		host->h_length);
-	sa.sin_port = htons(port);
 	chn->fd = socket(PF_INET, SOCK_STREAM, 0);
 	if(chn->fd < 0) {
 		fprintf(stderr, "Failed to create socket\n");
 		goto fail;
 	}
-	if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &state, sizeof(state))
-		< 0)
-	{
-		fprintf(stderr, "Failed to disable socket delay\n");
+	if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) {
+		fprintf(stderr, "Failed to set TCP_NODELAY\n");
 		goto fail;
 	}
-	int r = connect(chn->fd, (struct sockaddr *)&sa,
-		sizeof(struct sockaddr_in));
-	if(r < 0) {
+	sa.sin_family = AF_INET;
+	bcopy(host->h_addr, &sa.sin_addr.s_addr, host->h_length);
+	sa.sin_port = htons(port);
+	if(connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0) {
 		fprintf(stderr, "Connect to %s failed\n", name);
 		goto fail;
 	}
