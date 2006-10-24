@@ -25,7 +25,7 @@ struct channel* tcp_init(struct channel *chn, const char *name, int port) {
 	sa.sin_family = AF_INET;
 	bcopy((char *)host->h_addr, (char *)&sa.sin_addr.s_addr,
 		host->h_length);
-	sa.sin_port = htons(2345);
+	sa.sin_port = htons(port);
 	chn->fd = socket(PF_INET, SOCK_STREAM, 0);
 	if(chn->fd < 0) {
 		fprintf(stderr, "Failed to create socket\n");
