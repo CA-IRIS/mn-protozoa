@@ -239,10 +239,9 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *p,
 	enum pt_command_t cmnd, int speed)
 {
-	int receiver = p->receiver + w->base;
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		mess[1] |= (cmnd << 4) | (speed << 1);
 		mess[2] |= PT_COMMAND;
 	}
@@ -251,10 +250,9 @@ static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *p,
 static void encode_lens_function(struct ccwriter *w, struct ccpacket *p,
 	enum lens_t func)
 {
-	int receiver = p->receiver + w->base;
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		mess[1] |= (func << 1) | (EX_LENS << 4);
 	}
 }
@@ -262,10 +260,9 @@ static void encode_lens_function(struct ccwriter *w, struct ccpacket *p,
 static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
 	int aux)
 {
-	int receiver = p->receiver + w->base;
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		mess[1] |= (aux << 1) | (EX_AUX << 4);
 	}
 }
@@ -344,10 +341,9 @@ static inline void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 static void encode_recall_function(struct ccwriter *w, struct ccpacket *p,
 	int preset)
 {
-	int receiver = p->receiver + w->base;
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		mess[1] |= (preset << 1) | (EX_RECALL << 4);
 	}
 }
@@ -355,10 +351,9 @@ static void encode_recall_function(struct ccwriter *w, struct ccpacket *p,
 static void encode_store_function(struct ccwriter *w, struct ccpacket *p,
 	int preset)
 {
-	int receiver = p->receiver + w->base;
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		mess[1] |= (preset << 1) | (EX_STORE << 4);
 	}
 }
@@ -374,8 +369,7 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 }
 
 unsigned int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
-	int receiver = p->receiver + w->base;
-	if(receiver < 1 || receiver > 1024)
+	if(p->receiver < 1 || p->receiver > 1024)
 		return 0;
 	encode_pan(w, p);
 	encode_tilt(w, p);

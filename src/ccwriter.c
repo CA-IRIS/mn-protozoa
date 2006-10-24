@@ -10,14 +10,15 @@ static unsigned int ccwriter_do_write(struct ccwriter *w, struct ccpacket *p) {
 	return 0;
 }
 
-void ccwriter_init(struct ccwriter *w) {
+static void ccwriter_init(struct ccwriter *w) {
 	w->do_write = ccwriter_do_write;
 	w->txbuf = NULL;
 	w->base = 0;
+	w->range = 0;
 	w->next = NULL;
 }
 
-int ccwriter_set_protocol(struct ccwriter *w, const char *protocol) {
+static int ccwriter_set_protocol(struct ccwriter *w, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0)
 		w->do_write = manchester_do_write;
 	else if(strcasecmp(protocol, "pelco_d") == 0)
@@ -42,7 +43,7 @@ uint8_t *ccwriter_append(struct ccwriter *w, size_t n_bytes) {
 }
 
 struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
-	int base)
+	int base, int range)
 {
 	struct ccwriter *w = malloc(sizeof(struct ccwriter));
 	if(w == NULL)
@@ -52,8 +53,17 @@ struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
 		goto fail;
 	w->txbuf = chn->txbuf;
 	w->base = base;
+	w->range = range;
 	return w;
 fail:
 	free(w);
 	return NULL;
+}
+
+void ccwriter_set_receiver(const struct ccwriter *w, struct ccpacket *p) {
+	p->receiver += w->base;
+	if(p->receiver < 0)
+		p->receiver = 0;
+	if((w->range > 0) && (p->receiver > w->range))
+		p->receiver = 0;
 }

@@ -309,13 +309,11 @@ static inline void encode_checksum(uint8_t *mess) {
 	mess[6] = calculate_checksum(mess);
 }
 
-static void encode_command(struct ccwriter *w, struct ccpacket *p,
-	int receiver)
-{
+static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
 		bzero(mess, SIZE_MSG);
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		encode_pan(mess, p);
 		encode_tilt(mess, p);
 		encode_lens(mess, p);
@@ -324,12 +322,11 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p,
 	}
 }
 
-static void encode_preset(struct ccwriter *w, struct ccpacket *p, int receiver)
-{
+static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
 		bzero(mess, SIZE_MSG);
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_EXTENDED);
 		if(p->command & CC_RECALL)
 			mess[3] |= EX_RECALL << 1;
@@ -342,11 +339,11 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p, int receiver)
 	}
 }
 
-static void encode_aux(struct ccwriter *w, struct ccpacket *p, int receiver) {
+static void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
 		bzero(mess, SIZE_MSG);
-		encode_receiver(mess, receiver);
+		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_EXTENDED);
 		if(p->aux & AUX_CLEAR)
 			mess[3] |= EX_AUX_CLEAR << 1;
@@ -401,14 +398,13 @@ static inline bool has_aux(struct ccpacket *p) {
 }
 
 unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
-	int receiver = p->receiver + w->base;
-	if(receiver < 1 || receiver > 254)
+	if(p->receiver < 1 || p->receiver > 254)
 		return 0;
 	if(has_command(p))
-		encode_command(w, p, receiver);
+		encode_command(w, p);
 	if(has_preset(p))
-		encode_preset(w, p, receiver);
+		encode_preset(w, p);
 	if(has_aux(p))
-		encode_aux(w, p, receiver);
+		encode_aux(w, p);
 	return 1;
 }

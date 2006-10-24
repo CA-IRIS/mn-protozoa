@@ -76,15 +76,16 @@ static struct channel *config_get_channel(struct config *c, const char *name,
 
 static int config_directive(struct config *c, const char *protocol_in,
 	const char *port_in, int baud_in, const char *protocol_out,
-	const char *port_out, int baud_out, int base)
+	const char *port_out, int baud_out, int base, int range)
 {
 	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
 	struct ccwriter *writer;
 
 	if(c->verbose) {
-		printf("protozoa: %s %s %d %s %s %d %d\n", protocol_in, port_in,
-			baud_in, protocol_out, port_out, baud_out, base);
+		printf("protozoa: %s %s %d %s %s %d %d %d\n", protocol_in,
+			port_in, baud_in, protocol_out, port_out, baud_out,
+			base, range);
 	}
 	chn_in = config_get_channel(c, port_in, baud_in);
 	if(chn_in == NULL)
@@ -100,7 +101,7 @@ static int config_directive(struct config *c, const char *protocol_in,
 	chn_out = config_get_channel(c, port_out, baud_out);
 	if(chn_out == NULL)
 		goto fail;
-	writer = ccwriter_create(chn_out, protocol_out, base);
+	writer = ccwriter_create(chn_out, protocol_out, base, range);
 	if(writer == NULL)
 		goto fail;
 	ccreader_add_writer(reader, writer);
@@ -124,13 +125,16 @@ static int config_scan_directive(struct config *c) {
 	int baud_in = 9600;
 	int baud_out = 9600;
 	int base = 0;
-	i = sscanf(c->line, "%15s %15s %d %15s %15s %d %d", protocol_in,
-		port_in, &baud_in, protocol_out, port_out, &baud_out, &base);
+	int range = 0;
+
+	i = sscanf(c->line, "%15s %15s %d %15s %15s %d %d %d", protocol_in,
+		port_in, &baud_in, protocol_out, port_out, &baud_out, &base,
+		&range);
 	if(i == 5)
 		baud_out = baud_in;
 	if(i > 4)
 		return config_directive(c, protocol_in, port_in, baud_in,
-			protocol_out, port_out, baud_out, base);
+			protocol_out, port_out, baud_out, base, range);
 	else if(i <= 0)
 		return 0;
 	else {

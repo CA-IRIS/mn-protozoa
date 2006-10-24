@@ -38,8 +38,11 @@ static int ccreader_set_protocol(struct ccreader *r, const char *protocol) {
 static inline unsigned int ccreader_do_writers(struct ccreader *r) {
 	struct ccwriter *w = r->writer;
 	unsigned int res = 0;
+	const int receiver = r->packet.receiver; /* save "true" receiver */
 	while(w) {
+		ccwriter_set_receiver(w, &r->packet);
 		res += w->do_write(w, &r->packet);
+		r->packet.receiver = receiver;  /* restore "true" receiver */
 		w = w->next;
 	}
 	if(res && r->verbose)
@@ -50,7 +53,7 @@ static inline unsigned int ccreader_do_writers(struct ccreader *r) {
 unsigned int ccreader_process_packet(struct ccreader *r) {
 	unsigned int res = 0;
 	if(r->packet.receiver == 0)
-		return 0;	// Ignore if receiver is zero
+		return 0;	/* Ignore if receiver is zero */
 	else if(r->packet.status)
 		ccpacket_drop(&r->packet);
 	else {
