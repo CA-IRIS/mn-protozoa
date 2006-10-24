@@ -14,7 +14,7 @@ struct channel* tcp_init(struct channel *chn, const char *name, int port) {
 	struct sockaddr_in sa;
 	int on = 1;	// turn "on" TCP_NODELAY with setsockopt
 
-	if(channel_init(chn, name) == NULL)
+	if(channel_init(chn, name, port) == NULL)
 		return NULL;
 
 	host = gethostbyname(name);

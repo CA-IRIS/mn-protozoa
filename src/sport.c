@@ -23,7 +23,7 @@ static inline int baud_mask(int baud) {
 	}
 }
 
-static inline struct channel* sport_configure(struct channel *chn, int baud) {
+static inline struct channel* sport_configure(struct channel *chn) {
 	struct termios ttyset;
 
 	ttyset.c_iflag = 0;
@@ -33,7 +33,8 @@ static inline struct channel* sport_configure(struct channel *chn, int baud) {
 	ttyset.c_cc[VMIN] = 0;
 	ttyset.c_cc[VTIME] = 1;
 
-	int b = baud_mask(baud);
+	/* sport baud rate stored in channel->extra parameter */
+	int b = baud_mask(chn->extra);
 	if(b < 0)
 		return NULL;
 	if(cfsetispeed(&ttyset, b) < 0)
@@ -47,12 +48,12 @@ static inline struct channel* sport_configure(struct channel *chn, int baud) {
 }
 
 struct channel* sport_init(struct channel *chn, const char *name, int baud) {
-	if(channel_init(chn, name) == NULL)
+	if(channel_init(chn, name, baud) == NULL)
 		return NULL;
 	chn->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if(chn->fd < 0)
 		goto fail;
-	if(sport_configure(chn, baud) == NULL)
+	if(sport_configure(chn) == NULL)
 		goto fail;
 	return chn;
 fail:

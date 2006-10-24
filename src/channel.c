@@ -24,12 +24,13 @@ ssize_t channel_write(struct channel *c) {
 	return buffer_write(c->txbuf, c->fd);
 }
 
-struct channel* channel_init(struct channel *c, const char *name) {
+struct channel* channel_init(struct channel *c, const char *name, int extra) {
 	bzero(c, sizeof(struct channel));
 	c->name = malloc(strlen(name) + 1);
 	if(c->name == NULL)
 		goto fail;
 	strcpy(c->name, name);
+	c->extra = extra;
 	c->rxbuf = malloc(BUFFER_SIZE);
 	if(c->rxbuf == NULL)
 		goto fail;
