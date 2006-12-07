@@ -3,6 +3,6 @@
 
 #include "channel.h"
 
-struct channel* tcp_init(struct channel *chn, const char *name, int port);
+int tcp_open(struct channel *chn);
 
 #endif

@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/errno.h>	/* for errno */
 #include "config.h"
 #include "ccreader.h"
 #include "ccwriter.h"
-#include "sport.h"
-#include "tcp.h"
 
 void config_init(struct config *c, const char *filename, bool verbose,
 	bool debug, bool stats)
@@ -32,10 +31,6 @@ static struct channel *config_find_channel(struct config *c, const char *name) {
 	return NULL;
 }
 
-static inline bool config_is_sport(const char *name) {
-	return name[0] == '/';
-}
-
 static struct channel *config_new_channel(struct config *c, const char *name,
 	int extra)
 {
@@ -45,17 +40,18 @@ static struct channel *config_new_channel(struct config *c, const char *name,
 	if(c->chns == NULL)
 		return NULL;
 	chn = c->chns + (c->n_channels - 1);
-	if(config_is_sport(name)) {
-		if(sport_init(chn, name, extra) == NULL) {
-			fprintf(stderr, "Error initializing serial port: %s\n",
-				name);
-			return NULL;
-		}
-	} else {
-		if(tcp_init(chn, name, extra) == NULL) {
-			fprintf(stderr, "Error connecting tcp: %s\n", name);
-			return NULL;
-		}
+printf("Init: %s\n", name);
+	if(channel_init(chn, name, extra) == NULL) {
+		fprintf(stderr, "Error initializing channel: %s\n", name);
+		c->n_channels--;
+		return NULL;
+	}
+printf("Open: %s\n", name);
+	if(channel_open(chn) < 0) {
+		fprintf(stderr, "Error opening channel: %s\n", name);
+		fprintf(stderr, "Error: %s\n", strerror(errno));
+		channel_close(chn);
+		return NULL;
 	}
 	chn->rxbuf->debug = c->debug;
 	chn->txbuf->debug = c->debug;

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <termios.h>
@@ -23,7 +24,7 @@ static inline int baud_mask(int baud) {
 	}
 }
 
-static inline struct channel* sport_configure(struct channel *chn) {
+static inline int sport_configure(struct channel *chn) {
 	struct termios ttyset;
 
 	ttyset.c_iflag = 0;
@@ -36,27 +37,22 @@ static inline struct channel* sport_configure(struct channel *chn) {
 	/* sport baud rate stored in channel->extra parameter */
 	int b = baud_mask(chn->extra);
 	if(b < 0)
-		return NULL;
+		return -1;
 	if(cfsetispeed(&ttyset, b) < 0)
-		return NULL;
+		return -1;
 	if(cfsetospeed(&ttyset, b) < 0)
-		return NULL;
+		return -1;
 	if(tcsetattr(chn->fd, TCSAFLUSH, &ttyset) < 0)
-		return NULL;
-
-	return chn;
+		return -1;
+	return 0;
 }
 
-struct channel* sport_init(struct channel *chn, const char *name, int baud) {
-	if(channel_init(chn, name, baud) == NULL)
-		return NULL;
-	chn->fd = open(name, O_RDWR | O_NOCTTY | O_NONBLOCK);
-	if(chn->fd < 0)
-		goto fail;
-	if(sport_configure(chn) == NULL)
-		goto fail;
-	return chn;
-fail:
-	channel_destroy(chn);
-	return NULL;
+int sport_open(struct channel *chn) {
+	assert(chn->fd == 0);
+	chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
+	if(chn->fd < 0) {
+		chn->fd = 0;
+		return -1;
+	}
+	return sport_configure(chn);
 }

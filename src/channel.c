@@ -1,7 +1,13 @@
+#include <stdio.h>
+#include <unistd.h>
 #include "string.h"
 #include "channel.h"
 
 #define BUFFER_SIZE 256
+
+/* Define these prototypes here to avoid circular dependency */
+int sport_open(struct channel *chn);
+int tcp_open(struct channel *chn);
 
 ssize_t channel_read(struct channel *c) {
 	ssize_t n_bytes = buffer_read(c->rxbuf, c->fd);
@@ -50,7 +56,34 @@ fail:
 	return NULL;
 }
 
+static inline bool channel_is_sport(const struct channel *chn) {
+	return chn->name[0] == '/';
+}
+
+int channel_open(struct channel *chn) {
+	if(channel_is_sport(chn))
+		return sport_open(chn);
+	else
+		return tcp_open(chn);
+}
+
+int channel_close(struct channel *chn) {
+	if(chn->fd) {
+		int r = close(chn->fd);
+		chn->fd = 0;
+		return r;
+	} else
+		return 0;
+}
+
+void channel_reopen(struct channel *chn) {
+	channel_close(chn);
+	fprintf(stderr, "Reopening Channel: %s\n", chn->name);
+	channel_open(chn);
+}
+
 void channel_destroy(struct channel *c) {
+	channel_close(c);
 	free(c->name);
 	free(c->rxbuf);
 	free(c->txbuf);

@@ -15,9 +15,12 @@ struct channel {
 	struct ccreader *reader;		/* camera control reader */
 };
 
-struct channel* channel_init(struct channel *c, const char *name, int extra);
-void channel_destroy(struct channel *c);
-ssize_t channel_read(struct channel *c);
-ssize_t channel_write(struct channel *c);
+struct channel* channel_init(struct channel *chn, const char *name, int extra);
+int channel_open(struct channel *chn);
+int channel_close(struct channel *chn);
+void channel_reopen(struct channel *chn);
+void channel_destroy(struct channel *chn);
+ssize_t channel_read(struct channel *chn);
+ssize_t channel_write(struct channel *chn);
 
 #endif

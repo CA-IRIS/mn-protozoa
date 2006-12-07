@@ -20,9 +20,9 @@ static void poller_register_events(struct poller *p) {
 
 	for(i = 0; i < p->n_channels; i++) {
 		if(buffer_is_empty(p->chn[i].txbuf))
-			p->pollfds[i].events = POLLIN;
+			p->pollfds[i].events = POLLHUP | POLLIN;
 		else
-			p->pollfds[i].events = POLLIN | POLLOUT;
+			p->pollfds[i].events = POLLHUP | POLLERR | POLLIN | POLLOUT;
 	}
 }
 
@@ -33,6 +33,14 @@ static int poller_do_poll(struct poller *p) {
 	if(poll(p->pollfds, p->n_channels, -1) < 0)
 		return -1;
 	for(i = 0; i < p->n_channels; i++) {
+		if(p->pollfds[i].revents & POLLHUP) {
+			channel_reopen(p->chn + i);
+			continue;
+		}
+		if(p->pollfds[i].revents & POLLERR) {
+			channel_reopen(p->chn + i);
+			continue;
+		}
 		if(p->pollfds[i].revents & POLLOUT) {
 			n_bytes = channel_write(p->chn + i);
 			if(n_bytes < 0)
