@@ -1,5 +1,7 @@
 #include "poller.h"
 
+#define POLL_MASK (POLLHUP | POLLERR | POLLIN)
+
 struct poller *poller_init(struct poller *p, int n_channels,
 	struct channel *chn)
 {
@@ -20,9 +22,9 @@ static void poller_register_events(struct poller *p) {
 
 	for(i = 0; i < p->n_channels; i++) {
 		if(buffer_is_empty(p->chn[i].txbuf))
-			p->pollfds[i].events = POLLHUP | POLLIN;
+			p->pollfds[i].events = POLL_MASK;
 		else
-			p->pollfds[i].events = POLLHUP | POLLERR | POLLIN | POLLOUT;
+			p->pollfds[i].events = POLL_MASK | POLLOUT;
 	}
 }
 
@@ -33,11 +35,7 @@ static int poller_do_poll(struct poller *p) {
 	if(poll(p->pollfds, p->n_channels, -1) < 0)
 		return -1;
 	for(i = 0; i < p->n_channels; i++) {
-		if(p->pollfds[i].revents & POLLHUP) {
-			channel_reopen(p->chn + i);
-			continue;
-		}
-		if(p->pollfds[i].revents & POLLERR) {
+		if(p->pollfds[i].revents & (POLLHUP | POLLERR)) {
 			channel_reopen(p->chn + i);
 			continue;
 		}
