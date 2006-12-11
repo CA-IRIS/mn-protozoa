@@ -26,12 +26,12 @@ void log_line_start(struct log *log) {
 	struct timeval tv;
 	struct timezone tz;
 	struct tm *now;
-	char buf[16];
+	char buf[17];
 
 	if(log) {
 		gettimeofday(&tv, &tz);
 		now = localtime(&tv.tv_sec);
-		strftime(buf, 16, "%b %d %H:%M:%S", now);
+		strftime(buf, 17, "%b %d %H:%M:%S ", now);
 		fprintf(log->out, buf);
 	}
 }
