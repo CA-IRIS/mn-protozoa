@@ -9,6 +9,19 @@
 int sport_open(struct channel *chn);
 int tcp_open(struct channel *chn);
 
+bool channel_is_open(const struct channel *chn) {
+	return (bool)(chn->fd);
+}
+
+bool channel_is_waiting(const struct channel *chn) {
+	return (!buffer_is_empty(chn->txbuf)) || (chn->reader != NULL);
+}
+
+void channel_debug(struct channel *chn, const char* msg) {
+	if(chn->verbose)
+		fprintf(stderr, "Channel %s: %s\n", msg, chn->name);
+}
+
 ssize_t channel_read(struct channel *c) {
 	ssize_t n_bytes = buffer_read(c->rxbuf, c->fd);
 	if(n_bytes <= 0)
@@ -30,13 +43,16 @@ ssize_t channel_write(struct channel *c) {
 	return buffer_write(c->txbuf, c->fd);
 }
 
-struct channel* channel_init(struct channel *c, const char *name, int extra) {
+struct channel* channel_init(struct channel *c, const char *name, int extra,
+	bool verbose)
+{
 	bzero(c, sizeof(struct channel));
 	c->name = malloc(strlen(name) + 1);
 	if(c->name == NULL)
 		goto fail;
 	strcpy(c->name, name);
 	c->extra = extra;
+	c->verbose = verbose;
 	c->rxbuf = malloc(BUFFER_SIZE);
 	if(c->rxbuf == NULL)
 		goto fail;
@@ -61,6 +77,7 @@ static inline bool channel_is_sport(const struct channel *chn) {
 }
 
 int channel_open(struct channel *chn) {
+	channel_debug(chn, "Opening");
 	if(channel_is_sport(chn))
 		return sport_open(chn);
 	else
@@ -68,18 +85,15 @@ int channel_open(struct channel *chn) {
 }
 
 int channel_close(struct channel *chn) {
-	if(chn->fd) {
+	buffer_clear(chn->rxbuf);
+	buffer_clear(chn->txbuf);
+	if(channel_is_open(chn)) {
+		channel_debug(chn, "Closing");
 		int r = close(chn->fd);
 		chn->fd = 0;
 		return r;
 	} else
 		return 0;
-}
-
-void channel_reopen(struct channel *chn) {
-	channel_close(chn);
-	fprintf(stderr, "Reopening Channel: %s\n", chn->name);
-	channel_open(chn);
 }
 
 void channel_destroy(struct channel *c) {

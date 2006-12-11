@@ -40,15 +40,10 @@ static struct channel *config_new_channel(struct config *c, const char *name,
 	if(c->chns == NULL)
 		return NULL;
 	chn = c->chns + (c->n_channels - 1);
-	if(channel_init(chn, name, extra) == NULL) {
-		fprintf(stderr, "Error initializing channel: %s\n", name);
+	if(channel_init(chn, name, extra, c->verbose) == NULL) {
+		channel_debug(chn, "Initialization error");
 		c->n_channels--;
 		return NULL;
-	}
-	if(channel_open(chn) < 0) {
-		fprintf(stderr, "Error opening channel: %s\n", name);
-		fprintf(stderr, "Error: %s\n", strerror(errno));
-		channel_close(chn);
 	}
 	chn->rxbuf->debug = c->debug;
 	chn->txbuf->debug = c->debug;

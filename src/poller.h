@@ -8,6 +8,7 @@ struct poller {
 	int		n_channels;
 	struct channel	*chn;
 	struct pollfd	*pollfds;
+	int		fd_null;
 };
 
 struct poller *poller_init(struct poller *p, int n_channels,
