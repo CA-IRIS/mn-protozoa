@@ -1,7 +1,10 @@
 #ifndef __CCPACKET_H__
 #define __CCPACKET_H__
 
+#include "log.h"
+
 struct packet_counter {
+	struct log	*log;		/* logger */
 	long long	n_packets;	/* total count of packets */
 	long long	n_dropped;	/* count of dropped packets */
 	long long	n_status;	/* count of status packets */
@@ -95,10 +98,10 @@ struct ccpacket {
 	struct packet_counter *counter;	/* packet counter */
 };
 
-void counter_init(struct packet_counter *c);
+void counter_init(struct packet_counter *c, struct log *log);
 void ccpacket_init(struct ccpacket *p);
 void ccpacket_clear(struct ccpacket *p);
-void ccpacket_debug(struct ccpacket *p, const char *name);
+void ccpacket_debug(struct ccpacket *p, struct log *log, const char *name);
 void ccpacket_count(struct ccpacket *p);
 void ccpacket_drop(struct ccpacket *p);
 

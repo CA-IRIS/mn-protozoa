@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <strings.h>
 #include "ccwriter.h"
 #include "manchester.h"
@@ -10,8 +9,9 @@ static unsigned int ccwriter_do_write(struct ccwriter *w, struct ccpacket *p) {
 	return 0;
 }
 
-static void ccwriter_init(struct ccwriter *w) {
+static void ccwriter_init(struct ccwriter *w, struct log *log) {
 	w->do_write = ccwriter_do_write;
+	w->log = log;
 	w->txbuf = NULL;
 	w->base = 0;
 	w->range = 0;
@@ -26,7 +26,7 @@ static int ccwriter_set_protocol(struct ccwriter *w, const char *protocol) {
 	else if(strcasecmp(protocol, "vicon") == 0)
 		w->do_write = vicon_do_write;
 	else {
-		fprintf(stderr, "Unknown protocol: %s\n", protocol);
+		log_println(w->log, "Unknown protocol: %s", protocol);
 		return -1;
 	}
 	return 0;
@@ -37,7 +37,7 @@ uint8_t *ccwriter_append(struct ccwriter *w, size_t n_bytes) {
 	if(mess)
 		return mess;
 	else {
-		fprintf(stderr, "protozoa: output buffer full\n");
+		log_println(w->log, "ccwriter_append: output buffer full");
 		return NULL;
 	}
 }
@@ -48,7 +48,7 @@ struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
 	struct ccwriter *w = malloc(sizeof(struct ccwriter));
 	if(w == NULL)
 		return NULL;
-	ccwriter_init(w);
+	ccwriter_init(w, chn->log);
 	if(ccwriter_set_protocol(w, protocol) < 0)
 		goto fail;
 	w->txbuf = chn->txbuf;

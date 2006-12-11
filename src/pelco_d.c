@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include <strings.h>
 #include "ccreader.h"
 #include "pelco_d.h"
@@ -209,13 +208,13 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 {
 	uint8_t *mess = buffer_current(rxbuf);
 	if(mess[0] != FLAG) {
-		fprintf(stderr, "Pelco(D): unexpected byte %02X\n", mess[0]);
+		log_println(r->log, "Pelco(D): unexpected byte %02X", mess[0]);
 		buffer_skip(rxbuf, 1);
 		return MORE;
 	}
 	buffer_skip(rxbuf, SIZE_MSG);
 	if(checksum_invalid(mess)) {
-		fprintf(stderr, "Pelco(D): invalid checksum\n");
+		log_println(r->log, "Pelco(D): invalid checksum");
 		return MORE;
 	}
 	if(is_extended(mess))

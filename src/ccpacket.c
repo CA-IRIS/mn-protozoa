@@ -1,7 +1,8 @@
-#include <stdio.h>
 #include "ccpacket.h"
+#include "log.h"
 
-void counter_init(struct packet_counter *c) {
+void counter_init(struct packet_counter *c, struct log *log) {
+	c->log = log;
 	c->n_packets = 0;
 	c->n_dropped = 0;
 	c->n_status = 0;
@@ -17,11 +18,11 @@ static void counter_print(const struct packet_counter *c, const char *stat,
 	long long count)
 {
 	float percent = 100 * (float)count / (float)c->n_packets;
-	printf("%10s: %10lld  %6.2f%%\n", stat, count, percent);
+	log_println(c->log, "%10s: %10lld  %6.2f%%", stat, count, percent);
 }
 
 static void counter_display(const struct packet_counter *c) {
-	printf("protozoa statistics: %lld packets\n", c->n_packets);
+	log_println(c->log, "protozoa statistics: %lld packets", c->n_packets);
 	if(c->n_dropped)
 		counter_print(c, "dropped", c->n_dropped);
 	if(c->n_status)
@@ -79,29 +80,29 @@ void ccpacket_init(struct ccpacket *p) {
 	ccpacket_clear(p);
 }
 
-void ccpacket_debug(struct ccpacket *p, const char *name) {
-	printf("%s ", name);
-	printf("(%lld) ", p->n_packet++);
-	printf("rcv: %d", p->receiver);
+void ccpacket_debug(struct ccpacket *p, struct log *log, const char *name) {
+	log_line_start(log);
+	log_printf(log, ": %s (%lld) rcv: %d", name, p->n_packet++,
+		p->receiver);
 	if(p->status)
-		printf(" status: %d", p->status);
+		log_printf(log, " status: %d", p->status);
 	if(p->command)
-		printf(" command: %d", p->command);
+		log_printf(log, " command: %d", p->command);
 	if(p->command & CC_PAN)
-		printf(" pan: %d", p->pan);
+		log_printf(log, " pan: %d", p->pan);
 	if(p->command & CC_TILT)
-		printf(" tilt: %d", p->tilt);
+		log_printf(log, " tilt: %d", p->tilt);
 	if(p->zoom)
-		printf(" zoom: %d", p->zoom);
+		log_printf(log, " zoom: %d", p->zoom);
 	if(p->focus)
-		printf(" focus: %d", p->focus);
+		log_printf(log, " focus: %d", p->focus);
 	if(p->iris)
-		printf(" iris: %d", p->iris);
+		log_printf(log, " iris: %d", p->iris);
 	if(p->aux)
-		printf(" aux: %d", p->aux);
+		log_printf(log, " aux: %d", p->aux);
 	if(p->preset)
-		printf(" preset: %d", p->preset);
-	printf("\n");
+		log_printf(log, " preset: %d", p->preset);
+	log_line_end(log);
 }
 
 void ccpacket_count(struct ccpacket *p) {

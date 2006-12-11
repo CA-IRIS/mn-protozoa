@@ -6,6 +6,7 @@
 
 struct ccwriter {
 	unsigned int (*do_write) (struct ccwriter *w, struct ccpacket *p);
+	struct	log		*log;		/* logger */
 	struct	buffer		*txbuf;		/* transmit buffer */
 	int			base;		/* receiver address base */
 	int			range;		/* receiver address range */

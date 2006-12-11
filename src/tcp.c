@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <strings.h>
 #include <sys/errno.h>
 #include <sys/types.h>

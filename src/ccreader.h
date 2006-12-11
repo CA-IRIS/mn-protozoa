@@ -3,6 +3,7 @@
 
 #include "buffer.h"
 #include "ccpacket.h"
+#include "log.h"
 
 enum decode_t {
 	MORE = 0,
@@ -14,13 +15,12 @@ struct ccreader {
 	struct	ccpacket	packet;		/* camera control packet */
 	struct	ccwriter	*writer;	/* head of writer list */
 	const char		*name;		/* channel name */
-	bool			verbose;	/* verbose flag */
+	struct	log		*log;		/* log file */
 };
 
-void ccreader_init(struct ccreader *r);
 void ccreader_add_writer(struct ccreader *r, struct ccwriter *w);
 unsigned int ccreader_process_packet(struct ccreader *r);
 struct ccreader *ccreader_create(const char *name, const char *protocol,
-	bool verbose);
+	struct log *log);
 
 #endif

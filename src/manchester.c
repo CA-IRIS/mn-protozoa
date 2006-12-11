@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "ccreader.h"
 #include "manchester.h"
 
@@ -210,7 +209,8 @@ static inline enum decode_t manchester_read_message(struct ccreader *r,
 {
 	uint8_t *mess = buffer_current(rxbuf);
 	if((mess[0] & FLAG) == 0) {
-		fprintf(stderr, "Manchester: unexpected byte %02X\n", mess[0]);
+		log_println(r->log, "Manchester: unexpected byte %02X",
+			mess[0]);
 		buffer_skip(rxbuf, 1);
 		return MORE;
 	}

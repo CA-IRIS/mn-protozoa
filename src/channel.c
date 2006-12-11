@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <unistd.h>
 #include "string.h"
 #include "channel.h"
@@ -18,8 +17,7 @@ bool channel_is_waiting(const struct channel *chn) {
 }
 
 void channel_debug(struct channel *chn, const char* msg) {
-	if(chn->verbose)
-		fprintf(stderr, "Channel %s: %s\n", msg, chn->name);
+	log_println(chn->log, "Channel %s: %s", msg, chn->name);
 }
 
 ssize_t channel_read(struct channel *c) {
@@ -27,7 +25,7 @@ ssize_t channel_read(struct channel *c) {
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(c->reader) {
-		buffer_debug_in(c->rxbuf, n_bytes);
+		buffer_debug_in(c->rxbuf, c->log, n_bytes);
 		c->reader->do_read(c->reader, c->rxbuf);
 		return n_bytes;
 	} else {
@@ -39,12 +37,12 @@ ssize_t channel_read(struct channel *c) {
 }
 
 ssize_t channel_write(struct channel *c) {
-	buffer_debug_out(c->txbuf);
+	buffer_debug_out(c->txbuf, c->log);
 	return buffer_write(c->txbuf, c->fd);
 }
 
 struct channel* channel_init(struct channel *c, const char *name, int extra,
-	bool verbose)
+	struct log *log)
 {
 	bzero(c, sizeof(struct channel));
 	c->name = malloc(strlen(name) + 1);
@@ -52,7 +50,7 @@ struct channel* channel_init(struct channel *c, const char *name, int extra,
 		goto fail;
 	strcpy(c->name, name);
 	c->extra = extra;
-	c->verbose = verbose;
+	c->log = log;
 	c->rxbuf = malloc(BUFFER_SIZE);
 	if(c->rxbuf == NULL)
 		goto fail;

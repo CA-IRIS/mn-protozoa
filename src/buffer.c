@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>	/* for read, write */
 #include <sys/errno.h>
@@ -64,7 +63,6 @@ ssize_t buffer_read(struct buffer *buf, int fd) {
 		buffer_compact(buf);
 		count = buffer_space(buf);
 		if(count <= 0) {
-			fprintf(stderr, "Input buffer full: %s\n", buf->name);
 			errno = ENOBUFS;
 			return -1;
 		}
@@ -78,7 +76,6 @@ ssize_t buffer_read(struct buffer *buf, int fd) {
 ssize_t buffer_write(struct buffer *buf, int fd) {
 	size_t count = buffer_available(buf);
 	if(count <= 0) {
-		fprintf(stderr, "Output buffer full: %s\n", buf->name);
 		errno = ENOBUFS;
 		return -1;
 	}
@@ -108,23 +105,26 @@ void buffer_skip(struct buffer *buf, size_t n_bytes) {
 		buffer_clear(buf);
 }
 
-static void buffer_debug(struct buffer *buf, const char *prefix, void *start) {
+static void buffer_debug(struct buffer *buf, struct log *log,
+	const char *prefix, void *start)
+{
 	uint8_t *mess;
 	uint8_t *stop = buf->pin;
 
-	fprintf(stderr, buf->name);
-	fprintf(stderr, prefix);
+	log_line_start(log);
+	log_printf(log, buf->name);
+	log_printf(log, prefix);
 	for(mess = start; mess < stop; mess++)
-		fprintf(stderr, " %02x", *mess);
-	fprintf(stderr, "\n");
+		log_printf(log, " %02x", *mess);
+	log_line_end(log);
 }
 
-void buffer_debug_in(struct buffer *buf, size_t n_bytes) {
+void buffer_debug_in(struct buffer *buf, struct log *log, size_t n_bytes) {
 	if(buf->debug)
-		buffer_debug(buf, "  in:", buf->pin - n_bytes);
+		buffer_debug(buf, log, "  in:", buf->pin - n_bytes);
 }
 
-void buffer_debug_out(struct buffer *buf) {
+void buffer_debug_out(struct buffer *buf, struct log *log) {
 	if(buf->debug)
-		buffer_debug(buf, " out:", buf->pout);
+		buffer_debug(buf, log, " out:", buf->pout);
 }

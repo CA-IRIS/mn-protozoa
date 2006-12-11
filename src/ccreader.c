@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <strings.h>
 #include "ccreader.h"
 #include "manchester.h"
@@ -9,11 +8,11 @@ static void ccreader_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	/* Do nothing */
 }
 
-void ccreader_init(struct ccreader *r) {
+void ccreader_init(struct ccreader *r, struct log *log) {
 	r->do_read = ccreader_do_read;
 	ccpacket_init(&r->packet);
 	r->writer = NULL;
-	r->verbose = false;
+	r->log = log;
 }
 
 void ccreader_add_writer(struct ccreader *r, struct ccwriter *w) {
@@ -29,7 +28,7 @@ static int ccreader_set_protocol(struct ccreader *r, const char *protocol) {
 	else if(strcasecmp(protocol, "vicon") == 0)
 		r->do_read = vicon_do_read;
 	else {
-		fprintf(stderr, "Unknown protocol: %s\n", protocol);
+		log_println(r->log, "Unknown protocol: %s", protocol);
 		return -1;
 	}
 	return 0;
@@ -45,8 +44,8 @@ static inline unsigned int ccreader_do_writers(struct ccreader *r) {
 		r->packet.receiver = receiver;  /* restore "true" receiver */
 		w = w->next;
 	}
-	if(res && r->verbose)
-		ccpacket_debug(&r->packet, r->name);
+	if(res && r->log)
+		ccpacket_debug(&r->packet, r->log, r->name);
 	return res;
 }
 
@@ -68,16 +67,15 @@ unsigned int ccreader_process_packet(struct ccreader *r) {
 }
 
 struct ccreader *ccreader_create(const char *name, const char *protocol,
-	bool verbose)
+	struct log *log)
 {
 	struct ccreader *r = malloc(sizeof(struct ccreader));
 	if(r == NULL)
 		return NULL;
-	ccreader_init(r);
+	ccreader_init(r, log);
 	if(ccreader_set_protocol(r, protocol) < 0)
 		goto fail;
 	r->name = name;
-	r->verbose = verbose;
 	return r;
 fail:
 	free(r);

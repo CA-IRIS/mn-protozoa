@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include <strings.h>
 #include "ccreader.h"
 #include "vicon.h"
@@ -216,7 +215,7 @@ static inline enum decode_t vicon_decode_message(struct ccreader *r,
 {
 	uint8_t *mess = buffer_current(rxbuf);
 	if((mess[0] & FLAG) == 0) {
-		fprintf(stderr, "Vicon: unexpected byte %02X\n", mess[0]);
+		log_println(r->log, "Vicon: unexpected byte %02X", mess[0]);
 		buffer_skip(rxbuf, 1);
 		return MORE;
 	}

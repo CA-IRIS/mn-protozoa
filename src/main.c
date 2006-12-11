@@ -9,6 +9,7 @@
 #define VERSION "0.7"
 
 static const char *CONF_FILE = "/etc/protozoa.conf";
+static const char *LOG_FILE = "/var/log/protozoa";
 
 extern int errno;
 
@@ -17,20 +18,23 @@ static void print_version() {
 	printf("Copyright (C) 2006 Minnesota Department of Transportation\n");
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	int n_channels, i;
 	struct config conf;
 	struct poller poll;
+	struct log *log;
+	bool daemonize = false;
 	bool debug = false;
-	bool verbose = false;
+	bool quiet = false;
 	bool stats = false;
 
 	for(i = 0; i < argc; i++) {
+		if(strcmp(argv[i], "--daemonize") == 0)
+			daemonize = true;
 		if(strcmp(argv[i], "--debug") == 0)
 			debug = true;
-		if(strcmp(argv[i], "--verbose") == 0)
-			verbose = true;
+		if(strcmp(argv[i], "--quiet") == 0)
+			quiet = true;
 		if(strcmp(argv[i], "--stats") == 0)
 			stats = true;
 		if(strcmp(argv[i], "--version") == 0) {
@@ -39,7 +43,17 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	config_init(&conf, CONF_FILE, verbose, debug, stats);
+	if(quiet)
+		log = NULL;
+	else {
+		log = malloc(sizeof(struct log));
+		if(daemonize)
+			log = log_init_file(log, LOG_FILE);
+		else
+			log = log_init(log);
+	}
+
+	config_init(&conf, CONF_FILE, log, debug, stats);
 	n_channels = config_read(&conf);
 	if(n_channels <= 0) {
 		fprintf(stderr, "Check configuration file: %s\n", CONF_FILE);
@@ -47,7 +61,7 @@ int main(int argc, char* argv[])
 	}
 	if(poller_init(&poll, n_channels, conf.chns) == NULL)
 		goto fail;
-	if(!(debug || verbose || stats)) {
+	if(daemonize) {
 		if(daemon(0, 0) < 0)
 			goto fail;
 	}

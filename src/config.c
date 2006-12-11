@@ -1,23 +1,22 @@
-#include <stdio.h>
 #include <string.h>
 #include <sys/errno.h>	/* for errno */
 #include "config.h"
 #include "ccreader.h"
 #include "ccwriter.h"
 
-void config_init(struct config *c, const char *filename, bool verbose,
+void config_init(struct config *c, const char *filename, struct log *log,
 	bool debug, bool stats)
 {
 	c->filename = filename;
 	c->line = malloc(LINE_LENGTH);
 	c->chns = NULL;
 	c->n_channels = 0;
-	c->verbose = verbose;
+	c->log = log;
 	c->debug = debug;
 	c->out = NULL;
 	if(stats) {
 		c->counter = malloc(sizeof(struct packet_counter));
-		counter_init(c->counter);
+		counter_init(c->counter, log);
 	} else
 		c->counter = NULL;
 }
@@ -40,7 +39,7 @@ static struct channel *config_new_channel(struct config *c, const char *name,
 	if(c->chns == NULL)
 		return NULL;
 	chn = c->chns + (c->n_channels - 1);
-	if(channel_init(chn, name, extra, c->verbose) == NULL) {
+	if(channel_init(chn, name, extra, c->log) == NULL) {
 		channel_debug(chn, "Initialization error");
 		c->n_channels--;
 		return NULL;
@@ -70,16 +69,14 @@ static int config_directive(struct config *c, const char *protocol_in,
 	struct ccreader *reader;
 	struct ccwriter *writer;
 
-	if(c->verbose) {
-		printf("protozoa: %s %s %d %s %s %d %d %d\n", protocol_in,
-			port_in, extra_in, protocol_out, port_out, extra_out,
-			base, range);
-	}
+	log_println(c->log, "config: %s %s %d %s %s %d %d %d", protocol_in,
+		port_in, extra_in, protocol_out, port_out, extra_out,
+		base, range);
 	chn_in = config_get_channel(c, port_in, extra_in);
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
-		reader = ccreader_create(chn_in->name, protocol_in, c->verbose);
+		reader = ccreader_create(chn_in->name, protocol_in, c->log);
 		chn_in->reader = reader;
 		reader->packet.counter = c->counter;
 	} else {
@@ -126,7 +123,7 @@ static int config_scan_directive(struct config *c) {
 	else if(i <= 0)
 		return 0;
 	else {
-		fprintf(stderr, "Invalid directive: %s\n", c->line);
+		log_println(c->log, "Invalid directive: %s", c->line);
 		return -1;
 	}
 }
@@ -142,7 +139,7 @@ int config_read(struct config *c) {
 			goto fail;
 	}
 	if(c->n_channels == 0) {
-		fprintf(stderr, "Error reading configuration file: %s\n",
+		log_println(c->log, "Error reading configuration file: %s",
 			c->filename);
 	}
 	fclose(f);
