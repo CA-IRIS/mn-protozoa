@@ -45,7 +45,7 @@ static inline unsigned int ccreader_do_writers(struct ccreader *r) {
 		w = w->next;
 	}
 	if(res && r->log && !r->log->quiet)
-		ccpacket_debug(&r->packet, r->log, r->name);
+		ccpacket_log(&r->packet, r->log, r->name);
 	return res;
 }
 

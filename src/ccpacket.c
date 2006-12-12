@@ -80,7 +80,7 @@ void ccpacket_init(struct ccpacket *p) {
 	ccpacket_clear(p);
 }
 
-void ccpacket_debug(struct ccpacket *p, struct log *log, const char *name) {
+void ccpacket_log(struct ccpacket *p, struct log *log, const char *name) {
 	log_line_start(log);
 	log_printf(log, "%s (%lld) rcv: %d", name, p->n_packet++,
 		p->receiver);
