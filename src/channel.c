@@ -21,56 +21,59 @@ bool channel_is_waiting(const struct channel *chn) {
 }
 
 void channel_debug(struct channel *chn, const char* msg) {
-	log_println(chn->log, "Channel %s: %s", msg, chn->name);
+	log_println(chn->log, "channel: %s %s", msg, chn->name);
 }
 
-ssize_t channel_read(struct channel *c) {
-	ssize_t n_bytes = buffer_read(c->rxbuf, c->fd);
+ssize_t channel_read(struct channel *chn) {
+	ssize_t n_bytes = buffer_read(chn->rxbuf, chn->fd);
 	if(n_bytes <= 0)
 		return n_bytes;
-	if(c->reader) {
-		buffer_debug_in(c->rxbuf, c->log, n_bytes);
-		c->reader->do_read(c->reader, c->rxbuf);
+	if(chn->reader) {
+		buffer_debug_in(chn->rxbuf, chn->log, n_bytes);
+		chn->reader->do_read(chn->reader, chn->rxbuf);
 		return n_bytes;
 	} else {
 		/* Data is coming in on the channel, but we're not set up to
 		 * handle it -- just ignore. */
-		buffer_clear(c->rxbuf);
+		buffer_clear(chn->rxbuf);
 		return 0;
 	}
 }
 
-ssize_t channel_write(struct channel *c) {
-	buffer_debug_out(c->txbuf, c->log);
-	return buffer_write(c->txbuf, c->fd);
+ssize_t channel_write(struct channel *chn) {
+	buffer_debug_out(chn->txbuf, chn->log);
+	return buffer_write(chn->txbuf, chn->fd);
 }
 
-struct channel* channel_init(struct channel *c, const char *name, int extra,
+struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	struct log *log)
 {
-	bzero(c, sizeof(struct channel));
-	c->name = malloc(strlen(name) + 1);
-	if(c->name == NULL)
+	bzero(chn, sizeof(struct channel));
+	chn->name = malloc(strlen(name) + 1);
+	if(chn->name == NULL)
 		goto fail;
-	strcpy(c->name, name);
-	c->extra = extra;
-	c->log = log;
-	c->rxbuf = malloc(BUFFER_SIZE);
-	if(c->rxbuf == NULL)
+	strcpy(chn->name, name);
+	chn->extra = extra;
+	chn->log = log;
+	chn->rxbuf = malloc(BUFFER_SIZE);
+	if(chn->rxbuf == NULL)
 		goto fail;
-	if(buffer_init(name, c->rxbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(name, chn->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
-	c->txbuf = malloc(BUFFER_SIZE);
-	if(c->txbuf == NULL)
+	chn->txbuf = malloc(BUFFER_SIZE);
+	if(chn->txbuf == NULL)
 		goto fail;
-	if(buffer_init(name, c->txbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(name, chn->txbuf, BUFFER_SIZE) == NULL)
 		goto fail;
-	c->reader = NULL;
-	return c;
+	chn->reader = NULL;
+	return chn;
 fail:
-	free(c->name);
-	free(c->rxbuf);
-	free(c->txbuf);
+	free(chn->name);
+	free(chn->rxbuf);
+	free(chn->txbuf);
+	chn->name = NULL;
+	chn->rxbuf = NULL;
+	chn->txbuf = NULL;
 	return NULL;
 }
 
@@ -79,7 +82,7 @@ static inline bool channel_is_sport(const struct channel *chn) {
 }
 
 int channel_open(struct channel *chn) {
-	channel_debug(chn, "Opening");
+	channel_debug(chn, "opening");
 	if(channel_is_sport(chn))
 		return sport_open(chn);
 	else
@@ -90,7 +93,7 @@ int channel_close(struct channel *chn) {
 	buffer_clear(chn->rxbuf);
 	buffer_clear(chn->txbuf);
 	if(channel_is_open(chn)) {
-		channel_debug(chn, "Closing");
+		channel_debug(chn, "closing");
 		int r = close(chn->fd);
 		chn->fd = 0;
 		return r;
@@ -98,9 +101,9 @@ int channel_close(struct channel *chn) {
 		return 0;
 }
 
-void channel_destroy(struct channel *c) {
-	channel_close(c);
-	free(c->name);
-	free(c->rxbuf);
-	free(c->txbuf);
+void channel_destroy(struct channel *chn) {
+	channel_close(chn);
+	free(chn->name);
+	free(chn->rxbuf);
+	free(chn->txbuf);
 }
