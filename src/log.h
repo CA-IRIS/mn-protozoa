@@ -1,10 +1,14 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
+#include <stdbool.h>
 #include <stdio.h>
 
 struct log {
-	FILE	*out;
+	FILE	*out;		/* output stream */
+	bool	quiet;		/* quiet (only major events logged) */
+	bool	debug;		/* debugging input commands */
+	bool	stats;		/* stats logging */
 };
 
 struct log *log_init(struct log *log);

@@ -43,17 +43,17 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if(quiet)
-		log = NULL;
-	else {
-		log = malloc(sizeof(struct log));
-		if(daemonize)
-			log = log_init_file(log, LOG_FILE);
-		else
-			log = log_init(log);
-	}
+	log = malloc(sizeof(struct log));
+	if(daemonize)
+		log = log_init_file(log, LOG_FILE);
+	else
+		log = log_init(log);
 
-	config_init(&conf, CONF_FILE, log, debug, stats);
+	log->quiet = quiet;
+	log->debug = debug;
+	log->stats = stats;
+
+	config_init(&conf, CONF_FILE, log);
 	n_channels = config_read(&conf);
 	if(n_channels <= 0) {
 		fprintf(stderr, "Check configuration file: %s\n", CONF_FILE);

@@ -16,7 +16,6 @@ struct buffer *buffer_init(const char *name, struct buffer *buf,
 	buf->end = buf->base + n_bytes;
 	buf->pin = buf->base;
 	buf->pout = buf->base;
-	buf->debug = false;
 	return buf;
 }
 
@@ -120,11 +119,11 @@ static void buffer_debug(struct buffer *buf, struct log *log,
 }
 
 void buffer_debug_in(struct buffer *buf, struct log *log, size_t n_bytes) {
-	if(buf->debug)
+	if(log->debug)
 		buffer_debug(buf, log, "  in:", buf->pin - n_bytes);
 }
 
 void buffer_debug_out(struct buffer *buf, struct log *log) {
-	if(buf->debug)
+	if(log->debug)
 		buffer_debug(buf, log, " out:", buf->pout);
 }

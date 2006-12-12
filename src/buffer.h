@@ -18,7 +18,6 @@ struct buffer {
 	void	*end;	/* end address of buffer */
 	void	*pin;	/* input pointer location */
 	void	*pout;	/* output pointer location */
-	bool	debug;	/* flag for buffer debugginig */
 };
 
 struct buffer *buffer_init(const char *name, struct buffer *buf,

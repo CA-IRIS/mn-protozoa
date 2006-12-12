@@ -4,17 +4,14 @@
 #include "ccreader.h"
 #include "ccwriter.h"
 
-void config_init(struct config *c, const char *filename, struct log *log,
-	bool debug, bool stats)
-{
+void config_init(struct config *c, const char *filename, struct log *log) {
 	c->filename = filename;
 	c->line = malloc(LINE_LENGTH);
 	c->chns = NULL;
 	c->n_channels = 0;
 	c->log = log;
-	c->debug = debug;
 	c->out = NULL;
-	if(stats) {
+	if(log->stats) {
 		c->counter = malloc(sizeof(struct packet_counter));
 		counter_init(c->counter, log);
 	} else
@@ -44,8 +41,6 @@ static struct channel *config_new_channel(struct config *c, const char *name,
 		c->n_channels--;
 		return NULL;
 	}
-	chn->rxbuf->debug = c->debug;
-	chn->txbuf->debug = c->debug;
 	return chn;
 }
 

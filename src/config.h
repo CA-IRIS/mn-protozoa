@@ -12,13 +12,11 @@ struct config {
 	struct channel	*chns;
 	int		n_channels;
 	struct log	*log;
-	bool		debug;
 	struct combiner *out;		/* most recent OUT combiner */
 	struct packet_counter *counter;
 };
 
-void config_init(struct config *c, const char *filename, struct log *log,
-	bool debug, bool stats);
+void config_init(struct config *c, const char *filename, struct log *log);
 int config_read(struct config *c);
 
 #endif
