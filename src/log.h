@@ -6,9 +6,9 @@
 
 struct log {
 	FILE	*out;		/* output stream */
-	bool	quiet;		/* quiet (only major events logged) */
-	bool	debug;		/* debugging input commands */
-	bool	stats;		/* stats logging */
+	bool	debug;		/* debug raw input/output data */
+	bool	packet;		/* log packet details */
+	bool	stats;		/* log packet statistics */
 };
 
 struct log *log_init(struct log *log);

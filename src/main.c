@@ -30,8 +30,8 @@ int main(int argc, char* argv[]) {
 			daemonize = true;
 		if(strcmp(argv[i], "--debug") == 0)
 			log.debug = true;
-		if(strcmp(argv[i], "--quiet") == 0)
-			log.quiet = true;
+		if(strcmp(argv[i], "--packet") == 0)
+			log.packet = true;
 		if(strcmp(argv[i], "--stats") == 0)
 			log.stats = true;
 		if(strcmp(argv[i], "--version") == 0) {
