@@ -82,16 +82,18 @@ void ccpacket_init(struct ccpacket *p) {
 
 void ccpacket_log(struct ccpacket *p, struct log *log, const char *name) {
 	log_line_start(log);
-	log_printf(log, "%s (%lld) rcv: %d", name, p->n_packet++,
+	log_printf(log, "packet: %lld %s rcv: %d", p->n_packet++, name,
 		p->receiver);
 	if(p->status)
 		log_printf(log, " status: %d", p->status);
-	if(p->command)
-		log_printf(log, " command: %d", p->command);
-	if(p->command & CC_PAN)
-		log_printf(log, " pan: %d", p->pan);
-	if(p->command & CC_TILT)
-		log_printf(log, " tilt: %d", p->tilt);
+	if(p->command & CC_PAN_LEFT)
+		log_printf(log, " pan left: %d", p->pan);
+	else if(p->command & CC_PAN_RIGHT)
+		log_printf(log, " pan right: %d", p->pan);
+	if(p->command & CC_TILT_UP)
+		log_printf(log, " tilt up: %d", p->tilt);
+	else if(p->command & CC_TILT_DOWN)
+		log_printf(log, " tilt down: %d", p->tilt);
 	if(p->zoom)
 		log_printf(log, " zoom: %d", p->zoom);
 	if(p->focus)
@@ -100,8 +102,25 @@ void ccpacket_log(struct ccpacket *p, struct log *log, const char *name) {
 		log_printf(log, " iris: %d", p->iris);
 	if(p->aux)
 		log_printf(log, " aux: %d", p->aux);
-	if(p->preset)
+	if(p->preset) {
+		if(p->command & CC_RECALL)
+			log_printf(log, " recall");
+		else if(p->command & CC_STORE)
+			log_printf(log, " store");
+		else if(p->command & CC_CLEAR)
+			log_printf(log, " clear");
 		log_printf(log, " preset: %d", p->preset);
+	}
+	if(p->command & CC_AUTO_IRIS)
+		log_printf(log, " auto-iris");
+	if(p->command & CC_AUTO_PAN)
+		log_printf(log, " auto-pan");
+	if(p->command & CC_MANUAL_PAN)
+		log_printf(log, " manual-pan");
+	if(p->command & CC_LENS_SPEED)
+		log_printf(log, " lens-speed");
+	if(p->command & CC_ACK_ALARM)
+		log_printf(log, " ack-alarm");
 	log_line_end(log);
 }
 
