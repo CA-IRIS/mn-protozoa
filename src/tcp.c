@@ -1,18 +1,13 @@
 #include <assert.h>
-#include <stddef.h>
-#include <strings.h>
-#include <sys/errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
+#include <strings.h>		/* for bcopy */
+#include <netinet/tcp.h>	/* for TCP_NODELAY */
 #include <netdb.h>
 #include "tcp.h"
 
 int tcp_open(struct channel *chn) {
 	struct hostent *host;
 	struct sockaddr_in sa;
-	int on = 1;	// turn "on" TCP_NODELAY with setsockopt
+	int on = 1;	/* turn "on" values for setsockopt */
 
 	assert(chn->fd == 0);
 	host = gethostbyname(chn->name);

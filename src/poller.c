@@ -12,7 +12,7 @@ struct poller *poller_init(struct poller *p, int n_channels,
 	p->pollfds = malloc(sizeof(struct pollfd) * n_channels);
 	if(p->pollfds == NULL)
 		return NULL;
-	// open an fd to poll for closed channels
+	/* open an fd to poll for closed channels */
 	p->fd_null = open("/dev/null", O_RDONLY);
 	return p;
 }

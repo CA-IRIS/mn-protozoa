@@ -2,7 +2,6 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <termios.h>
-#include <sys/errno.h>
 #include "sport.h"
 
 static inline int baud_mask(int baud) {
