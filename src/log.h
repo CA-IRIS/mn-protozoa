@@ -12,7 +12,7 @@ struct log {
 };
 
 struct log *log_init(struct log *log);
-struct log *log_init_file(struct log *log, const char *filename);
+struct log *log_open_file(struct log *log, const char *filename);
 void log_destroy(struct log *log);
 void log_line_start(struct log *log);
 void log_line_end(struct log *log);

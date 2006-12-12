@@ -6,14 +6,18 @@
 
 struct log *log_init(struct log *log) {
 	log->out = stderr;
+	log->debug = false;
+	log->packet = false;
+	log->stats = false;
 	return log;
 }
 
-struct log *log_init_file(struct log *log, const char *filename) {
-	log->out = fopen(filename, "a");
-	if(log->out)
+struct log *log_open_file(struct log *log, const char *filename) {
+	FILE *out = fopen(filename, "a");
+	if(out) {
+		log->out = out;
 		return log;
-	else
+	} else
 		return NULL;
 }
 
