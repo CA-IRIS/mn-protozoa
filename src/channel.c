@@ -49,12 +49,12 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	struct log *log)
 {
 	bzero(chn, sizeof(struct channel));
+	chn->extra = extra;
+	chn->log = log;
 	chn->name = malloc(strlen(name) + 1);
 	if(chn->name == NULL)
 		goto fail;
 	strcpy(chn->name, name);
-	chn->extra = extra;
-	chn->log = log;
 	chn->rxbuf = malloc(BUFFER_SIZE);
 	if(chn->rxbuf == NULL)
 		goto fail;
