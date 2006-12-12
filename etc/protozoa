@@ -14,7 +14,7 @@ prog="protozoa"
 
 start() {
     echo -n $"Starting $prog: " 
-    daemon --user protozoa /usr/local/bin/protozoa
+    /usr/local/bin/protozoa --daemonize
     RETVAL=$?
     if [ $RETVAL -ne 0 ]; then
 	failure;
