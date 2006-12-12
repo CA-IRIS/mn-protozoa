@@ -19,6 +19,7 @@ struct channel {
 
 void channel_debug(struct channel *chn, const char* msg);
 bool channel_is_open(const struct channel *chn);
+bool channel_has_reader(const struct channel *chn);
 bool channel_is_waiting(const struct channel *chn);
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	struct log *log);

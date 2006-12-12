@@ -3,7 +3,6 @@
 #include <sys/errno.h>	/* for errno */
 #include "poller.h"
 
-#define POLL_MASK (POLLHUP | POLLERR | POLLIN)
 
 struct poller *poller_init(struct poller *p, int n_channels,
 	struct channel *chn)
@@ -32,10 +31,11 @@ static void poller_register_events(struct poller *p) {
 		}
 		if(channel_is_open(chn)) {
 			p->pollfds[i].fd = chn->fd;
-			if(buffer_is_empty(chn->txbuf))
-				p->pollfds[i].events = POLL_MASK;
-			else
-				p->pollfds[i].events = POLL_MASK | POLLOUT;
+			p->pollfds[i].events = POLLHUP | POLLERR;
+			if(channel_has_reader(chn))
+				p->pollfds[i].events |= POLLIN;
+			if(!buffer_is_empty(chn->txbuf))
+				p->pollfds[i].events |= POLLOUT;
 		} else {
 			p->pollfds[i].fd = p->fd_null;
 			p->pollfds[i].events = 0;

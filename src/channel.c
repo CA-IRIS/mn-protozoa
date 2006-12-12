@@ -12,6 +12,10 @@ bool channel_is_open(const struct channel *chn) {
 	return (bool)(chn->fd);
 }
 
+bool channel_has_reader(const struct channel *chn) {
+	return chn->reader != NULL;
+}
+
 bool channel_is_waiting(const struct channel *chn) {
 	return (!buffer_is_empty(chn->txbuf)) || (chn->reader != NULL);
 }
