@@ -21,8 +21,6 @@ int main(int argc, char* argv[]) {
 	bool daemonize = false;
 
 	log_init(&log);
-	log_println(&log, BANNER);
-
 	for(i = 0; i < argc; i++) {
 		if(strcmp(argv[i], "--daemonize") == 0)
 			daemonize = true;
@@ -33,14 +31,13 @@ int main(int argc, char* argv[]) {
 		if(strcmp(argv[i], "--stats") == 0)
 			log.stats = true;
 	}
-
 	if(daemonize) {
 		if(log_open_file(&log, LOG_FILE) == NULL) {
 			log_println(&log, "Cannot open: %s", LOG_FILE);
 			goto fail;
 		}
 	}
-
+	log_println(&log, BANNER);
 	config_init(&conf, CONF_FILE, &log);
 	n_channels = config_read(&conf);
 	if(n_channels <= 0) {
@@ -53,7 +50,6 @@ int main(int argc, char* argv[]) {
 		if(daemon(0, 0) < 0)
 			goto fail;
 	}
-
 	poller_loop(&poll);
 fail:
 	if(errno)
