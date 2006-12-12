@@ -18,8 +18,7 @@ struct log *log_init_file(struct log *log, const char *filename) {
 }
 
 void log_destroy(struct log *log) {
-	if(log)
-		fclose(log->out);
+	fclose(log->out);
 }
 
 void log_line_start(struct log *log) {
@@ -28,37 +27,29 @@ void log_line_start(struct log *log) {
 	struct tm *now;
 	char buf[17];
 
-	if(log) {
-		gettimeofday(&tv, &tz);
-		now = localtime(&tv.tv_sec);
-		strftime(buf, 17, "%b %d %H:%M:%S ", now);
-		fprintf(log->out, buf);
-	}
+	gettimeofday(&tv, &tz);
+	now = localtime(&tv.tv_sec);
+	strftime(buf, 17, "%b %d %H:%M:%S ", now);
+	fprintf(log->out, buf);
 }
 
 void log_line_end(struct log *log) {
-	if(log) {
-		fprintf(log->out, "\n");
-		fflush(log->out);
-	}
+	fprintf(log->out, "\n");
+	fflush(log->out);
 }
 
 void log_printf(struct log *log, const char *format, ...) {
-	if(log) {
-		va_list va;
-		va_start(va, format);
-		vfprintf(log->out, format, va);
-		va_end(va);
-	}
+	va_list va;
+	va_start(va, format);
+	vfprintf(log->out, format, va);
+	va_end(va);
 }
 
 void log_println(struct log *log, const char *format, ...) {
-	if(log) {
-		va_list va;
-		va_start(va, format);
-		log_line_start(log);
-		vfprintf(log->out, format, va);
-		log_line_end(log);
-		va_end(va);
-	}
+	va_list va;
+	va_start(va, format);
+	log_line_start(log);
+	vfprintf(log->out, format, va);
+	log_line_end(log);
+	va_end(va);
 }

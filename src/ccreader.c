@@ -44,7 +44,7 @@ static inline unsigned int ccreader_do_writers(struct ccreader *r) {
 		r->packet.receiver = receiver;  /* restore "true" receiver */
 		w = w->next;
 	}
-	if(res && r->log && !r->log->quiet)
+	if(res && !r->log->quiet)
 		ccpacket_log(&r->packet, r->log, r->name);
 	return res;
 }
