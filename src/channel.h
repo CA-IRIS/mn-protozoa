@@ -9,7 +9,7 @@ struct channel {
 	char		*name;			/* channel name */
 	int		fd;			/* file descriptor */
 	int		extra;			/* extra parameter */
-	struct log	*log;			/* logger */
+	struct log	*log;			/* message logger */
 
 	struct buffer	*rxbuf;			/* receive buffer */
 	struct buffer	*txbuf;			/* transmit buffer */
@@ -17,7 +17,7 @@ struct channel {
 	struct ccreader *reader;		/* camera control reader */
 };
 
-void channel_debug(struct channel *chn, const char* msg);
+void channel_log(struct channel *chn, const char* msg);
 bool channel_is_open(const struct channel *chn);
 bool channel_has_reader(const struct channel *chn);
 bool channel_is_waiting(const struct channel *chn);

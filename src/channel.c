@@ -20,7 +20,7 @@ bool channel_is_waiting(const struct channel *chn) {
 	return (!buffer_is_empty(chn->txbuf)) || (chn->reader != NULL);
 }
 
-void channel_debug(struct channel *chn, const char* msg) {
+void channel_log(struct channel *chn, const char* msg) {
 	log_println(chn->log, "channel: %s %s", msg, chn->name);
 }
 
@@ -82,7 +82,7 @@ static inline bool channel_is_sport(const struct channel *chn) {
 }
 
 int channel_open(struct channel *chn) {
-	channel_debug(chn, "opening");
+	channel_log(chn, "opening");
 	if(channel_is_sport(chn))
 		return sport_open(chn);
 	else
@@ -93,7 +93,7 @@ int channel_close(struct channel *chn) {
 	buffer_clear(chn->rxbuf);
 	buffer_clear(chn->txbuf);
 	if(channel_is_open(chn)) {
-		channel_debug(chn, "closing");
+		channel_log(chn, "closing");
 		int r = close(chn->fd);
 		chn->fd = 0;
 		return r;

@@ -25,7 +25,7 @@ static void poller_register_events(struct poller *p) {
 		chn = p->chn + i;
 		if(!channel_is_open(chn)) {
 			if(channel_is_waiting(chn) && channel_open(chn) < 0) {
-				channel_debug(chn, strerror(errno));
+				channel_log(chn, strerror(errno));
 				channel_close(chn);
 			}
 		}
@@ -59,7 +59,7 @@ static int poller_do_poll(struct poller *p) {
 		if(p->pollfds[i].revents & POLLOUT) {
 			n_bytes = channel_write(chn);
 			if(n_bytes < 0) {
-				channel_debug(chn, strerror(errno));
+				channel_log(chn, strerror(errno));
 				channel_close(chn);
 				continue;
 			}
@@ -67,7 +67,7 @@ static int poller_do_poll(struct poller *p) {
 		if(p->pollfds[i].revents & POLLIN) {
 			n_bytes = channel_read(chn);
 			if(n_bytes < 0) {
-				channel_debug(chn, strerror(errno));
+				channel_log(chn, strerror(errno));
 				channel_close(chn);
 				continue;
 			}

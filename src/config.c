@@ -36,7 +36,7 @@ static struct channel *config_new_channel(struct config *c, const char *name,
 		return NULL;
 	chn = c->chns + (c->n_channels - 1);
 	if(channel_init(chn, name, extra, c->log) == NULL) {
-		channel_debug(chn, "Initialization error");
+		channel_log(chn, "Initialization error");
 		c->n_channels--;
 		return NULL;
 	}
