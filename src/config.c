@@ -63,7 +63,7 @@ static int config_directive(struct config *c, const char *protocol_in,
 	struct ccreader *reader;
 	struct ccwriter *writer;
 
-	log_println(c->log, "config: %s %s %d %s %s %d %d %d", protocol_in,
+	log_println(c->log, "config: %s %s %d -> %s %s %d %d %d", protocol_in,
 		port_in, extra_in, protocol_out, port_out, extra_out,
 		base, range);
 	chn_in = config_get_channel(c, port_in, extra_in);
