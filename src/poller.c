@@ -46,27 +46,29 @@ static void poller_register_events(struct poller *p) {
 static int poller_do_poll(struct poller *p) {
 	int i;
 	ssize_t n_bytes;
+	struct channel *chn;
 
 	if(poll(p->pollfds, p->n_channels, -1) < 0)
 		return -1;
 	for(i = 0; i < p->n_channels; i++) {
+		chn = p->chn + i;
 		if(p->pollfds[i].revents & (POLLHUP | POLLERR)) {
-			channel_close(p->chn + i);
+			channel_close(chn);
 			continue;
 		}
 		if(p->pollfds[i].revents & POLLOUT) {
-			n_bytes = channel_write(p->chn + i);
+			n_bytes = channel_write(chn);
 			if(n_bytes < 0) {
-				channel_debug(p->chn + i, strerror(errno));
-				channel_close(p->chn + i);
+				channel_debug(chn, strerror(errno));
+				channel_close(chn);
 				continue;
 			}
 		}
 		if(p->pollfds[i].revents & POLLIN) {
-			n_bytes = channel_read(p->chn + i);
+			n_bytes = channel_read(chn);
 			if(n_bytes < 0) {
-				channel_debug(p->chn + i, strerror(errno));
-				channel_close(p->chn + i);
+				channel_debug(chn, strerror(errno));
+				channel_close(chn);
 				continue;
 			}
 		}
