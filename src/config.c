@@ -1,5 +1,4 @@
 #include <string.h>
-#include <sys/errno.h>	/* for errno */
 #include "config.h"
 #include "ccreader.h"
 #include "ccwriter.h"
@@ -75,7 +74,7 @@ static int config_directive(struct config *c, const char *protocol_in,
 		chn_in->reader = reader;
 		reader->packet.counter = c->counter;
 	} else {
-		// FIXME: check for redefined protocol
+		/* FIXME: check for redefined protocol */
 		reader = chn_in->reader;
 	}
 	chn_out = config_get_channel(c, port_out, extra_out);
