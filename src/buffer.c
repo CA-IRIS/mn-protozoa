@@ -1,7 +1,8 @@
-#include "buffer.h"
+#include <assert.h>	/* for assert */
 #include <string.h>	/* for memmove */
 #include <unistd.h>	/* for read, write */
 #include <sys/errno.h>	/* for errno */
+#include "buffer.h"	/* for struct buffer and prototypes */
 
 extern int errno;
 
@@ -46,6 +47,7 @@ void buffer_clear(struct buffer *buf) {
  * return: number of bytes available
  */
 inline size_t buffer_available(const struct buffer *buf) {
+	assert(buf->pin >= buf->pout);
 	return buf->pin - buf->pout;
 }
 
@@ -55,7 +57,7 @@ inline size_t buffer_available(const struct buffer *buf) {
  * return: true if buffer is empty; otherwise false
  */
 inline bool buffer_is_empty(const struct buffer *buf) {
-	return buffer_available(buf) <= 0;
+	return buffer_available(buf) == 0;
 }
 
 /*
@@ -64,6 +66,7 @@ inline bool buffer_is_empty(const struct buffer *buf) {
  * return: space (bytes) remaining in buffer
  */
 inline size_t buffer_space(const struct buffer *buf) {
+	assert(buf->end >= buf->pin);
 	return buf->end - buf->pin;
 }
 
@@ -73,7 +76,7 @@ inline size_t buffer_space(const struct buffer *buf) {
  * return: true if buffer is full; otherwise false
  */
 inline bool buffer_is_full(const struct buffer *buf) {
-	return buffer_space(buf) <= 0;
+	return buffer_space(buf) == 0;
 }
 
 /*
@@ -94,10 +97,10 @@ static inline void buffer_compact(struct buffer *buf) {
  */
 ssize_t buffer_read(struct buffer *buf, int fd) {
 	size_t count = buffer_space(buf);
-	if(count <= 0) {
+	if(count == 0) {
 		buffer_compact(buf);
 		count = buffer_space(buf);
-		if(count <= 0) {
+		if(count == 0) {
 			errno = ENOBUFS;
 			return -1;
 		}
@@ -116,7 +119,7 @@ ssize_t buffer_read(struct buffer *buf, int fd) {
  */
 ssize_t buffer_write(struct buffer *buf, int fd) {
 	size_t count = buffer_available(buf);
-	if(count <= 0) {
+	if(count == 0) {
 		errno = ENOBUFS;
 		return -1;
 	}
@@ -167,6 +170,7 @@ inline void *buffer_current(struct buffer *buf) {
  */
 void buffer_consume(struct buffer *buf, size_t n_bytes) {
 	buf->pout += n_bytes;
-	if(buf->pout >= buf->pin)
+	assert(buf->pout <= buf->pin);
+	if(buf->pout == buf->pin)
 		buffer_clear(buf);
 }
