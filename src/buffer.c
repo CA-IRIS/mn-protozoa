@@ -103,27 +103,3 @@ void buffer_skip(struct buffer *buf, size_t n_bytes) {
 	if(buf->pout >= buf->pin)
 		buffer_clear(buf);
 }
-
-static void buffer_debug(struct buffer *buf, struct log *log,
-	const char *prefix, void *start)
-{
-	uint8_t *mess;
-	uint8_t *stop = buf->pin;
-
-	log_line_start(log);
-	log_printf(log, buf->name);
-	log_printf(log, prefix);
-	for(mess = start; mess < stop; mess++)
-		log_printf(log, " %02x", *mess);
-	log_line_end(log);
-}
-
-void buffer_debug_in(struct buffer *buf, struct log *log, size_t n_bytes) {
-	if(log->debug)
-		buffer_debug(buf, log, "  in:", buf->pin - n_bytes);
-}
-
-void buffer_debug_out(struct buffer *buf, struct log *log) {
-	if(log->debug)
-		buffer_debug(buf, log, " out:", buf->pout);
-}

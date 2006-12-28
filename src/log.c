@@ -57,3 +57,27 @@ void log_println(struct log *log, const char *format, ...) {
 	log_line_end(log);
 	va_end(va);
 }
+
+static void log_debug_buffer(struct log *log, struct buffer *buf,
+	const char *prefix, void *start)
+{
+	uint8_t *mess;
+	uint8_t *stop = buf->pin;
+
+	log_line_start(log);
+	log_printf(log, buf->name);
+	log_printf(log, prefix);
+	for(mess = start; mess < stop; mess++)
+		log_printf(log, " %02x", *mess);
+	log_line_end(log);
+}
+
+void log_buffer_in(struct log *log, struct buffer *buf, size_t n_bytes) {
+	if(log->debug)
+		log_debug_buffer(log, buf, "  in:", buf->pin - n_bytes);
+}
+
+void log_buffer_out(struct log *log, struct buffer *buf) {
+	if(log->debug)
+		log_debug_buffer(log, buf, " out:", buf->pout);
+}

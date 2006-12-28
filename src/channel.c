@@ -29,7 +29,7 @@ ssize_t channel_read(struct channel *chn) {
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(chn->reader) {
-		buffer_debug_in(chn->rxbuf, chn->log, n_bytes);
+		log_buffer_in(chn->log, chn->rxbuf, n_bytes);
 		chn->reader->do_read(chn->reader, chn->rxbuf);
 		return n_bytes;
 	} else {
@@ -41,7 +41,7 @@ ssize_t channel_read(struct channel *chn) {
 }
 
 ssize_t channel_write(struct channel *chn) {
-	buffer_debug_out(chn->txbuf, chn->log);
+	log_buffer_out(chn->log, chn->txbuf);
 	return buffer_write(chn->txbuf, chn->fd);
 }
 

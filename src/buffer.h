@@ -5,7 +5,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "log.h"
 
 /*
  * A buffer is used for I/O buffering. It consists of four pointers to a
@@ -33,7 +32,5 @@ ssize_t buffer_write(struct buffer *buf, int fd);
 void *buffer_append(struct buffer *buf, size_t n_bytes);
 void *buffer_current(struct buffer *buf);
 void buffer_skip(struct buffer *buf, size_t n_bytes);
-void buffer_debug_in(struct buffer *buf, struct log *log, size_t n_bytes);
-void buffer_debug_out(struct buffer *buf, struct log *log);
 
 #endif
