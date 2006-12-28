@@ -5,7 +5,7 @@
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.9"
+#define VERSION "0.10"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006  Mn/DOT"
 
 static const char *CONF_FILE = "/etc/protozoa.conf";
