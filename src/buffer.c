@@ -6,18 +6,12 @@
 extern int errno;
 
 /*
- * buffer_init
+ * buffer_init		Initialize a new I/O buffer.
  *
- * Initialize a new I/O buffer.
- *	name -> buffer name
- *	n_bytes -> size of buffer (bytes)
- * Returns a pointer to the buffer or NULL on error.
+ * n_bytes: size of buffer (bytes)
+ * return: pointer to the buffer or NULL on error
  */
-struct buffer *buffer_init(struct buffer *buf, const char *name,
-	size_t n_bytes)
-{
-	buf->name = malloc(strlen(name) + 1);
-	strcpy(buf->name, name);
+struct buffer *buffer_init(struct buffer *buf, size_t n_bytes) {
 	buf->base = malloc(n_bytes);
 	if(buf->base == NULL)
 		return NULL;
@@ -28,7 +22,6 @@ struct buffer *buffer_init(struct buffer *buf, const char *name,
 }
 
 void buffer_destroy(struct buffer *buf) {
-	free(buf->name);
 	free(buf->base);
 	buf->base = NULL;
 	buf->end = NULL;

@@ -12,15 +12,13 @@
  * out of the buffer at "pout". So, base <= pout <= pin < end.
  */
 struct buffer {
-	char	*name;	/* name of channel */
 	void	*base;	/* base address of buffer */
 	void	*end;	/* end address of buffer */
 	void	*pin;	/* input pointer location */
 	void	*pout;	/* output pointer location */
 };
 
-struct buffer *buffer_init(struct buffer *buf, const char *name,
-	size_t n_bytes);
+struct buffer *buffer_init(struct buffer *buf, size_t n_bytes);
 void buffer_destroy(struct buffer *buf);
 void buffer_clear(struct buffer *buf);
 size_t buffer_available(const struct buffer *buf);

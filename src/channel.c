@@ -29,7 +29,7 @@ ssize_t channel_read(struct channel *chn) {
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(chn->reader) {
-		log_buffer_in(chn->log, chn->rxbuf, n_bytes);
+		log_buffer_in(chn->log, chn->rxbuf, chn->name, n_bytes);
 		chn->reader->do_read(chn->reader, chn->rxbuf);
 		return n_bytes;
 	} else {
@@ -41,7 +41,7 @@ ssize_t channel_read(struct channel *chn) {
 }
 
 ssize_t channel_write(struct channel *chn) {
-	log_buffer_out(chn->log, chn->txbuf);
+	log_buffer_out(chn->log, chn->txbuf, chn->name);
 	return buffer_write(chn->txbuf, chn->fd);
 }
 
@@ -58,12 +58,12 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	chn->rxbuf = malloc(BUFFER_SIZE);
 	if(chn->rxbuf == NULL)
 		goto fail;
-	if(buffer_init(chn->rxbuf, name, BUFFER_SIZE) == NULL)
+	if(buffer_init(chn->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	chn->txbuf = malloc(BUFFER_SIZE);
 	if(chn->txbuf == NULL)
 		goto fail;
-	if(buffer_init(chn->txbuf, name, BUFFER_SIZE) == NULL)
+	if(buffer_init(chn->txbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	chn->reader = NULL;
 	return chn;
