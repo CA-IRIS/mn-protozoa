@@ -143,6 +143,15 @@ void *buffer_append(struct buffer *buf, size_t n_bytes) {
 }
 
 /*
+ * buffer_next		Get the next position in the I/O buffer.
+ *
+ * return: pointer to the next buffer position
+ */
+inline void *buffer_next(struct buffer *buf) {
+	return buf->pin;
+}
+
+/*
  * buffer_current	Get the current position in the I/O buffer.
  *
  * return: pointer to the current buffer position
