@@ -1,6 +1,7 @@
 #ifndef __CCWRITER_H__
 #define __CCWRITER_H__
 
+#include <stdint.h>	/* for uint8_t */
 #include "ccpacket.h"
 #include "channel.h"
 

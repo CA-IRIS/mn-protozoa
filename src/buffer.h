@@ -1,10 +1,8 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <stdbool.h>	/* for bool */
+#include <stdlib.h>	/* for size_t, ssize_t */
 
 /*
  * A buffer is used for I/O buffering. It consists of four pointers to a

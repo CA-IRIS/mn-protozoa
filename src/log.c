@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdint.h>	/* for uint8_t */
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
