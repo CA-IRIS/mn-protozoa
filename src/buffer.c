@@ -5,6 +5,14 @@
 
 extern int errno;
 
+/*
+ * buffer_init
+ *
+ * Initialize a new I/O buffer.
+ *	name -> buffer name
+ *	n_bytes -> size of buffer (bytes)
+ * Returns a pointer to the buffer or NULL on error.
+ */
 struct buffer *buffer_init(struct buffer *buf, const char *name,
 	size_t n_bytes)
 {
