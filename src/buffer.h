@@ -19,7 +19,7 @@ struct buffer {
 	void	*pout;	/* output pointer location */
 };
 
-struct buffer *buffer_init(const char *name, struct buffer *buf,
+struct buffer *buffer_init(struct buffer *buf, const char *name,
 	size_t n_bytes);
 void buffer_destroy(struct buffer *buf);
 void buffer_clear(struct buffer *buf);

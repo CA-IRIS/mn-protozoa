@@ -58,12 +58,12 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	chn->rxbuf = malloc(BUFFER_SIZE);
 	if(chn->rxbuf == NULL)
 		goto fail;
-	if(buffer_init(name, chn->rxbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(chn->rxbuf, name, BUFFER_SIZE) == NULL)
 		goto fail;
 	chn->txbuf = malloc(BUFFER_SIZE);
 	if(chn->txbuf == NULL)
 		goto fail;
-	if(buffer_init(name, chn->txbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(chn->txbuf, name, BUFFER_SIZE) == NULL)
 		goto fail;
 	chn->reader = NULL;
 	return chn;

@@ -5,7 +5,7 @@
 
 extern int errno;
 
-struct buffer *buffer_init(const char *name, struct buffer *buf,
+struct buffer *buffer_init(struct buffer *buf, const char *name,
 	size_t n_bytes)
 {
 	buf->name = malloc(strlen(name) + 1);
