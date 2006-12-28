@@ -211,11 +211,11 @@ static inline enum decode_t manchester_read_message(struct ccreader *r,
 	if((mess[0] & FLAG) == 0) {
 		log_println(r->log, "Manchester: unexpected byte %02X",
 			mess[0]);
-		buffer_skip(rxbuf, 1);
+		buffer_consume(rxbuf, 1);
 		return MORE;
 	}
 	manchester_decode_packet(r, mess);
-	buffer_skip(rxbuf, SIZE_MSG);
+	buffer_consume(rxbuf, SIZE_MSG);
 	return MORE;
 }
 

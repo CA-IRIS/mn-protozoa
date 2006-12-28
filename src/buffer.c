@@ -122,7 +122,7 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
 	}
 	ssize_t n_bytes = write(fd, buf->pout, count);
 	if(n_bytes > 0)
-		buffer_skip(buf, n_bytes);
+		buffer_consume(buf, n_bytes);
 	return n_bytes;
 }
 
@@ -161,11 +161,11 @@ inline void *buffer_current(struct buffer *buf) {
 }
 
 /*
- * buffer_skip		Skip forward into the I/O buffer.
+ * buffer_consume	Consume data from the I/O buffer.
  *
- * n_bytes: number of bytes to skip forward
+ * n_bytes: number of bytes to consume from the current position
  */
-void buffer_skip(struct buffer *buf, size_t n_bytes) {
+void buffer_consume(struct buffer *buf, size_t n_bytes) {
 	buf->pout += n_bytes;
 	if(buf->pout >= buf->pin)
 		buffer_clear(buf);

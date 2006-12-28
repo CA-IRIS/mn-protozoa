@@ -30,6 +30,6 @@ ssize_t buffer_write(struct buffer *buf, int fd);
 void *buffer_append(struct buffer *buf, size_t n_bytes);
 void *buffer_next(struct buffer *buf);
 void *buffer_current(struct buffer *buf);
-void buffer_skip(struct buffer *buf, size_t n_bytes);
+void buffer_consume(struct buffer *buf, size_t n_bytes);
 
 #endif

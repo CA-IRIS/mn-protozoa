@@ -209,10 +209,10 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 	uint8_t *mess = buffer_current(rxbuf);
 	if(mess[0] != FLAG) {
 		log_println(r->log, "Pelco(D): unexpected byte %02X", mess[0]);
-		buffer_skip(rxbuf, 1);
+		buffer_consume(rxbuf, 1);
 		return MORE;
 	}
-	buffer_skip(rxbuf, SIZE_MSG);
+	buffer_consume(rxbuf, SIZE_MSG);
 	if(checksum_invalid(mess)) {
 		log_println(r->log, "Pelco(D): invalid checksum");
 		return MORE;

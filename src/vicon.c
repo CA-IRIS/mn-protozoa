@@ -176,7 +176,7 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *r,
 			decode_ex_preset(&r->packet, mess);
 	} else
 		decode_ex_speed(&r->packet, mess);
-	buffer_skip(rxbuf, SIZE_EXTENDED);
+	buffer_consume(rxbuf, SIZE_EXTENDED);
 	ccreader_process_packet(r);
 	return MORE;
 }
@@ -193,7 +193,7 @@ static inline enum decode_t vicon_decode_command(struct ccreader *r,
 	decode_toggles(&r->packet, mess);
 	decode_aux(&r->packet, mess);
 	decode_preset(&r->packet, mess);
-	buffer_skip(rxbuf, SIZE_COMMAND);
+	buffer_consume(rxbuf, SIZE_COMMAND);
 	ccreader_process_packet(r);
 	return MORE;
 }
@@ -205,7 +205,7 @@ static inline enum decode_t vicon_decode_status(struct ccreader *r,
 		return DONE;
 	r->packet.receiver = decode_receiver(mess);
 	r->packet.status = STATUS_REQUEST;
-	buffer_skip(rxbuf, SIZE_STATUS);
+	buffer_consume(rxbuf, SIZE_STATUS);
 	ccreader_process_packet(r);
 	return MORE;
 }
@@ -216,7 +216,7 @@ static inline enum decode_t vicon_decode_message(struct ccreader *r,
 	uint8_t *mess = buffer_current(rxbuf);
 	if((mess[0] & FLAG) == 0) {
 		log_println(r->log, "Vicon: unexpected byte %02X", mess[0]);
-		buffer_skip(rxbuf, 1);
+		buffer_consume(rxbuf, 1);
 		return MORE;
 	}
 	if(is_extended_command(mess))
