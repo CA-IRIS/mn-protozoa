@@ -17,7 +17,7 @@ bool channel_has_reader(const struct channel *chn) {
 }
 
 bool channel_is_waiting(const struct channel *chn) {
-	return (!buffer_is_empty(chn->txbuf)) || (chn->reader != NULL);
+	return (!buffer_is_empty(&chn->txbuf)) || (chn->reader != NULL);
 }
 
 void channel_log(struct channel *chn, const char* msg) {
@@ -25,24 +25,24 @@ void channel_log(struct channel *chn, const char* msg) {
 }
 
 ssize_t channel_read(struct channel *chn) {
-	ssize_t n_bytes = buffer_read(chn->rxbuf, chn->fd);
+	ssize_t n_bytes = buffer_read(&chn->rxbuf, chn->fd);
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(chn->reader) {
-		log_buffer_in(chn->log, chn->rxbuf, chn->name, n_bytes);
-		chn->reader->do_read(chn->reader, chn->rxbuf);
+		log_buffer_in(chn->log, &chn->rxbuf, chn->name, n_bytes);
+		chn->reader->do_read(chn->reader, &chn->rxbuf);
 		return n_bytes;
 	} else {
 		/* Data is coming in on the channel, but we're not set up to
 		 * handle it -- just ignore. */
-		buffer_clear(chn->rxbuf);
+		buffer_clear(&chn->rxbuf);
 		return 0;
 	}
 }
 
 ssize_t channel_write(struct channel *chn) {
-	log_buffer_out(chn->log, chn->txbuf, chn->name);
-	return buffer_write(chn->txbuf, chn->fd);
+	log_buffer_out(chn->log, &chn->txbuf, chn->name);
+	return buffer_write(&chn->txbuf, chn->fd);
 }
 
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
@@ -55,25 +55,15 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	if(chn->name == NULL)
 		goto fail;
 	strcpy(chn->name, name);
-	chn->rxbuf = malloc(BUFFER_SIZE);
-	if(chn->rxbuf == NULL)
+	if(buffer_init(&chn->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
-	if(buffer_init(chn->rxbuf, BUFFER_SIZE) == NULL)
-		goto fail;
-	chn->txbuf = malloc(BUFFER_SIZE);
-	if(chn->txbuf == NULL)
-		goto fail;
-	if(buffer_init(chn->txbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(&chn->txbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	chn->reader = NULL;
 	return chn;
 fail:
 	free(chn->name);
-	free(chn->rxbuf);
-	free(chn->txbuf);
 	chn->name = NULL;
-	chn->rxbuf = NULL;
-	chn->txbuf = NULL;
 	return NULL;
 }
 
@@ -90,8 +80,8 @@ int channel_open(struct channel *chn) {
 }
 
 int channel_close(struct channel *chn) {
-	buffer_clear(chn->rxbuf);
-	buffer_clear(chn->txbuf);
+	buffer_clear(&chn->rxbuf);
+	buffer_clear(&chn->txbuf);
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
 		int r = close(chn->fd);
@@ -103,7 +93,7 @@ int channel_close(struct channel *chn) {
 
 void channel_destroy(struct channel *chn) {
 	channel_close(chn);
+	buffer_destroy(&chn->rxbuf);
+	buffer_destroy(&chn->txbuf);
 	free(chn->name);
-	free(chn->rxbuf);
-	free(chn->txbuf);
 }

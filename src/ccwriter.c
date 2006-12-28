@@ -9,10 +9,10 @@ static unsigned int ccwriter_do_write(struct ccwriter *w, struct ccpacket *p) {
 	return 0;
 }
 
-static void ccwriter_init(struct ccwriter *w, struct log *log) {
+static void ccwriter_init(struct ccwriter *w, struct channel *chn) {
 	w->do_write = ccwriter_do_write;
-	w->log = log;
-	w->txbuf = NULL;
+	w->log = chn->log;
+	w->txbuf = &chn->txbuf;
 	w->base = 0;
 	w->range = 0;
 	w->next = NULL;
@@ -48,10 +48,9 @@ struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
 	struct ccwriter *w = malloc(sizeof(struct ccwriter));
 	if(w == NULL)
 		return NULL;
-	ccwriter_init(w, chn->log);
+	ccwriter_init(w, chn);
 	if(ccwriter_set_protocol(w, protocol) < 0)
 		goto fail;
-	w->txbuf = chn->txbuf;
 	w->base = base;
 	w->range = range;
 	return w;

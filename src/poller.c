@@ -34,7 +34,7 @@ static void poller_register_events(struct poller *p) {
 			p->pollfds[i].events = POLLHUP | POLLERR;
 			if(channel_has_reader(chn))
 				p->pollfds[i].events |= POLLIN;
-			if(!buffer_is_empty(chn->txbuf))
+			if(!buffer_is_empty(&chn->txbuf))
 				p->pollfds[i].events |= POLLOUT;
 		} else {
 			p->pollfds[i].fd = p->fd_null;
