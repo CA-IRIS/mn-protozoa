@@ -8,6 +8,59 @@
 int sport_open(struct channel *chn);
 int tcp_open(struct channel *chn);
 
+struct channel* channel_init(struct channel *chn, const char *name, int extra,
+	struct log *log)
+{
+	bzero(chn, sizeof(struct channel));
+	chn->extra = extra;
+	chn->log = log;
+	chn->name = malloc(strlen(name) + 1);
+	if(chn->name == NULL)
+		goto fail;
+	strcpy(chn->name, name);
+	if(buffer_init(&chn->rxbuf, BUFFER_SIZE) == NULL)
+		goto fail;
+	if(buffer_init(&chn->txbuf, BUFFER_SIZE) == NULL)
+		goto fail;
+	chn->reader = NULL;
+	return chn;
+fail:
+	free(chn->name);
+	chn->name = NULL;
+	return NULL;
+}
+
+void channel_destroy(struct channel *chn) {
+	channel_close(chn);
+	buffer_destroy(&chn->rxbuf);
+	buffer_destroy(&chn->txbuf);
+	free(chn->name);
+}
+
+static inline bool channel_is_sport(const struct channel *chn) {
+	return chn->name[0] == '/';
+}
+
+int channel_open(struct channel *chn) {
+	channel_log(chn, "opening");
+	if(channel_is_sport(chn))
+		return sport_open(chn);
+	else
+		return tcp_open(chn);
+}
+
+int channel_close(struct channel *chn) {
+	buffer_clear(&chn->rxbuf);
+	buffer_clear(&chn->txbuf);
+	if(channel_is_open(chn)) {
+		channel_log(chn, "closing");
+		int r = close(chn->fd);
+		chn->fd = 0;
+		return r;
+	} else
+		return 0;
+}
+
 bool channel_is_open(const struct channel *chn) {
 	return (bool)(chn->fd);
 }
@@ -43,57 +96,4 @@ ssize_t channel_read(struct channel *chn) {
 ssize_t channel_write(struct channel *chn) {
 	log_buffer_out(chn->log, &chn->txbuf, chn->name);
 	return buffer_write(&chn->txbuf, chn->fd);
-}
-
-struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	struct log *log)
-{
-	bzero(chn, sizeof(struct channel));
-	chn->extra = extra;
-	chn->log = log;
-	chn->name = malloc(strlen(name) + 1);
-	if(chn->name == NULL)
-		goto fail;
-	strcpy(chn->name, name);
-	if(buffer_init(&chn->rxbuf, BUFFER_SIZE) == NULL)
-		goto fail;
-	if(buffer_init(&chn->txbuf, BUFFER_SIZE) == NULL)
-		goto fail;
-	chn->reader = NULL;
-	return chn;
-fail:
-	free(chn->name);
-	chn->name = NULL;
-	return NULL;
-}
-
-static inline bool channel_is_sport(const struct channel *chn) {
-	return chn->name[0] == '/';
-}
-
-int channel_open(struct channel *chn) {
-	channel_log(chn, "opening");
-	if(channel_is_sport(chn))
-		return sport_open(chn);
-	else
-		return tcp_open(chn);
-}
-
-int channel_close(struct channel *chn) {
-	buffer_clear(&chn->rxbuf);
-	buffer_clear(&chn->txbuf);
-	if(channel_is_open(chn)) {
-		channel_log(chn, "closing");
-		int r = close(chn->fd);
-		chn->fd = 0;
-		return r;
-	} else
-		return 0;
-}
-
-void channel_destroy(struct channel *chn) {
-	channel_close(chn);
-	buffer_destroy(&chn->rxbuf);
-	buffer_destroy(&chn->txbuf);
-	free(chn->name);
 }

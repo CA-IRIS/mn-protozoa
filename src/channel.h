@@ -17,15 +17,15 @@ struct channel {
 	struct log	*log;			/* message logger */
 };
 
-void channel_log(struct channel *chn, const char* msg);
+struct channel* channel_init(struct channel *chn, const char *name, int extra,
+	struct log *log);
+void channel_destroy(struct channel *chn);
+int channel_open(struct channel *chn);
+int channel_close(struct channel *chn);
 bool channel_is_open(const struct channel *chn);
 bool channel_has_reader(const struct channel *chn);
 bool channel_is_waiting(const struct channel *chn);
-struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	struct log *log);
-int channel_open(struct channel *chn);
-int channel_close(struct channel *chn);
-void channel_destroy(struct channel *chn);
+void channel_log(struct channel *chn, const char* msg);
 ssize_t channel_read(struct channel *chn);
 ssize_t channel_write(struct channel *chn);
 
