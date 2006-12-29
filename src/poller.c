@@ -1,6 +1,7 @@
 #include <fcntl.h>	/* for open */
 #include <string.h>	/* for strerror */
 #include <sys/errno.h>	/* for errno */
+#include <unistd.h>	/* for close */
 #include "poller.h"	/* for struct poller, prototypes */
 
 struct poller *poller_init(struct poller *plr, int n_channels,
@@ -14,6 +15,15 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 	/* open an fd to poll for closed channels */
 	plr->fd_null = open("/dev/null", O_RDONLY);
 	return plr;
+}
+
+void poller_destroy(struct poller *plr) {
+	close(plr->fd_null);
+	free(plr->pollfds);
+	plr->fd_null = 0;
+	plr->pollfds = NULL;
+	plr->chns = NULL;
+	plr->n_channels = 0;
 }
 
 static inline void poller_register_channel(struct poller *plr,
