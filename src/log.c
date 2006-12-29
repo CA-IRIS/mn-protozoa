@@ -1,9 +1,8 @@
-#include <stdarg.h>
+#include <stdarg.h>	/* for va_list, va_start, va_end */
 #include <stdint.h>	/* for uint8_t */
-#include <stdio.h>
-#include <time.h>
-#include <sys/time.h>
-#include "log.h"
+#include <time.h>	/* for localtime, strftime */
+#include <sys/time.h>	/* for gettimeofday */
+#include "log.h"	/* for struct log, prototypes */
 
 struct log *log_init(struct log *log) {
 	log->out = stderr;

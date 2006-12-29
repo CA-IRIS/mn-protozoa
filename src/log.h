@@ -1,8 +1,8 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#include <stdbool.h>
-#include <stdio.h>
+#include <stdbool.h>	/* for bool */
+#include <stdio.h>	/* for FILE */
 
 struct log {
 	FILE	*out;		/* output stream */
