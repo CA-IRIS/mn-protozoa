@@ -4,6 +4,13 @@
 #include <unistd.h>	/* for close */
 #include "poller.h"	/* for struct poller, prototypes */
 
+/*
+ * poller_init		Initialize a new I/O channel poller.
+ *
+ * n_channels: number of channels to poll
+ * chns: array of channels
+ * return: pointer to struct poller or NULL on error
+ */
 struct poller *poller_init(struct poller *plr, int n_channels,
 	struct channel *chns)
 {
@@ -17,6 +24,9 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 	return plr;
 }
 
+/*
+ * poller_destroy		Destroy a previously initialized poller.
+ */
 void poller_destroy(struct poller *plr) {
 	close(plr->fd_null);
 	free(plr->pollfds);
@@ -26,6 +36,12 @@ void poller_destroy(struct poller *plr) {
 	plr->n_channels = 0;
 }
 
+/*
+ * poller_register_channel	Register events to poll for one channel.
+ *
+ * chn: channel to register events for
+ * pfd: poll fd structure
+ */
 static inline void poller_register_channel(struct poller *plr,
 	struct channel *chn, struct pollfd *pfd)
 {
@@ -48,6 +64,9 @@ static inline void poller_register_channel(struct poller *plr,
 	}
 }
 
+/*
+ * poller_register_events	Register events for all channels to poll.
+ */
 static void poller_register_events(struct poller *plr) {
 	int i;
 
@@ -55,6 +74,12 @@ static void poller_register_events(struct poller *plr) {
 		poller_register_channel(plr, plr->chns + i, plr->pollfds + i);
 }
 
+/*
+ * poller_channel_events	Process polled events for one channel.
+ *
+ * chn: channel to process
+ * pfd: poll fd structure
+ */
 static inline void poller_channel_events(struct poller *plr,
 	struct channel *chn, struct pollfd *pfd)
 {
@@ -80,6 +105,9 @@ static inline void poller_channel_events(struct poller *plr,
 	}
 }
 
+/*
+ * poller_do_poll		Poll all channels for new events.
+ */
 static int poller_do_poll(struct poller *plr) {
 	int i;
 
@@ -90,6 +118,11 @@ static int poller_do_poll(struct poller *plr) {
 	return 0;
 }
 
+/*
+ * poller_loop		Poll all channels for events in a continuous loop.
+ *
+ * return: -1 on error, otherwise does not return
+ */
 int poller_loop(struct poller *plr) {
 	int r = 0;
 	do {
