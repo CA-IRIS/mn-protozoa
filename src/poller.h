@@ -11,8 +11,8 @@ struct poller {
 	int		fd_null;
 };
 
-struct poller *poller_init(struct poller *p, int n_channels,
+struct poller *poller_init(struct poller *plr, int n_channels,
 	struct channel *chns);
-int poller_loop(struct poller *p);
+int poller_loop(struct poller *plr);
 
 #endif

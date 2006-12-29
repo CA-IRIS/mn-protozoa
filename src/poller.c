@@ -3,25 +3,25 @@
 #include <sys/errno.h>	/* for errno */
 #include "poller.h"
 
-struct poller *poller_init(struct poller *p, int n_channels,
+struct poller *poller_init(struct poller *plr, int n_channels,
 	struct channel *chns)
 {
-	p->n_channels = n_channels;
-	p->chns = chns;
-	p->pollfds = malloc(sizeof(struct pollfd) * n_channels);
-	if(p->pollfds == NULL)
+	plr->n_channels = n_channels;
+	plr->chns = chns;
+	plr->pollfds = malloc(sizeof(struct pollfd) * n_channels);
+	if(plr->pollfds == NULL)
 		return NULL;
 	/* open an fd to poll for closed channels */
-	p->fd_null = open("/dev/null", O_RDONLY);
-	return p;
+	plr->fd_null = open("/dev/null", O_RDONLY);
+	return plr;
 }
 
-static void poller_register_events(struct poller *p) {
+static void poller_register_events(struct poller *plr) {
 	int i;
 	struct channel *chn;
 
-	for(i = 0; i < p->n_channels; i++) {
-		chn = p->chns + i;
+	for(i = 0; i < plr->n_channels; i++) {
+		chn = plr->chns + i;
 		if(!channel_is_open(chn)) {
 			if(channel_is_waiting(chn) && channel_open(chn) < 0) {
 				channel_log(chn, strerror(errno));
@@ -29,33 +29,33 @@ static void poller_register_events(struct poller *p) {
 			}
 		}
 		if(channel_is_open(chn)) {
-			p->pollfds[i].fd = chn->fd;
-			p->pollfds[i].events = POLLHUP | POLLERR;
+			plr->pollfds[i].fd = chn->fd;
+			plr->pollfds[i].events = POLLHUP | POLLERR;
 			if(channel_has_reader(chn))
-				p->pollfds[i].events |= POLLIN;
+				plr->pollfds[i].events |= POLLIN;
 			if(!buffer_is_empty(chn->txbuf))
-				p->pollfds[i].events |= POLLOUT;
+				plr->pollfds[i].events |= POLLOUT;
 		} else {
-			p->pollfds[i].fd = p->fd_null;
-			p->pollfds[i].events = 0;
+			plr->pollfds[i].fd = plr->fd_null;
+			plr->pollfds[i].events = 0;
 		}
 	}
 }
 
-static int poller_do_poll(struct poller *p) {
+static int poller_do_poll(struct poller *plr) {
 	int i;
 	ssize_t n_bytes;
 	struct channel *chn;
 
-	if(poll(p->pollfds, p->n_channels, -1) < 0)
+	if(poll(plr->pollfds, plr->n_channels, -1) < 0)
 		return -1;
-	for(i = 0; i < p->n_channels; i++) {
-		chn = p->chns + i;
-		if(p->pollfds[i].revents & (POLLHUP | POLLERR)) {
+	for(i = 0; i < plr->n_channels; i++) {
+		chn = plr->chns + i;
+		if(plr->pollfds[i].revents & (POLLHUP | POLLERR)) {
 			channel_close(chn);
 			continue;
 		}
-		if(p->pollfds[i].revents & POLLOUT) {
+		if(plr->pollfds[i].revents & POLLOUT) {
 			n_bytes = channel_write(chn);
 			if(n_bytes < 0) {
 				channel_log(chn, strerror(errno));
@@ -63,7 +63,7 @@ static int poller_do_poll(struct poller *p) {
 				continue;
 			}
 		}
-		if(p->pollfds[i].revents & POLLIN) {
+		if(plr->pollfds[i].revents & POLLIN) {
 			n_bytes = channel_read(chn);
 			if(n_bytes < 0) {
 				channel_log(chn, strerror(errno));
@@ -75,11 +75,11 @@ static int poller_do_poll(struct poller *p) {
 	return 0;
 }
 
-int poller_loop(struct poller *p) {
+int poller_loop(struct poller *plr) {
 	int r = 0;
 	do {
-		poller_register_events(p);
-		r = poller_do_poll(p);
+		poller_register_events(plr);
+		r = poller_do_poll(plr);
 	} while(r >= 0);
 	return r;
 }
