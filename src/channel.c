@@ -1,3 +1,4 @@
+#include <assert.h>	/* for assert */
 #include <unistd.h>	/* for close */
 #include <string.h>	/* for bzero, strlen, strcpy */
 #include "channel.h"	/* for struct channel and prototypes */
@@ -63,6 +64,7 @@ static inline bool channel_is_sport(const struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 int channel_open(struct channel *chn) {
+	assert(chn->fd == 0);
 	channel_log(chn, "opening");
 	if(channel_is_sport(chn))
 		return sport_open(chn);

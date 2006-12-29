@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <termios.h>
@@ -47,7 +46,6 @@ static inline int sport_configure(struct channel *chn) {
 }
 
 int sport_open(struct channel *chn) {
-	assert(chn->fd == 0);
 	chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if(chn->fd < 0) {
 		chn->fd = 0;

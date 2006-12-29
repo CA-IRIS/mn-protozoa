@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <strings.h>		/* for bcopy */
 #include <netinet/tcp.h>	/* for TCP_NODELAY */
 #include <netdb.h>
@@ -9,7 +8,6 @@ int tcp_open(struct channel *chn) {
 	struct sockaddr_in sa;
 	int on = 1;	/* turn "on" values for setsockopt */
 
-	assert(chn->fd == 0);
 	host = gethostbyname(chn->name);
 	if(host == NULL)
 		return -1;
