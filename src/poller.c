@@ -45,36 +45,38 @@ static void poller_register_events(struct poller *plr) {
 		poller_register_channel(plr, plr->chns + i, plr->pollfds + i);
 }
 
+static inline void poller_channel_events(struct poller *plr,
+	struct channel *chn, struct pollfd *pfd)
+{
+	if(pfd->revents & (POLLHUP | POLLERR)) {
+		channel_close(chn);
+		return;
+	}
+	if(pfd->revents & POLLOUT) {
+		ssize_t n_bytes = channel_write(chn);
+		if(n_bytes < 0) {
+			channel_log(chn, strerror(errno));
+			channel_close(chn);
+			return;
+		}
+	}
+	if(pfd->revents & POLLIN) {
+		ssize_t n_bytes = channel_read(chn);
+		if(n_bytes < 0) {
+			channel_log(chn, strerror(errno));
+			channel_close(chn);
+			return;
+		}
+	}
+}
+
 static int poller_do_poll(struct poller *plr) {
 	int i;
-	ssize_t n_bytes;
-	struct channel *chn;
 
 	if(poll(plr->pollfds, plr->n_channels, -1) < 0)
 		return -1;
-	for(i = 0; i < plr->n_channels; i++) {
-		chn = plr->chns + i;
-		if(plr->pollfds[i].revents & (POLLHUP | POLLERR)) {
-			channel_close(chn);
-			continue;
-		}
-		if(plr->pollfds[i].revents & POLLOUT) {
-			n_bytes = channel_write(chn);
-			if(n_bytes < 0) {
-				channel_log(chn, strerror(errno));
-				channel_close(chn);
-				continue;
-			}
-		}
-		if(plr->pollfds[i].revents & POLLIN) {
-			n_bytes = channel_read(chn);
-			if(n_bytes < 0) {
-				channel_log(chn, strerror(errno));
-				channel_close(chn);
-				continue;
-			}
-		}
-	}
+	for(i = 0; i < plr->n_channels; i++)
+		poller_channel_events(plr, plr->chns + i, plr->pollfds + i);
 	return 0;
 }
 
