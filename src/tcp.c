@@ -22,7 +22,7 @@ int tcp_open(struct channel *chn) {
 		return -1;
 	sa.sin_family = AF_INET;
 	bcopy(host->h_addr, &sa.sin_addr.s_addr, host->h_length);
-	/* tcp port stored in channel->extra parameter */
+	/* tcp port stored in chn->extra parameter */
 	sa.sin_port = htons(chn->extra);
 	if(connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
 		return -1;

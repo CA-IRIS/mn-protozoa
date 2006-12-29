@@ -32,7 +32,7 @@ static inline int sport_configure(struct channel *chn) {
 	ttyset.c_cc[VMIN] = 0;
 	ttyset.c_cc[VTIME] = 1;
 
-	/* sport baud rate stored in channel->extra parameter */
+	/* sport baud rate stored in chn->extra parameter */
 	int b = baud_mask(chn->extra);
 	if(b < 0)
 		return -1;
