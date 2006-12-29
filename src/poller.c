@@ -25,7 +25,7 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 }
 
 /*
- * poller_destroy		Destroy a previously initialized poller.
+ * poller_destroy	Destroy a previously initialized poller.
  */
 void poller_destroy(struct poller *plr) {
 	close(plr->fd_null);
@@ -106,7 +106,7 @@ static inline void poller_channel_events(struct poller *plr,
 }
 
 /*
- * poller_do_poll		Poll all channels for new events.
+ * poller_do_poll	Poll all channels for new events.
  */
 static int poller_do_poll(struct poller *plr) {
 	int i;
