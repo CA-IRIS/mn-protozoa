@@ -1,6 +1,6 @@
-#include <unistd.h>
-#include <string.h>
-#include "channel.h"
+#include <unistd.h>	/* for close */
+#include <string.h>	/* for bzero, strlen, strcpy */
+#include "channel.h"	/* for struct channel and prototypes */
 
 #define BUFFER_SIZE 256
 
