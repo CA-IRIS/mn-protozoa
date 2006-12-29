@@ -1,6 +1,5 @@
-#include <fcntl.h>
-#include <stddef.h>
-#include <termios.h>
+#include <fcntl.h>	/* for open, O_RDWR, O_NOCTTY, O_NONBLOCK */
+#include <termios.h>	/* for serial port stuff */
 #include "sport.h"
 
 static inline int baud_mask(int baud) {
