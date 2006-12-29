@@ -43,6 +43,8 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	chn->reader = NULL;
 	return chn;
 fail:
+	free(chn->txbuf);
+	free(chn->rxbuf);
 	free(chn->name);
 	chn->name = NULL;
 	return NULL;
@@ -55,6 +57,8 @@ void channel_destroy(struct channel *chn) {
 	channel_close(chn);
 	buffer_destroy(chn->rxbuf);
 	buffer_destroy(chn->txbuf);
+	free(chn->rxbuf);
+	free(chn->txbuf);
 	free(chn->name);
 }
 
