@@ -16,30 +16,33 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 	return plr;
 }
 
-static void poller_register_events(struct poller *plr) {
-	int i;
-	struct channel *chn;
-
-	for(i = 0; i < plr->n_channels; i++) {
-		chn = plr->chns + i;
-		if(!channel_is_open(chn)) {
-			if(channel_is_waiting(chn) && channel_open(chn) < 0) {
-				channel_log(chn, strerror(errno));
-				channel_close(chn);
-			}
-		}
-		if(channel_is_open(chn)) {
-			plr->pollfds[i].fd = chn->fd;
-			plr->pollfds[i].events = POLLHUP | POLLERR;
-			if(channel_has_reader(chn))
-				plr->pollfds[i].events |= POLLIN;
-			if(!buffer_is_empty(chn->txbuf))
-				plr->pollfds[i].events |= POLLOUT;
-		} else {
-			plr->pollfds[i].fd = plr->fd_null;
-			plr->pollfds[i].events = 0;
+static inline void poller_register_channel(struct poller *plr,
+	struct channel *chn, struct pollfd *pfd)
+{
+	if(!channel_is_open(chn)) {
+		if(channel_is_waiting(chn) && channel_open(chn) < 0) {
+			channel_log(chn, strerror(errno));
+			channel_close(chn);
 		}
 	}
+	if(channel_is_open(chn)) {
+		pfd->fd = chn->fd;
+		pfd->events = POLLHUP | POLLERR;
+		if(channel_has_reader(chn))
+			pfd->events |= POLLIN;
+		if(!buffer_is_empty(chn->txbuf))
+			pfd->events |= POLLOUT;
+	} else {
+		pfd->fd = plr->fd_null;
+		pfd->events = 0;
+	}
+}
+
+static void poller_register_events(struct poller *plr) {
+	int i;
+
+	for(i = 0; i < plr->n_channels; i++)
+		poller_register_channel(plr, plr->chns + i, plr->pollfds + i);
 }
 
 static int poller_do_poll(struct poller *plr) {
