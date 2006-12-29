@@ -3,12 +3,11 @@
 #include <sys/errno.h>	/* for errno */
 #include "poller.h"
 
-
 struct poller *poller_init(struct poller *p, int n_channels,
-	struct channel *chn)
+	struct channel *chns)
 {
 	p->n_channels = n_channels;
-	p->chn = chn;
+	p->chns = chns;
 	p->pollfds = malloc(sizeof(struct pollfd) * n_channels);
 	if(p->pollfds == NULL)
 		return NULL;
@@ -22,7 +21,7 @@ static void poller_register_events(struct poller *p) {
 	struct channel *chn;
 
 	for(i = 0; i < p->n_channels; i++) {
-		chn = p->chn + i;
+		chn = p->chns + i;
 		if(!channel_is_open(chn)) {
 			if(channel_is_waiting(chn) && channel_open(chn) < 0) {
 				channel_log(chn, strerror(errno));
@@ -51,7 +50,7 @@ static int poller_do_poll(struct poller *p) {
 	if(poll(p->pollfds, p->n_channels, -1) < 0)
 		return -1;
 	for(i = 0; i < p->n_channels; i++) {
-		chn = p->chn + i;
+		chn = p->chns + i;
 		if(p->pollfds[i].revents & (POLLHUP | POLLERR)) {
 			channel_close(chn);
 			continue;
