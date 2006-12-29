@@ -1,13 +1,14 @@
-#include <assert.h>	/* for assert */
-#include <unistd.h>	/* for close */
-#include <string.h>	/* for bzero, strlen, strcpy */
-#include "channel.h"	/* for struct channel and prototypes */
+#include <assert.h>		/* for assert */
+#include <fcntl.h>		/* for open, O_RDWR, O_NOCTTY, O_NONBLOCK */
+#include <netdb.h>		/* for socket stuff */
+#include <netinet/tcp.h>	/* for TCP_NODELAY */
+#include <unistd.h>		/* for close */
+#include <string.h>		/* for bzero, strlen, strcpy */
+#include <strings.h>		/* for bcopy */
+#include <termios.h>		/* for serial port stuff */
+#include "channel.h"		/* for struct channel and prototypes */
 
 #define BUFFER_SIZE 256
-
-/* Define these prototypes here to avoid circular dependency */
-int sport_open(struct channel *chn);
-int tcp_open(struct channel *chn);
 
 /*
  * channel_init		Initialize a new I/O channel.
@@ -58,6 +59,84 @@ static inline bool channel_is_sport(const struct channel *chn) {
 	return chn->name[0] == '/';
 }
 
+static inline int channel_sport_baud_mask(int baud) {
+	switch(baud) {
+		case 1200:
+			return B1200;
+		case 2400:
+			return B2400;
+		case 4800:
+			return B4800;
+		case 9600:
+			return B9600;
+		case 19200:
+			return B19200;
+		case 38400:
+			return B38400;
+		default:
+			return -1;
+	}
+}
+
+static inline int channel_configure_sport(struct channel *chn) {
+	struct termios ttyset;
+
+	ttyset.c_iflag = 0;
+	ttyset.c_lflag = 0;
+	ttyset.c_oflag = 0;
+	ttyset.c_cflag = CREAD | CS8 | CLOCAL;
+	ttyset.c_cc[VMIN] = 0;
+	ttyset.c_cc[VTIME] = 1;
+
+	/* serial port baud rate stored in chn->extra parameter */
+	int b = channel_sport_baud_mask(chn->extra);
+	if(b < 0)
+		return -1;
+	if(cfsetispeed(&ttyset, b) < 0)
+		return -1;
+	if(cfsetospeed(&ttyset, b) < 0)
+		return -1;
+	if(tcsetattr(chn->fd, TCSAFLUSH, &ttyset) < 0)
+		return -1;
+	return 0;
+}
+
+static int channel_open_sport(struct channel *chn) {
+	chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
+	if(chn->fd < 0) {
+		chn->fd = 0;
+		return -1;
+	}
+	return channel_configure_sport(chn);
+}
+
+static int channel_open_tcp(struct channel *chn) {
+	struct hostent *host;
+	struct sockaddr_in sa;
+	int on = 1;	/* turn "on" values for setsockopt */
+
+	host = gethostbyname(chn->name);
+	if(host == NULL)
+		return -1;
+	chn->fd = socket(PF_INET, SOCK_STREAM, 0);
+	if(chn->fd < 0) {
+		chn->fd = 0;
+		return -1;
+	}
+	if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
+		return -1;
+	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
+		return -1;
+	sa.sin_family = AF_INET;
+	bcopy(host->h_addr, &sa.sin_addr.s_addr, host->h_length);
+	/* tcp port stored in chn->extra parameter */
+	sa.sin_port = htons(chn->extra);
+	if(connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
+		return -1;
+	else
+		return 0;
+}
+
 /*
  * channel_open		Open the I/O channel.
  *
@@ -67,9 +146,9 @@ int channel_open(struct channel *chn) {
 	assert(chn->fd == 0);
 	channel_log(chn, "opening");
 	if(channel_is_sport(chn))
-		return sport_open(chn);
+		return channel_open_sport(chn);
 	else
-		return tcp_open(chn);
+		return channel_open_tcp(chn);
 }
 
 /*
