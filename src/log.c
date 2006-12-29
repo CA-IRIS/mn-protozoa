@@ -58,28 +58,3 @@ void log_println(struct log *log, const char *format, ...) {
 	log_line_end(log);
 	va_end(va);
 }
-
-static void log_buffer(struct log *log, struct buffer *buf, const char *prefix,
-	const char *name, void *start)
-{
-	uint8_t *mess;
-	uint8_t *stop = buffer_next(buf);
-
-	log_line_start(log);
-	log_printf(log, prefix, name);
-	for(mess = start; mess < stop; mess++)
-		log_printf(log, " %02x", *mess);
-	log_line_end(log);
-}
-
-void log_buffer_in(struct log *log, struct buffer *buf, const char *name,
-	size_t n_bytes)
-{
-	if(log->debug)
-		log_buffer(log, buf, "%s  in:", name, buffer_next(buf)-n_bytes);
-}
-
-void log_buffer_out(struct log *log, struct buffer *buf, const char *name) {
-	if(log->debug)
-		log_buffer(log, buf, "%s out:", name, buffer_current(buf));
-}

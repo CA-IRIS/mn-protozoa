@@ -226,6 +226,48 @@ void channel_log(struct channel *chn, const char* msg) {
 }
 
 /*
+ * channel_log_buffer	Log buffer debug information.
+ *
+ * buf: buffer to debug
+ * prefix: prefix to print on the log message
+ * start: pointer to start of buffer debug information
+ */
+static void channel_log_buffer(struct channel *chn, struct buffer *buf,
+	const char *prefix, void *start)
+{
+	uint8_t *mess;
+	uint8_t *stop = buffer_next(buf);
+
+	log_line_start(chn->log);
+	log_printf(chn->log, prefix, chn->name);
+	for(mess = start; mess < stop; mess++)
+		log_printf(chn->log, " %02x", *mess);
+	log_line_end(chn->log);
+}
+
+/*
+ * channel_log_buffer_in	Log channel receive buffer information.
+ *
+ * n_bytes: number of bytes received
+ */
+static void channel_log_buffer_in(struct channel *chn, size_t n_bytes) {
+	if(chn->log->debug) {
+		channel_log_buffer(chn, &chn->rxbuf, "%s  in:",
+			buffer_next(&chn->rxbuf) - n_bytes);
+	}
+}
+
+/*
+ * channel_log_buffer_out	Log channel transmit buffer information.
+ */
+static void channel_log_buffer_out(struct channel *chn) {
+	if(chn->log->debug) {
+		channel_log_buffer(chn, &chn->txbuf, "%s out:",
+			buffer_current(&chn->txbuf));
+	}
+}
+
+/*
  * channel_read		Read from the I/O channel.
  *
  * return: number of bytes read; -1 on error
@@ -235,7 +277,7 @@ ssize_t channel_read(struct channel *chn) {
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(channel_has_reader(chn)) {
-		log_buffer_in(chn->log, &chn->rxbuf, chn->name, n_bytes);
+		channel_log_buffer_in(chn, n_bytes);
 		chn->reader->do_read(chn->reader, &chn->rxbuf);
 		return n_bytes;
 	} else {
@@ -252,6 +294,6 @@ ssize_t channel_read(struct channel *chn) {
  * return: number of bytes written; -1 on error
  */
 ssize_t channel_write(struct channel *chn) {
-	log_buffer_out(chn->log, &chn->txbuf, chn->name);
+	channel_log_buffer_out(chn);
 	return buffer_write(&chn->txbuf, chn->fd);
 }

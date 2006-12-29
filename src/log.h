@@ -19,8 +19,5 @@ void log_line_start(struct log *log);
 void log_line_end(struct log *log);
 void log_printf(struct log *log, const char *format, ...);
 void log_println(struct log *log, const char *format, ...);
-void log_buffer_in(struct log *log, struct buffer *buf, const char *name,
-	size_t n_bytes);
-void log_buffer_out(struct log *log, struct buffer *buf, const char *name);
 
 #endif
