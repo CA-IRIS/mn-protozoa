@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include "buffer.h"
 
 struct log {
 	FILE	*out;		/* output stream */
