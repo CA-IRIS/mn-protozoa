@@ -12,7 +12,7 @@ static unsigned int ccwriter_do_write(struct ccwriter *w, struct ccpacket *p) {
 static void ccwriter_init(struct ccwriter *w, struct channel *chn) {
 	w->do_write = ccwriter_do_write;
 	w->log = chn->log;
-	w->txbuf = &chn->txbuf;
+	w->txbuf = chn->txbuf;
 	w->base = 0;
 	w->range = 0;
 	w->next = NULL;
