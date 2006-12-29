@@ -59,6 +59,12 @@ static inline bool channel_is_sport(const struct channel *chn) {
 	return chn->name[0] == '/';
 }
 
+/*
+ * channel_sport_baud_mask	Get the baud mask for a baud rate.
+ *
+ * baud: baud rate to get the mask for
+ * return: baud mask
+ */
 static inline int channel_sport_baud_mask(int baud) {
 	switch(baud) {
 		case 1200:
@@ -78,6 +84,11 @@ static inline int channel_sport_baud_mask(int baud) {
 	}
 }
 
+/*
+ * channel_configure_sport	Configure a serial port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
 static inline int channel_configure_sport(struct channel *chn) {
 	struct termios ttyset;
 
@@ -101,6 +112,11 @@ static inline int channel_configure_sport(struct channel *chn) {
 	return 0;
 }
 
+/*
+ * channel_open_sport	Open a serial port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
 static int channel_open_sport(struct channel *chn) {
 	chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if(chn->fd < 0) {
@@ -110,6 +126,11 @@ static int channel_open_sport(struct channel *chn) {
 	return channel_configure_sport(chn);
 }
 
+/*
+ * channel_open_tcp	Open a tcp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
 static int channel_open_tcp(struct channel *chn) {
 	struct hostent *host;
 	struct sockaddr_in sa;
