@@ -16,7 +16,7 @@ struct config {
 	struct packet_counter *counter;
 };
 
-void config_init(struct config *c, const char *filename, struct log *log);
-int config_read(struct config *c);
+void config_init(struct config *cfg, const char *filename, struct log *log);
+int config_read(struct config *cfg);
 
 #endif
