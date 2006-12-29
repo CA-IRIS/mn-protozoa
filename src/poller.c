@@ -1,7 +1,7 @@
 #include <fcntl.h>	/* for open */
 #include <string.h>	/* for strerror */
 #include <sys/errno.h>	/* for errno */
-#include "poller.h"
+#include "poller.h"	/* for struct poller, prototypes */
 
 struct poller *poller_init(struct poller *plr, int n_channels,
 	struct channel *chns)
