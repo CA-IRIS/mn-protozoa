@@ -4,6 +4,11 @@
 #include <sys/time.h>	/* for gettimeofday */
 #include "log.h"	/* for struct log, prototypes */
 
+/*
+ * log_init		Initialize a new message log.
+ *
+ * return: pointer to struct log or NULL on failure
+ */
 struct log *log_init(struct log *log) {
 	log->out = stderr;
 	log->debug = false;
@@ -12,6 +17,12 @@ struct log *log_init(struct log *log) {
 	return log;
 }
 
+/*
+ * log_open_file	Open a message log file.
+ *
+ * filename: name of file to append messages
+ * return: pointer to struct log or NULL on failure
+ */
 struct log *log_open_file(struct log *log, const char *filename) {
 	FILE *out = fopen(filename, "a");
 	if(out) {
@@ -21,10 +32,16 @@ struct log *log_open_file(struct log *log, const char *filename) {
 		return NULL;
 }
 
+/*
+ * log_destroy		Destroy a previously initialized message log.
+ */
 void log_destroy(struct log *log) {
 	fclose(log->out);
 }
 
+/*
+ * log_line_start	Start a new line in the message log.
+ */
 void log_line_start(struct log *log) {
 	struct timeval tv;
 	struct timezone tz;
@@ -37,11 +54,20 @@ void log_line_start(struct log *log) {
 	fprintf(log->out, buf);
 }
 
+/*
+ * log_line_end		End the current line in the message log.
+ */
 void log_line_end(struct log *log) {
 	fprintf(log->out, "\n");
 	fflush(log->out);
 }
 
+/*
+ * log_printf		Print a message on the current line in the message log.
+ *
+ * format: printf format string
+ * ...: printf arguments
+ */
 void log_printf(struct log *log, const char *format, ...) {
 	va_list va;
 	va_start(va, format);
@@ -49,6 +75,12 @@ void log_printf(struct log *log, const char *format, ...) {
 	va_end(va);
 }
 
+/*
+ * log_println		Print a full message on a new line in the message log.
+ *
+ * format: printf format string
+ * ...: printf arguments
+ */
 void log_println(struct log *log, const char *format, ...) {
 	va_list va;
 	va_start(va, format);
