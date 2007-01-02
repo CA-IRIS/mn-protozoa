@@ -3,16 +3,25 @@
 #include "ccreader.h"
 #include "ccwriter.h"
 
-void config_init(struct config *cfg, struct log *log) {
+struct config *config_init(struct config *cfg, struct log *log) {
+	bzero(cfg, sizeof(struct config));
 	cfg->line = malloc(LINE_LENGTH);
+	if(cfg->line == NULL)
+		goto fail;
 	cfg->chns = NULL;
 	cfg->n_channels = 0;
 	cfg->log = log;
 	if(log->stats) {
 		cfg->counter = malloc(sizeof(struct packet_counter));
+		if(cfg->counter == NULL)
+			goto fail;
 		counter_init(cfg->counter, log);
 	} else
 		cfg->counter = NULL;
+	return cfg;
+fail:
+	free(cfg->line);
+	return NULL;
 }
 
 void config_destroy(struct config *cfg) {

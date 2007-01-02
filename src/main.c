@@ -38,7 +38,8 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	log_println(&log, BANNER);
-	config_init(&conf, &log);
+	if(config_init(&conf, &log) == NULL)
+		goto fail;
 	n_channels = config_read(&conf, CONF_FILE);
 	if(n_channels <= 0) {
 		log_println(&log, "Check configuration file: %s", CONF_FILE);
