@@ -46,7 +46,7 @@ fail:
 	free(chn->txbuf);
 	free(chn->rxbuf);
 	free(chn->name);
-	chn->name = NULL;
+	bzero(chn, sizeof(struct channel));
 	return NULL;
 }
 
@@ -60,6 +60,7 @@ void channel_destroy(struct channel *chn) {
 	free(chn->rxbuf);
 	free(chn->txbuf);
 	free(chn->name);
+	bzero(chn, sizeof(struct channel));
 }
 
 /*
