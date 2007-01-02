@@ -25,11 +25,15 @@ fail:
 }
 
 void config_destroy(struct config *cfg) {
-	free(cfg->counter);
+	int i;
+	for(i = 0; i < cfg->n_channels; i++)
+		channel_destroy(cfg->chns + i);
 	free(cfg->chns);
+	free(cfg->counter);
 	free(cfg->line);
-	cfg->counter = NULL;
+	cfg->n_channels = 0;
 	cfg->chns = NULL;
+	cfg->counter = NULL;
 	cfg->line = NULL;
 }
 
