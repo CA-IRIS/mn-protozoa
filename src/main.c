@@ -45,8 +45,9 @@ int main(int argc, char* argv[]) {
 		log_println(&log, "Check configuration file: %s", CONF_FILE);
 		goto fail;
 	}
-	if(poller_init(&poll, n_channels, conf.chns) == NULL)
+	if(poller_init(&poll, n_channels, config_take_channels(&conf)) == NULL)
 		goto fail;
+	config_destroy(&conf);
 	if(daemonize) {
 		if(daemon(0, 0) < 0)
 			goto fail;

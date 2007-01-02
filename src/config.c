@@ -50,7 +50,7 @@ static struct channel *config_new_channel(struct config *cfg, const char *name,
 {
 	struct channel *chn, *chns;
 
-	chns = realloc(cfg->chns, sizeof(struct channel) * cfg->n_channels + 1);
+	chns = realloc(cfg->chns, sizeof(struct channel) * (cfg->n_channels+1));
 	if(chns == NULL)
 		goto fail;
 	chn = chns + cfg->n_channels;
@@ -162,4 +162,11 @@ int config_read(struct config *cfg, const char *filename) {
 fail:
 	fclose(f);
 	return -1;
+}
+
+struct channel *config_take_channels(struct config *cfg) {
+	struct channel *chns = cfg->chns;
+	cfg->n_channels = 0;
+	cfg->chns = NULL;
+	return chns;
 }

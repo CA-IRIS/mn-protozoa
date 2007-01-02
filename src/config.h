@@ -17,5 +17,6 @@ struct config {
 struct config *config_init(struct config *cfg, struct log *log);
 void config_destroy(struct config *cfg);
 int config_read(struct config *cfg, const char *filename);
+struct channel *config_take_channels(struct config *cfg);
 
 #endif
