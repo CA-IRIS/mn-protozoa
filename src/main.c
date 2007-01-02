@@ -6,7 +6,7 @@
 #include "poller.h"
 
 #define VERSION "0.10"
-#define BANNER "protozoa: v" VERSION "  Copyright (C) 2006  Mn/DOT"
+#define BANNER "protozoa: v" VERSION "  Copyright (C) 2006,2007  Mn/DOT"
 
 static const char *CONF_FILE = "/etc/protozoa.conf";
 static const char *LOG_FILE = "/var/log/protozoa";
