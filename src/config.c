@@ -31,10 +31,7 @@ void config_destroy(struct config *cfg) {
 	free(cfg->chns);
 	free(cfg->counter);
 	free(cfg->line);
-	cfg->n_channels = 0;
-	cfg->chns = NULL;
-	cfg->counter = NULL;
-	cfg->line = NULL;
+	bzero(cfg, sizeof(struct config));
 }
 
 static struct channel *config_find_channel(struct config *cfg,
