@@ -13,10 +13,35 @@ static const char *LOG_FILE = "/var/log/protozoa";
 
 extern int errno;
 
+struct poller *create_poller(struct log *log) {
+	int n_channels;
+	struct config cfg;
+	struct poller *poll;
+
+	poll = malloc(sizeof(struct poller));
+	if(poll == NULL)
+		goto fail;
+	if(config_init(&cfg, log) == NULL)
+		goto fail;
+	n_channels = config_read(&cfg, CONF_FILE);
+	if(n_channels <= 0) {
+		log_println(log, "Check configuration file: %s", CONF_FILE);
+		goto fail_0;
+	}
+	if(poller_init(poll, n_channels, config_take_channels(&cfg)) == NULL)
+		goto fail_0;
+	config_destroy(&cfg);
+	return poll;
+fail_0:
+	config_destroy(&cfg);
+fail:
+	free(poll);
+	return NULL;
+}
+
 int main(int argc, char* argv[]) {
-	int n_channels, i;
-	struct config conf;
-	struct poller poll;
+	int i;
+	struct poller *poll;
 	struct log log;
 	bool daemonize = false;
 
@@ -38,21 +63,14 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	log_println(&log, BANNER);
-	if(config_init(&conf, &log) == NULL)
+	poll = create_poller(&log);
+	if(poll == NULL)
 		goto fail;
-	n_channels = config_read(&conf, CONF_FILE);
-	if(n_channels <= 0) {
-		log_println(&log, "Check configuration file: %s", CONF_FILE);
-		goto fail;
-	}
-	if(poller_init(&poll, n_channels, config_take_channels(&conf)) == NULL)
-		goto fail;
-	config_destroy(&conf);
 	if(daemonize) {
 		if(daemon(0, 0) < 0)
 			goto fail;
 	}
-	poller_loop(&poll);
+	poller_loop(poll);
 fail:
 	if(errno)
 		log_println(&log, "Error: %s", strerror(errno));
