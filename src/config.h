@@ -7,7 +7,6 @@
 #define LINE_LENGTH (80)
 
 struct config {
-	const char	*filename;
 	char		*line;
 	struct channel	*chns;
 	int		n_channels;
@@ -16,8 +15,8 @@ struct config {
 	struct packet_counter *counter;
 };
 
-void config_init(struct config *cfg, const char *filename, struct log *log);
+void config_init(struct config *cfg, struct log *log);
 void config_destroy(struct config *cfg);
-int config_read(struct config *cfg);
+int config_read(struct config *cfg, const char *filename);
 
 #endif

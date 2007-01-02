@@ -3,8 +3,7 @@
 #include "ccreader.h"
 #include "ccwriter.h"
 
-void config_init(struct config *cfg, const char *filename, struct log *log) {
-	cfg->filename = filename;
+void config_init(struct config *cfg, struct log *log) {
 	cfg->line = malloc(LINE_LENGTH);
 	cfg->chns = NULL;
 	cfg->n_channels = 0;
@@ -135,8 +134,8 @@ static int config_scan_directive(struct config *cfg) {
 	}
 }
 
-int config_read(struct config *cfg) {
-	FILE *f = fopen(cfg->filename, "r");
+int config_read(struct config *cfg, const char *filename) {
+	FILE *f = fopen(filename, "r");
 	if(f == NULL)
 		return -1;
 
@@ -147,7 +146,7 @@ int config_read(struct config *cfg) {
 	}
 	if(cfg->n_channels == 0) {
 		log_println(cfg->log, "Error reading configuration file: %s",
-			cfg->filename);
+			filename);
 	}
 	fclose(f);
 	return cfg->n_channels;
