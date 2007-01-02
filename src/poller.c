@@ -8,12 +8,13 @@
  * poller_init		Initialize a new I/O channel poller.
  *
  * n_channels: number of channels to poll
- * chns: array of channels
+ * chns: array of channels (poller takes ownership of memory)
  * return: pointer to struct poller or NULL on error
  */
 struct poller *poller_init(struct poller *plr, int n_channels,
 	struct channel *chns)
 {
+	bzero(plr, sizeof(struct poller));
 	plr->n_channels = n_channels;
 	plr->chns = chns;
 	plr->pollfds = malloc(sizeof(struct pollfd) * n_channels);
@@ -30,10 +31,8 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 void poller_destroy(struct poller *plr) {
 	close(plr->fd_null);
 	free(plr->pollfds);
-	plr->fd_null = 0;
-	plr->pollfds = NULL;
-	plr->chns = NULL;
-	plr->n_channels = 0;
+	free(plr->chns);
+	bzero(plr, sizeof(struct poller));
 }
 
 /*
