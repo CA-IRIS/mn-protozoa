@@ -11,7 +11,6 @@ struct config {
 	struct channel	*chns;
 	int		n_channels;
 	struct log	*log;
-	struct combiner *out;		/* most recent OUT combiner */
 	struct packet_counter *counter;
 };
 

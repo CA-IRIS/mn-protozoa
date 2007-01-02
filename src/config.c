@@ -8,7 +8,6 @@ void config_init(struct config *cfg, struct log *log) {
 	cfg->chns = NULL;
 	cfg->n_channels = 0;
 	cfg->log = log;
-	cfg->out = NULL;
 	if(log->stats) {
 		cfg->counter = malloc(sizeof(struct packet_counter));
 		counter_init(cfg->counter, log);
