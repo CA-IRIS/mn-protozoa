@@ -4,14 +4,14 @@
 #include "channel.h"
 #include "ccpacket.h"
 
-#define LINE_LENGTH (80)
+#define LINE_LENGTH (256)
 
 struct config {
-	char		*line;
-	struct channel	*chns;
-	int		n_channels;
-	struct log	*log;
-	struct packet_counter *counter;
+	char			*line;
+	struct channel		*chns;
+	int			n_channels;
+	struct log		*log;
+	struct packet_counter	*counter;
 };
 
 struct config *config_init(struct config *cfg, struct log *log);
