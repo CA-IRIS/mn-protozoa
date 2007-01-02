@@ -17,6 +17,15 @@ void config_init(struct config *cfg, const char *filename, struct log *log) {
 		cfg->counter = NULL;
 }
 
+void config_destroy(struct config *cfg) {
+	free(cfg->counter);
+	free(cfg->chns);
+	free(cfg->line);
+	cfg->counter = NULL;
+	cfg->chns = NULL;
+	cfg->line = NULL;
+}
+
 static struct channel *config_find_channel(struct config *cfg,
 	const char *name)
 {
@@ -31,19 +40,20 @@ static struct channel *config_find_channel(struct config *cfg,
 static struct channel *config_new_channel(struct config *cfg, const char *name,
 	int extra)
 {
-	struct channel *chn;
+	struct channel *chn, *chns;
+
+	chns = realloc(cfg->chns, sizeof(struct channel) * cfg->n_channels + 1);
+	if(chns == NULL)
+		goto fail;
+	chn = chns + cfg->n_channels;
+	if(channel_init(chn, name, extra, cfg->log) == NULL)
+		goto fail;
 	cfg->n_channels++;
-	cfg->chns = realloc(cfg->chns,
-		sizeof(struct channel) * cfg->n_channels);
-	if(cfg->chns == NULL)
-		return NULL;
-	chn = cfg->chns + (cfg->n_channels - 1);
-	if(channel_init(chn, name, extra, cfg->log) == NULL) {
-		channel_log(chn, "Initialization error");
-		cfg->n_channels--;
-		return NULL;
-	}
+	cfg->chns = chns;
 	return chn;
+fail:
+	log_println(cfg->log, "config: channel %s init error", name);
+	return NULL;
 }
 
 static struct channel *config_get_channel(struct config *cfg, const char *name,
