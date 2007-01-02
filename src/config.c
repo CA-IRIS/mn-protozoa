@@ -3,6 +3,12 @@
 #include "ccreader.h"
 #include "ccwriter.h"
 
+/*
+ * config_init		Initialize a new configuration reader.
+ *
+ * log: message logger
+ * return: pointer to struct config or NULL on error
+ */
 struct config *config_init(struct config *cfg, struct log *log) {
 	bzero(cfg, sizeof(struct config));
 	cfg->line = malloc(LINE_LENGTH);
@@ -24,6 +30,9 @@ fail:
 	return NULL;
 }
 
+/*
+ * config_destroy	Destroy a previously initialized config.
+ */
 void config_destroy(struct config *cfg) {
 	int i;
 	for(i = 0; i < cfg->n_channels; i++)
@@ -34,6 +43,12 @@ void config_destroy(struct config *cfg) {
 	bzero(cfg, sizeof(struct config));
 }
 
+/*
+ * config_find_channel	Find a configured channel by name.
+ *
+ * name: name of channel to find
+ * return: pointer to channel; or NULL if not found
+ */
 static struct channel *config_find_channel(struct config *cfg,
 	const char *name)
 {
@@ -45,6 +60,13 @@ static struct channel *config_find_channel(struct config *cfg,
 	return NULL;
 }
 
+/*
+ * config_new_channel	Create a new channel in the configuration.
+ *
+ * name: name of the channel
+ * extra: extra channel parameter (baud rate or tcp port)
+ * return: pointer to channel; or NULL on error
+ */
 static struct channel *config_new_channel(struct config *cfg, const char *name,
 	int extra)
 {
@@ -64,6 +86,13 @@ fail:
 	return NULL;
 }
 
+/*
+ * config_get_channel	Find an existing channel or create a new one.
+ *
+ * name: name of the channel
+ * extra: extra channel parameter (baud rate or tcp port)
+ * return: pointer to channel; or NULL on error
+ */
 static struct channel *config_get_channel(struct config *cfg, const char *name,
 	int extra)
 {
@@ -76,6 +105,19 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
 		return config_new_channel(cfg, name, extra);
 }
 
+/*
+ * config_directive	Process one configuration directive.
+ *
+ * protocol_in: input protocol
+ * port_in: input port name
+ * extra_in: input extra parameter
+ * protocol_out: output protocol
+ * port_out: output port name
+ * extra_out: output extra parameter
+ * base: receiver address translation base
+ * range: receiver address translation range
+ * return: 0 on success; -1 on error
+ */
 static int config_directive(struct config *cfg, const char *protocol_in,
 	const char *port_in, int extra_in, const char *protocol_out,
 	const char *port_out, int extra_out, int base, int range)
@@ -110,6 +152,9 @@ fail:
 	return -1;
 }
 
+/*
+ * config_skip_comments		Remove comments from the line being parsed.
+ */
 static void config_skip_comments(struct config *cfg) {
 	int i;
 	for(i = 0; i < LINE_LENGTH; i++) {
@@ -118,6 +163,11 @@ static void config_skip_comments(struct config *cfg) {
 	}
 }
 
+/*
+ * config_scan_directive	Parse one directive in the configuration.
+ *
+ * return: 0 on success; -1 on error
+ */
 static int config_scan_directive(struct config *cfg) {
 	int i;
 	char protocol_in[16], protocol_out[16];
@@ -143,6 +193,12 @@ static int config_scan_directive(struct config *cfg) {
 	}
 }
 
+/*
+ * config_read		Read the configuration file.
+ *
+ * filename: name of the configuration file
+ * return: number of channels created by the configuration
+ */
 int config_read(struct config *cfg, const char *filename) {
 	FILE *f = fopen(filename, "r");
 	if(f == NULL)
@@ -164,6 +220,11 @@ fail:
 	return -1;
 }
 
+/*
+ * config_take_channels		Take ownership of channel array memory.
+ *
+ * return: pointer to channel array
+ */
 struct channel *config_take_channels(struct config *cfg) {
 	struct channel *chns = cfg->chns;
 	cfg->n_channels = 0;
