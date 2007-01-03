@@ -2,6 +2,12 @@
 #include <strings.h>	/* for bzero */
 #include "ccpacket.h"
 
+/*
+ * packet_counter_init	Initialize a new packet counter.
+ *
+ * log: message logger
+ * return: pointer to packet counter
+ */
 struct packet_counter *packet_counter_init(struct packet_counter *cnt,
 	struct log *log)
 {
@@ -10,6 +16,12 @@ struct packet_counter *packet_counter_init(struct packet_counter *cnt,
 	return cnt;
 }
 
+/*
+ * packet_counter_new	Construct a new packet counter.
+ *
+ * log: message logger
+ * return: pointer to packet counter; NULL or error
+ */
 struct packet_counter *packet_counter_new(struct log *log) {
 	struct packet_counter *cnt = malloc(sizeof(struct packet_counter));
 	if(cnt == NULL)
@@ -17,6 +29,12 @@ struct packet_counter *packet_counter_new(struct log *log) {
 	return packet_counter_init(cnt, log);
 }
 
+/*
+ * packet_counter_print		Print packet counter statistics.
+ *
+ * stat: name of statistic to print
+ * count: count of the statistic
+ */
 static void packet_counter_print(const struct packet_counter *cnt,
 	const char *stat, long long count)
 {
@@ -24,6 +42,9 @@ static void packet_counter_print(const struct packet_counter *cnt,
 	log_println(cnt->log, "%10s: %10lld  %6.2f%%", stat, count, percent);
 }
 
+/*
+ * packet_counter_display	Display all packet counter statistics.
+ */
 static void packet_counter_display(const struct packet_counter *cnt) {
 	log_println(cnt->log, "protozoa statistics: %lld packets",
 		cnt->n_packets);
@@ -45,6 +66,11 @@ static void packet_counter_display(const struct packet_counter *cnt) {
 		packet_counter_print(cnt, "preset", cnt->n_preset);
 }
 
+/*
+ * packet_counter_count		Count one packet in the packet counter.
+ *
+ * pkt: packet to count
+ */
 static void packet_counter_count(struct packet_counter *cnt,
 	struct ccpacket *pkt)
 {
@@ -67,12 +93,18 @@ static void packet_counter_count(struct packet_counter *cnt,
 		packet_counter_display(cnt);
 }
 
+/*
+ * ccpacket_init	Initialize a new camera control packet.
+ */
 void ccpacket_init(struct ccpacket *pkt) {
 	pkt->counter = NULL;
 	pkt->n_packet = 0;
 	ccpacket_clear(pkt);
 }
 
+/*
+ * ccpacket_clear	Clear the camera control packet.
+ */
 void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->receiver = 0;
 	pkt->status = STATUS_NONE;
@@ -86,6 +118,11 @@ void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->preset = 0;
 }
 
+/*
+ * ccpacket_log_pan	Log any pan command in the camera control packet.
+ *
+ * log: message logger
+ */
 static inline void ccpacket_log_pan(struct ccpacket *pkt, struct log *log) {
 	if(pkt->pan == 0)
 		log_printf(log, " pan: 0");
@@ -95,6 +132,11 @@ static inline void ccpacket_log_pan(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " pan right: %d", pkt->pan);
 }
 
+/*
+ * ccpacket_log_tilt	Log any tilt command in the camera control packet.
+ *
+ * log: message logger
+ */
 static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
 	if(pkt->tilt == 0)
 		log_printf(log, " tilt: 0");
@@ -104,6 +146,11 @@ static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " tilt down: %d", pkt->tilt);
 }
 
+/*
+ * ccpacket_log_lens	Log any lens commands in the camera control packet.
+ *
+ * log: message logger
+ */
 static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
 	if(pkt->zoom)
 		log_printf(log, " zoom: %d", pkt->zoom);
@@ -113,6 +160,11 @@ static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " iris: %d", pkt->iris);
 }
 
+/*
+ * ccpacket_log_preset	Log any preset commands in the camera control packet.
+ *
+ * log: message logger
+ */
 static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
 	if(pkt->command & CC_RECALL)
 		log_printf(log, " recall");
@@ -123,6 +175,11 @@ static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
 	log_printf(log, " preset: %d", pkt->preset);
 }
 
+/*
+ * ccpacket_log_special	Log any special commands in the camera control packet.
+ *
+ * log: message logger
+ */
 static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 	if(pkt->command & CC_AUTO_IRIS)
 		log_printf(log, " auto-iris");
@@ -136,6 +193,11 @@ static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " ack-alarm");
 }
 
+/*
+ * ccpacket_log		Log the camera control packet.
+ *
+ * log: message logger
+ */
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
 	log_line_start(log);
 	log_printf(log, "packet: %lld %s rcv: %d", pkt->n_packet++, name,
@@ -153,11 +215,17 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
 	log_line_end(log);
 }
 
+/*
+ * ccpacket_count	Count the camera control packet statistics.
+ */
 void ccpacket_count(struct ccpacket *pkt) {
 	if(pkt->counter)
 		packet_counter_count(pkt->counter, pkt);
 }
 
+/*
+ * ccpacket_drop	Drop the camera control packet.
+ */
 void ccpacket_drop(struct ccpacket *pkt) {
 	if(pkt->counter) {
 		pkt->counter->n_dropped++;
