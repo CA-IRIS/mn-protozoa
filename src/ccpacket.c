@@ -1,20 +1,12 @@
-#include <stdlib.h>
+#include <stdlib.h>	/* for malloc */
+#include <strings.h>	/* for bzero */
 #include "ccpacket.h"
-#include "log.h"
 
 struct packet_counter *packet_counter_init(struct packet_counter *cnt,
 	struct log *log)
 {
+	bzero(cnt, sizeof(struct packet_counter));
 	cnt->log = log;
-	cnt->n_packets = 0;
-	cnt->n_dropped = 0;
-	cnt->n_status = 0;
-	cnt->n_pan = 0;
-	cnt->n_tilt = 0;
-	cnt->n_zoom = 0;
-	cnt->n_lens = 0;
-	cnt->n_aux = 0;
-	cnt->n_preset = 0;
 	return cnt;
 }
 
@@ -25,51 +17,54 @@ struct packet_counter *packet_counter_new(struct log *log) {
 	return packet_counter_init(cnt, log);
 }
 
-static void counter_print(const struct packet_counter *c, const char *stat,
-	long long count)
+static void packet_counter_print(const struct packet_counter *cnt,
+	const char *stat, long long count)
 {
-	float percent = 100 * (float)count / (float)c->n_packets;
-	log_println(c->log, "%10s: %10lld  %6.2f%%", stat, count, percent);
+	float percent = 100 * (float)count / (float)cnt->n_packets;
+	log_println(cnt->log, "%10s: %10lld  %6.2f%%", stat, count, percent);
 }
 
-static void counter_display(const struct packet_counter *c) {
-	log_println(c->log, "protozoa statistics: %lld packets", c->n_packets);
-	if(c->n_dropped)
-		counter_print(c, "dropped", c->n_dropped);
-	if(c->n_status)
-		counter_print(c, "status", c->n_status);
-	if(c->n_pan)
-		counter_print(c, "pan", c->n_pan);
-	if(c->n_tilt)
-		counter_print(c, "tilt", c->n_tilt);
-	if(c->n_zoom)
-		counter_print(c, "zoom", c->n_zoom);
-	if(c->n_lens)
-		counter_print(c, "lens", c->n_lens);
-	if(c->n_aux)
-		counter_print(c, "aux", c->n_aux);
-	if(c->n_preset)
-		counter_print(c, "preset", c->n_preset);
+static void packet_counter_display(const struct packet_counter *cnt) {
+	log_println(cnt->log, "protozoa statistics: %lld packets",
+		cnt->n_packets);
+	if(cnt->n_dropped)
+		packet_counter_print(cnt, "dropped", cnt->n_dropped);
+	if(cnt->n_status)
+		packet_counter_print(cnt, "status", cnt->n_status);
+	if(cnt->n_pan)
+		packet_counter_print(cnt, "pan", cnt->n_pan);
+	if(cnt->n_tilt)
+		packet_counter_print(cnt, "tilt", cnt->n_tilt);
+	if(cnt->n_zoom)
+		packet_counter_print(cnt, "zoom", cnt->n_zoom);
+	if(cnt->n_lens)
+		packet_counter_print(cnt, "lens", cnt->n_lens);
+	if(cnt->n_aux)
+		packet_counter_print(cnt, "aux", cnt->n_aux);
+	if(cnt->n_preset)
+		packet_counter_print(cnt, "preset", cnt->n_preset);
 }
 
-static void counter_count(struct packet_counter *c, struct ccpacket *p) {
-	c->n_packets++;
+static void packet_counter_count(struct packet_counter *cnt,
+	struct ccpacket *p)
+{
+	cnt->n_packets++;
 	if(p->status)
-		c->n_status++;
+		cnt->n_status++;
 	if(p->command & (CC_PAN_LEFT | CC_PAN_RIGHT) && p->pan)
-		c->n_pan++;
+		cnt->n_pan++;
 	if(p->command & (CC_TILT_UP | CC_TILT_DOWN) && p->tilt)
-		c->n_tilt++;
+		cnt->n_tilt++;
 	if(p->zoom)
-		c->n_zoom++;
+		cnt->n_zoom++;
 	if(p->focus | p->iris)
-		c->n_lens++;
+		cnt->n_lens++;
 	if(p->aux)
-		c->n_aux++;
+		cnt->n_aux++;
 	if(p->command & (CC_RECALL | CC_STORE))
-		c->n_preset++;
-	if((c->n_packets % 100) == 0)
-		counter_display(c);
+		cnt->n_preset++;
+	if((cnt->n_packets % 100) == 0)
+		packet_counter_display(cnt);
 }
 
 void ccpacket_clear(struct ccpacket *p) {
@@ -137,7 +132,7 @@ void ccpacket_log(struct ccpacket *p, struct log *log, const char *name) {
 
 void ccpacket_count(struct ccpacket *p) {
 	if(p->counter)
-		counter_count(p->counter, p);
+		packet_counter_count(p->counter, p);
 }
 
 void ccpacket_drop(struct ccpacket *p) {
