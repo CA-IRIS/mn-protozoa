@@ -46,98 +46,98 @@ static void packet_counter_display(const struct packet_counter *cnt) {
 }
 
 static void packet_counter_count(struct packet_counter *cnt,
-	struct ccpacket *p)
+	struct ccpacket *pkt)
 {
 	cnt->n_packets++;
-	if(p->status)
+	if(pkt->status)
 		cnt->n_status++;
-	if(p->command & (CC_PAN_LEFT | CC_PAN_RIGHT) && p->pan)
+	if(pkt->command & (CC_PAN_LEFT | CC_PAN_RIGHT) && pkt->pan)
 		cnt->n_pan++;
-	if(p->command & (CC_TILT_UP | CC_TILT_DOWN) && p->tilt)
+	if(pkt->command & (CC_TILT_UP | CC_TILT_DOWN) && pkt->tilt)
 		cnt->n_tilt++;
-	if(p->zoom)
+	if(pkt->zoom)
 		cnt->n_zoom++;
-	if(p->focus | p->iris)
+	if(pkt->focus | pkt->iris)
 		cnt->n_lens++;
-	if(p->aux)
+	if(pkt->aux)
 		cnt->n_aux++;
-	if(p->command & (CC_RECALL | CC_STORE))
+	if(pkt->command & (CC_RECALL | CC_STORE))
 		cnt->n_preset++;
 	if((cnt->n_packets % 100) == 0)
 		packet_counter_display(cnt);
 }
 
-void ccpacket_clear(struct ccpacket *p) {
-	p->receiver = 0;
-	p->status = STATUS_NONE;
-	p->command = 0;
-	p->pan = 0;
-	p->tilt = 0;
-	p->zoom = ZOOM_NONE;
-	p->focus = FOCUS_NONE;
-	p->iris = IRIS_NONE;
-	p->aux = 0;
-	p->preset = 0;
+void ccpacket_clear(struct ccpacket *pkt) {
+	pkt->receiver = 0;
+	pkt->status = STATUS_NONE;
+	pkt->command = 0;
+	pkt->pan = 0;
+	pkt->tilt = 0;
+	pkt->zoom = ZOOM_NONE;
+	pkt->focus = FOCUS_NONE;
+	pkt->iris = IRIS_NONE;
+	pkt->aux = 0;
+	pkt->preset = 0;
 }
 
-void ccpacket_init(struct ccpacket *p) {
-	p->counter = NULL;
-	p->n_packet = 0;
-	ccpacket_clear(p);
+void ccpacket_init(struct ccpacket *pkt) {
+	pkt->counter = NULL;
+	pkt->n_packet = 0;
+	ccpacket_clear(pkt);
 }
 
-void ccpacket_log(struct ccpacket *p, struct log *log, const char *name) {
+void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
 	log_line_start(log);
-	log_printf(log, "packet: %lld %s rcv: %d", p->n_packet++, name,
-		p->receiver);
-	if(p->status)
-		log_printf(log, " status: %d", p->status);
-	if(p->command & CC_PAN_LEFT)
-		log_printf(log, " pan left: %d", p->pan);
-	else if(p->command & CC_PAN_RIGHT)
-		log_printf(log, " pan right: %d", p->pan);
-	if(p->command & CC_TILT_UP)
-		log_printf(log, " tilt up: %d", p->tilt);
-	else if(p->command & CC_TILT_DOWN)
-		log_printf(log, " tilt down: %d", p->tilt);
-	if(p->zoom)
-		log_printf(log, " zoom: %d", p->zoom);
-	if(p->focus)
-		log_printf(log, " focus: %d", p->focus);
-	if(p->iris)
-		log_printf(log, " iris: %d", p->iris);
-	if(p->aux)
-		log_printf(log, " aux: %d", p->aux);
-	if(p->preset) {
-		if(p->command & CC_RECALL)
+	log_printf(log, "packet: %lld %s rcv: %d", pkt->n_packet++, name,
+		pkt->receiver);
+	if(pkt->status)
+		log_printf(log, " status: %d", pkt->status);
+	if(pkt->command & CC_PAN_LEFT)
+		log_printf(log, " pan left: %d", pkt->pan);
+	else if(pkt->command & CC_PAN_RIGHT)
+		log_printf(log, " pan right: %d", pkt->pan);
+	if(pkt->command & CC_TILT_UP)
+		log_printf(log, " tilt up: %d", pkt->tilt);
+	else if(pkt->command & CC_TILT_DOWN)
+		log_printf(log, " tilt down: %d", pkt->tilt);
+	if(pkt->zoom)
+		log_printf(log, " zoom: %d", pkt->zoom);
+	if(pkt->focus)
+		log_printf(log, " focus: %d", pkt->focus);
+	if(pkt->iris)
+		log_printf(log, " iris: %d", pkt->iris);
+	if(pkt->aux)
+		log_printf(log, " aux: %d", pkt->aux);
+	if(pkt->preset) {
+		if(pkt->command & CC_RECALL)
 			log_printf(log, " recall");
-		else if(p->command & CC_STORE)
+		else if(pkt->command & CC_STORE)
 			log_printf(log, " store");
-		else if(p->command & CC_CLEAR)
+		else if(pkt->command & CC_CLEAR)
 			log_printf(log, " clear");
-		log_printf(log, " preset: %d", p->preset);
+		log_printf(log, " preset: %d", pkt->preset);
 	}
-	if(p->command & CC_AUTO_IRIS)
+	if(pkt->command & CC_AUTO_IRIS)
 		log_printf(log, " auto-iris");
-	if(p->command & CC_AUTO_PAN)
+	if(pkt->command & CC_AUTO_PAN)
 		log_printf(log, " auto-pan");
-	if(p->command & CC_MANUAL_PAN)
+	if(pkt->command & CC_MANUAL_PAN)
 		log_printf(log, " manual-pan");
-	if(p->command & CC_LENS_SPEED)
+	if(pkt->command & CC_LENS_SPEED)
 		log_printf(log, " lens-speed");
-	if(p->command & CC_ACK_ALARM)
+	if(pkt->command & CC_ACK_ALARM)
 		log_printf(log, " ack-alarm");
 	log_line_end(log);
 }
 
-void ccpacket_count(struct ccpacket *p) {
-	if(p->counter)
-		packet_counter_count(p->counter, p);
+void ccpacket_count(struct ccpacket *pkt) {
+	if(pkt->counter)
+		packet_counter_count(pkt->counter, pkt);
 }
 
-void ccpacket_drop(struct ccpacket *p) {
-	if(p->counter) {
-		p->counter->n_dropped++;
-		ccpacket_count(p);
+void ccpacket_drop(struct ccpacket *pkt) {
+	if(pkt->counter) {
+		pkt->counter->n_dropped++;
+		ccpacket_count(pkt);
 	}
 }

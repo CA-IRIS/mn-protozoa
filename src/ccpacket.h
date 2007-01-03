@@ -102,10 +102,10 @@ struct ccpacket {
 	struct packet_counter *counter;	/* packet counter */
 };
 
-void ccpacket_init(struct ccpacket *p);
-void ccpacket_clear(struct ccpacket *p);
-void ccpacket_log(struct ccpacket *p, struct log *log, const char *name);
-void ccpacket_count(struct ccpacket *p);
-void ccpacket_drop(struct ccpacket *p);
+void ccpacket_init(struct ccpacket *pkt);
+void ccpacket_clear(struct ccpacket *pkt);
+void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name);
+void ccpacket_count(struct ccpacket *pkt);
+void ccpacket_drop(struct ccpacket *pkt);
 
 #endif
