@@ -61,10 +61,10 @@ fail:
 	return NULL;
 }
 
-void ccwriter_set_receiver(const struct ccwriter *wtr, struct ccpacket *pkt) {
-	pkt->receiver += wtr->base;
-	if(pkt->receiver < 0)
-		pkt->receiver = 0;
-	if((wtr->range > 0) && (pkt->receiver > wtr->range))
-		pkt->receiver = 0;
+int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver) {
+	receiver += wtr->base;
+	if((receiver < 0) || ((wtr->range > 0) && (receiver > wtr->range)))
+		return 0;
+	else
+		return receiver;
 }

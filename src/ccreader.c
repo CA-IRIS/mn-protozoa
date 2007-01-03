@@ -39,11 +39,11 @@ static inline unsigned int ccreader_do_writers(struct ccreader *r) {
 	unsigned int res = 0;
 	const int receiver = r->packet.receiver; /* save "true" receiver */
 	while(w) {
-		ccwriter_set_receiver(w, &r->packet);
+		r->packet.receiver = ccwriter_get_receiver(w, receiver);
 		res += w->do_write(w, &r->packet);
-		r->packet.receiver = receiver;  /* restore "true" receiver */
 		w = w->next;
 	}
+	r->packet.receiver = receiver;  /* restore "true" receiver */
 	if(res && r->log->packet)
 		ccpacket_log(&r->packet, r->log, r->name);
 	return res;
