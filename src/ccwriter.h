@@ -2,8 +2,8 @@
 #define __CCWRITER_H__
 
 #include <stdint.h>	/* for uint8_t */
-#include "ccpacket.h"
-#include "channel.h"
+#include "ccpacket.h"	/* for struct ccpacket */
+#include "channel.h"	/* for struct channel */
 
 struct ccwriter {
 	unsigned int (*do_write) (struct ccwriter *wtr, struct ccpacket *pkt);
