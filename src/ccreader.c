@@ -29,8 +29,8 @@ void ccreader_init(struct ccreader *rdr, struct log *log) {
 	rdr->log = log;
 }
 
-struct ccreader *ccreader_new(const char *name, const char *protocol,
-	struct log *log)
+struct ccreader *ccreader_new(const char *name, struct log *log,
+	const char *protocol)
 {
 	struct ccreader *rdr = malloc(sizeof(struct ccreader));
 	if(rdr == NULL)
