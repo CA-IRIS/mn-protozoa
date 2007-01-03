@@ -6,7 +6,8 @@
 /*
  * config_init		Initialize a new configuration reader.
  *
- * log: message logger
+ * log: message logger (borrowed reference)
+ * cnt: packet counter (borrowed reference)
  * return: pointer to struct config or NULL on error
  */
 struct config *config_init(struct config *cfg, struct log *log,
@@ -15,15 +16,10 @@ struct config *config_init(struct config *cfg, struct log *log,
 	bzero(cfg, sizeof(struct config));
 	cfg->line = malloc(LINE_LENGTH);
 	if(cfg->line == NULL)
-		goto fail;
-	cfg->chns = NULL;
-	cfg->n_channels = 0;
+		return NULL;
 	cfg->log = log;
 	cfg->counter = cnt;
 	return cfg;
-fail:
-	free(cfg->line);
-	return NULL;
 }
 
 /*
