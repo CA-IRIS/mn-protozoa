@@ -5,32 +5,6 @@
 #include "vicon.h"
 
 /*
- * ccwriter_do_write	Stub function for camera control writers.
- *
- * pkt: camera control packet to write
- */
-static unsigned int ccwriter_do_write(struct ccwriter *wtr,
-	struct ccpacket *pkt)
-{
-	/* Do nothing */
-	return 0;
-}
-
-/*
- * ccwriter_init	Initialize a new camera control writer.
- *
- * chn: channel to write camera control output
- */
-static void ccwriter_init(struct ccwriter *wtr, struct channel *chn) {
-	wtr->do_write = ccwriter_do_write;
-	wtr->log = chn->log;
-	wtr->txbuf = chn->txbuf;
-	wtr->base = 0;
-	wtr->range = 0;
-	wtr->next = NULL;
-}
-
-/*
  * ccwriter_set_protocol	Set protocol of the camera control writer.
  *
  * protocol: protocol name
@@ -51,6 +25,29 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 }
 
 /*
+ * ccwriter_init	Initialize a new camera control writer.
+ *
+ * chn: channel to write camera control output
+ * protocol: protocol name
+ * base: base receiver address for output
+ * range: range of receiver addresses for output
+ * return: pointer to struct ccwriter on success; NULL on error
+ */
+static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
+	const char *protocol, int base, int range)
+{
+	wtr->log = chn->log;
+	wtr->txbuf = chn->txbuf;
+	wtr->base = base;
+	wtr->range = range;
+	wtr->next = NULL;
+	if(ccwriter_set_protocol(wtr, protocol) < 0)
+		return NULL;
+	else
+		return wtr;
+}
+
+/*
  * ccwriter_new		Construct a new camera control writer.
  *
  * chn: channel to write camera control output
@@ -65,11 +62,8 @@ struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
 	struct ccwriter *wtr = malloc(sizeof(struct ccwriter));
 	if(wtr == NULL)
 		return NULL;
-	ccwriter_init(wtr, chn);
-	if(ccwriter_set_protocol(wtr, protocol) < 0)
+	if(ccwriter_init(wtr, chn, protocol, base, range) == NULL)
 		goto fail;
-	wtr->base = base;
-	wtr->range = range;
 	return wtr;
 fail:
 	free(wtr);
