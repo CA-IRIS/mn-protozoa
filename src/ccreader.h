@@ -15,7 +15,7 @@ struct ccreader {
 	struct	ccpacket	packet;		/* camera control packet */
 	struct	ccwriter	*writer;	/* head of writer list */
 	const char		*name;		/* channel name */
-	struct	log		*log;		/* log file */
+	struct	log		*log;		/* message logger */
 };
 
 struct ccreader *ccreader_new(const char *name, struct log *log,

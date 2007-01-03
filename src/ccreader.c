@@ -18,15 +18,16 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	return 0;
 }
 
-static void ccreader_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
-	/* Do nothing */
-}
-
-void ccreader_init(struct ccreader *rdr, struct log *log) {
-	rdr->do_read = ccreader_do_read;
+static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
+	const char *protocol)
+{
 	ccpacket_init(&rdr->packet);
 	rdr->writer = NULL;
 	rdr->log = log;
+	if(ccreader_set_protocol(rdr, protocol) < 0)
+		return NULL;
+	else
+		return rdr;
 }
 
 struct ccreader *ccreader_new(const char *name, struct log *log,
@@ -35,8 +36,7 @@ struct ccreader *ccreader_new(const char *name, struct log *log,
 	struct ccreader *rdr = malloc(sizeof(struct ccreader));
 	if(rdr == NULL)
 		return NULL;
-	ccreader_init(rdr, log);
-	if(ccreader_set_protocol(rdr, protocol) < 0)
+	if(ccreader_init(rdr, log, protocol) == NULL)
 		goto fail;
 	rdr->name = name;
 	return rdr;
