@@ -11,7 +11,7 @@ struct ccwriter {
 	struct	buffer		*txbuf;		/* transmit buffer */
 	int			base;		/* receiver address base */
 	int			range;		/* receiver address range */
-	struct	ccwriter	*next;
+	struct	ccwriter	*next;		/* next writer in the list */
 };
 
 uint8_t *ccwriter_append(struct ccwriter *w, size_t n_bytes);

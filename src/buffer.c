@@ -137,10 +137,8 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
  */
 void *buffer_append(struct buffer *buf, size_t n_bytes) {
 	void *pin = buf->pin;
-	if(buffer_space(buf) < n_bytes) {
-		errno = ENOBUFS;
+	if(buffer_space(buf) < n_bytes)
 		return NULL;
-	}
 	buf->pin += n_bytes;
 	return pin;
 }
