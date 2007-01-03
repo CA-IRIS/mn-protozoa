@@ -6,7 +6,7 @@
 #include "channel.h"
 
 struct ccwriter {
-	unsigned int (*do_write) (struct ccwriter *w, struct ccpacket *p);
+	unsigned int (*do_write) (struct ccwriter *wtr, struct ccpacket *pkt);
 	struct	log		*log;		/* message logger */
 	struct	buffer		*txbuf;		/* transmit buffer */
 	int			base;		/* receiver address base */
@@ -14,9 +14,9 @@ struct ccwriter {
 	struct	ccwriter	*next;		/* next writer in the list */
 };
 
-uint8_t *ccwriter_append(struct ccwriter *w, size_t n_bytes);
+uint8_t *ccwriter_append(struct ccwriter *wtr, size_t n_bytes);
 struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
 	int base, int range);
-void ccwriter_set_receiver(const struct ccwriter *w, struct ccpacket *p);
+void ccwriter_set_receiver(const struct ccwriter *wtr, struct ccpacket *pkt);
 
 #endif
