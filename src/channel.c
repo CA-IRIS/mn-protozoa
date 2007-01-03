@@ -276,7 +276,7 @@ static void channel_log_buffer_in(struct channel *chn, size_t n_bytes) {
 static void channel_log_buffer_out(struct channel *chn) {
 	if(chn->log->debug) {
 		channel_log_buffer(chn, chn->txbuf, "%s out:",
-			buffer_current(chn->txbuf));
+			buffer_output(chn->txbuf));
 	}
 }
 

@@ -153,18 +153,18 @@ inline void *buffer_input(struct buffer *buf) {
 }
 
 /*
- * buffer_current	Get the current position in the I/O buffer.
+ * buffer_output	Get the output position in the I/O buffer.
  *
- * return: borrowed pointer to the current buffer position
+ * return: borrowed pointer to the output buffer position
  */
-inline void *buffer_current(struct buffer *buf) {
+inline void *buffer_output(struct buffer *buf) {
 	return buf->pout;
 }
 
 /*
  * buffer_consume	Consume data from the I/O buffer.
  *
- * n_bytes: number of bytes to consume from the current position
+ * n_bytes: number of bytes to consume from the output position
  */
 void buffer_consume(struct buffer *buf, size_t n_bytes) {
 	buf->pout += n_bytes;

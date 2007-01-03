@@ -207,7 +207,7 @@ static inline void manchester_decode_packet(struct ccreader *r, uint8_t *mess) {
 static inline enum decode_t manchester_read_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
-	uint8_t *mess = buffer_current(rxbuf);
+	uint8_t *mess = buffer_output(rxbuf);
 	if((mess[0] & FLAG) == 0) {
 		log_println(r->log, "Manchester: unexpected byte %02X",
 			mess[0]);

@@ -206,7 +206,7 @@ static inline bool checksum_invalid(uint8_t *mess) {
 static inline enum decode_t pelco_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
-	uint8_t *mess = buffer_current(rxbuf);
+	uint8_t *mess = buffer_output(rxbuf);
 	if(mess[0] != FLAG) {
 		log_println(r->log, "Pelco(D): unexpected byte %02X", mess[0]);
 		buffer_consume(rxbuf, 1);

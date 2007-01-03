@@ -213,7 +213,7 @@ static inline enum decode_t vicon_decode_status(struct ccreader *r,
 static inline enum decode_t vicon_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
-	uint8_t *mess = buffer_current(rxbuf);
+	uint8_t *mess = buffer_output(rxbuf);
 	if((mess[0] & FLAG) == 0) {
 		log_println(r->log, "Vicon: unexpected byte %02X", mess[0]);
 		buffer_consume(rxbuf, 1);
