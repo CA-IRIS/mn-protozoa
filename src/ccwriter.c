@@ -1,4 +1,4 @@
-#include <strings.h>
+#include <strings.h>		/* for strcasecmp */
 #include "ccwriter.h"
 #include "manchester.h"
 #include "pelco_d.h"
