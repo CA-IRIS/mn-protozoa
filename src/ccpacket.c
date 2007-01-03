@@ -67,6 +67,12 @@ static void packet_counter_count(struct packet_counter *cnt,
 		packet_counter_display(cnt);
 }
 
+void ccpacket_init(struct ccpacket *pkt) {
+	pkt->counter = NULL;
+	pkt->n_packet = 0;
+	ccpacket_clear(pkt);
+}
+
 void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->receiver = 0;
 	pkt->status = STATUS_NONE;
@@ -78,12 +84,6 @@ void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->iris = IRIS_NONE;
 	pkt->aux = 0;
 	pkt->preset = 0;
-}
-
-void ccpacket_init(struct ccpacket *pkt) {
-	pkt->counter = NULL;
-	pkt->n_packet = 0;
-	ccpacket_clear(pkt);
 }
 
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
