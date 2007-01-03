@@ -133,7 +133,7 @@ ssize_t buffer_write(struct buffer *buf, int fd) {
  * buffer_append	Append data to the I/O buffer.
  *
  * n_bytes: number of bytes to append
- * return: pointer to the appended data, or NULL on error
+ * return: borrowed pointer to the appended data, or NULL on error
  */
 void *buffer_append(struct buffer *buf, size_t n_bytes) {
 	void *pin = buf->pin;
@@ -148,7 +148,7 @@ void *buffer_append(struct buffer *buf, size_t n_bytes) {
 /*
  * buffer_next		Get the next position in the I/O buffer.
  *
- * return: pointer to the next buffer position
+ * return: borrowed pointer to the next buffer position
  */
 inline void *buffer_next(struct buffer *buf) {
 	return buf->pin;
@@ -157,7 +157,7 @@ inline void *buffer_next(struct buffer *buf) {
 /*
  * buffer_current	Get the current position in the I/O buffer.
  *
- * return: pointer to the current buffer position
+ * return: borrowed pointer to the current buffer position
  */
 inline void *buffer_current(struct buffer *buf) {
 	return buf->pout;
