@@ -35,34 +35,36 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 }
 
 static inline unsigned int ccreader_do_writers(struct ccreader *rdr) {
-	struct ccwriter *wtr = rdr->writer;
 	unsigned int res = 0;
-	const int receiver = rdr->packet.receiver; /* save "true" receiver */
+	struct ccpacket *pkt = &rdr->packet;
+	const int receiver = pkt->receiver;	/* save "true" receiver */
+	struct ccwriter *wtr = rdr->writer;
 	while(wtr) {
-		rdr->packet.receiver = ccwriter_get_receiver(wtr, receiver);
-		res += wtr->do_write(wtr, &rdr->packet);
+		pkt->receiver = ccwriter_get_receiver(wtr, receiver);
+		res += wtr->do_write(wtr, pkt);
 		wtr = wtr->next;
 	}
-	rdr->packet.receiver = receiver;  /* restore "true" receiver */
+	pkt->receiver = receiver;	/* restore "true" receiver */
 	if(res && rdr->log->packet)
-		ccpacket_log(&rdr->packet, rdr->log, rdr->name);
+		ccpacket_log(pkt, rdr->log, rdr->name);
 	return res;
 }
 
 unsigned int ccreader_process_packet(struct ccreader *rdr) {
+	struct ccpacket *pkt = &rdr->packet;
 	unsigned int res = 0;
-	if(rdr->packet.receiver == 0)
+	if(pkt->receiver == 0)
 		return 0;	/* Ignore if receiver is zero */
-	else if(rdr->packet.status)
-		ccpacket_drop(&rdr->packet);
+	else if(pkt->status)
+		ccpacket_drop(pkt);
 	else {
 		res = ccreader_do_writers(rdr);
 		if(res)
-			ccpacket_count(&rdr->packet);
+			ccpacket_count(pkt);
 		else
-			ccpacket_drop(&rdr->packet);
+			ccpacket_drop(pkt);
 	}
-	ccpacket_clear(&rdr->packet);
+	ccpacket_clear(pkt);
 	return res;
 }
 
