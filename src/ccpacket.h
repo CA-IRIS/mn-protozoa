@@ -16,6 +16,10 @@ struct packet_counter {
 	long long	n_preset;	/* count of preset packets */
 };
 
+struct packet_counter *packet_counter_init(struct packet_counter *cnt,
+	struct log *log);
+struct packet_counter *packet_counter_new(struct log *log);
+
 enum status_t {
 	STATUS_NONE = 0,
 	STATUS_REQUEST = 1 << 0,
@@ -98,7 +102,6 @@ struct ccpacket {
 	struct packet_counter *counter;	/* packet counter */
 };
 
-void counter_init(struct packet_counter *c, struct log *log);
 void ccpacket_init(struct ccpacket *p);
 void ccpacket_clear(struct ccpacket *p);
 void ccpacket_log(struct ccpacket *p, struct log *log, const char *name);

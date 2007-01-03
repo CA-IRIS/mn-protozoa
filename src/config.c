@@ -9,7 +9,9 @@
  * log: message logger
  * return: pointer to struct config or NULL on error
  */
-struct config *config_init(struct config *cfg, struct log *log) {
+struct config *config_init(struct config *cfg, struct log *log,
+	struct packet_counter *cnt)
+{
 	bzero(cfg, sizeof(struct config));
 	cfg->line = malloc(LINE_LENGTH);
 	if(cfg->line == NULL)
@@ -17,13 +19,7 @@ struct config *config_init(struct config *cfg, struct log *log) {
 	cfg->chns = NULL;
 	cfg->n_channels = 0;
 	cfg->log = log;
-	if(log->stats) {
-		cfg->counter = malloc(sizeof(struct packet_counter));
-		if(cfg->counter == NULL)
-			goto fail;
-		counter_init(cfg->counter, log);
-	} else
-		cfg->counter = NULL;
+	cfg->counter = cnt;
 	return cfg;
 fail:
 	free(cfg->line);
@@ -38,7 +34,6 @@ void config_destroy(struct config *cfg) {
 	for(i = 0; i < cfg->n_channels; i++)
 		channel_destroy(cfg->chns + i);
 	free(cfg->chns);
-	free(cfg->counter);
 	free(cfg->line);
 	bzero(cfg, sizeof(struct config));
 }

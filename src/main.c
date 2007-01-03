@@ -17,11 +17,16 @@ struct poller *create_poller(struct log *log) {
 	int n_channels;
 	struct config cfg;
 	struct poller *poll;
+	struct packet_counter *cnt;
 
 	poll = malloc(sizeof(struct poller));
 	if(poll == NULL)
 		goto fail;
-	if(config_init(&cfg, log) == NULL)
+	if(log->stats)
+		cnt = packet_counter_new(log);
+	else
+		cnt = NULL;
+	if(config_init(&cfg, log, cnt) == NULL)
 		goto fail;
 	n_channels = config_read(&cfg, CONF_FILE);
 	if(n_channels <= 0) {

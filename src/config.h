@@ -14,7 +14,8 @@ struct config {
 	struct packet_counter	*counter;
 };
 
-struct config *config_init(struct config *cfg, struct log *log);
+struct config *config_init(struct config *cfg, struct log *log,
+	struct packet_counter *cnt);
 void config_destroy(struct config *cfg);
 int config_read(struct config *cfg, const char *filename);
 struct channel *config_take_channels(struct config *cfg);

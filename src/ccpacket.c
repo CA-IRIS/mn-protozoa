@@ -1,17 +1,28 @@
+#include <stdlib.h>
 #include "ccpacket.h"
 #include "log.h"
 
-void counter_init(struct packet_counter *c, struct log *log) {
-	c->log = log;
-	c->n_packets = 0;
-	c->n_dropped = 0;
-	c->n_status = 0;
-	c->n_pan = 0;
-	c->n_tilt = 0;
-	c->n_zoom = 0;
-	c->n_lens = 0;
-	c->n_aux = 0;
-	c->n_preset = 0;
+struct packet_counter *packet_counter_init(struct packet_counter *cnt,
+	struct log *log)
+{
+	cnt->log = log;
+	cnt->n_packets = 0;
+	cnt->n_dropped = 0;
+	cnt->n_status = 0;
+	cnt->n_pan = 0;
+	cnt->n_tilt = 0;
+	cnt->n_zoom = 0;
+	cnt->n_lens = 0;
+	cnt->n_aux = 0;
+	cnt->n_preset = 0;
+	return cnt;
+}
+
+struct packet_counter *packet_counter_new(struct log *log) {
+	struct packet_counter *cnt = malloc(sizeof(struct packet_counter));
+	if(cnt == NULL)
+		return NULL;
+	return packet_counter_init(cnt, log);
 }
 
 static void counter_print(const struct packet_counter *c, const char *stat,
