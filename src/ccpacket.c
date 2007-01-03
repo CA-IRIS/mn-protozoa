@@ -86,37 +86,44 @@ void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->preset = 0;
 }
 
-void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
-	log_line_start(log);
-	log_printf(log, "packet: %lld %s rcv: %d", pkt->n_packet++, name,
-		pkt->receiver);
-	if(pkt->status)
-		log_printf(log, " status: %d", pkt->status);
-	if(pkt->command & CC_PAN_LEFT)
+static inline void ccpacket_log_pan(struct ccpacket *pkt, struct log *log) {
+	if(pkt->pan == 0)
+		log_printf(log, " pan: 0");
+	else if(pkt->command & CC_PAN_LEFT)
 		log_printf(log, " pan left: %d", pkt->pan);
 	else if(pkt->command & CC_PAN_RIGHT)
 		log_printf(log, " pan right: %d", pkt->pan);
-	if(pkt->command & CC_TILT_UP)
+}
+
+static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
+	if(pkt->tilt == 0)
+		log_printf(log, " tilt: 0");
+	else if(pkt->command & CC_TILT_UP)
 		log_printf(log, " tilt up: %d", pkt->tilt);
 	else if(pkt->command & CC_TILT_DOWN)
 		log_printf(log, " tilt down: %d", pkt->tilt);
+}
+
+static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
 	if(pkt->zoom)
 		log_printf(log, " zoom: %d", pkt->zoom);
 	if(pkt->focus)
 		log_printf(log, " focus: %d", pkt->focus);
 	if(pkt->iris)
 		log_printf(log, " iris: %d", pkt->iris);
-	if(pkt->aux)
-		log_printf(log, " aux: %d", pkt->aux);
-	if(pkt->preset) {
-		if(pkt->command & CC_RECALL)
-			log_printf(log, " recall");
-		else if(pkt->command & CC_STORE)
-			log_printf(log, " store");
-		else if(pkt->command & CC_CLEAR)
-			log_printf(log, " clear");
-		log_printf(log, " preset: %d", pkt->preset);
-	}
+}
+
+static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
+	if(pkt->command & CC_RECALL)
+		log_printf(log, " recall");
+	else if(pkt->command & CC_STORE)
+		log_printf(log, " store");
+	else if(pkt->command & CC_CLEAR)
+		log_printf(log, " clear");
+	log_printf(log, " preset: %d", pkt->preset);
+}
+
+static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 	if(pkt->command & CC_AUTO_IRIS)
 		log_printf(log, " auto-iris");
 	if(pkt->command & CC_AUTO_PAN)
@@ -127,6 +134,22 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
 		log_printf(log, " lens-speed");
 	if(pkt->command & CC_ACK_ALARM)
 		log_printf(log, " ack-alarm");
+}
+
+void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
+	log_line_start(log);
+	log_printf(log, "packet: %lld %s rcv: %d", pkt->n_packet++, name,
+		pkt->receiver);
+	if(pkt->status)
+		log_printf(log, " status: %d", pkt->status);
+	ccpacket_log_pan(pkt, log);
+	ccpacket_log_tilt(pkt, log);
+	ccpacket_log_lens(pkt, log);
+	if(pkt->aux)
+		log_printf(log, " aux: %d", pkt->aux);
+	if(pkt->preset)
+		ccpacket_log_preset(pkt, log);
+	ccpacket_log_special(pkt, log);
 	log_line_end(log);
 }
 
