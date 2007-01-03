@@ -134,7 +134,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	chn_out = config_get_channel(cfg, port_out, extra_out);
 	if(chn_out == NULL)
 		goto fail;
-	writer = ccwriter_create(chn_out, protocol_out, base, range);
+	writer = ccwriter_new(chn_out, protocol_out, base, range);
 	if(writer == NULL)
 		goto fail;
 	ccreader_add_writer(reader, writer);

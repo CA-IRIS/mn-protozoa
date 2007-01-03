@@ -34,17 +34,7 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	return 0;
 }
 
-uint8_t *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
-	uint8_t *mess = buffer_append(wtr->txbuf, n_bytes);
-	if(mess)
-		return mess;
-	else {
-		log_println(wtr->log, "ccwriter_append: output buffer full");
-		return NULL;
-	}
-}
-
-struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
+struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
 	int base, int range)
 {
 	struct ccwriter *wtr = malloc(sizeof(struct ccwriter));
@@ -59,6 +49,16 @@ struct ccwriter *ccwriter_create(struct channel *chn, const char *protocol,
 fail:
 	free(wtr);
 	return NULL;
+}
+
+uint8_t *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
+	uint8_t *mess = buffer_append(wtr->txbuf, n_bytes);
+	if(mess)
+		return mess;
+	else {
+		log_println(wtr->log, "ccwriter_append: output buffer full");
+		return NULL;
+	}
 }
 
 int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver) {
