@@ -6,8 +6,8 @@
 #include "log.h"
 
 enum decode_t {
-	MORE = 0,
-	DONE = 1,
+	DECODE_MORE = 0,	/* more buffered packets may be decoded */
+	DECODE_DONE = 1,	/* buffered packet decoding is done */
 };
 
 struct ccreader {

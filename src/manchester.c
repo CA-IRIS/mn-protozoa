@@ -213,16 +213,16 @@ static inline enum decode_t manchester_read_message(struct ccreader *r,
 		log_println(r->log, "Manchester: unexpected byte %02X",
 			mess[0]);
 		buffer_consume(rxbuf, 1);
-		return MORE;
+		return DECODE_MORE;
 	}
 	manchester_decode_packet(r, mess);
 	buffer_consume(rxbuf, SIZE_MSG);
-	return MORE;
+	return DECODE_MORE;
 }
 
 void manchester_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
-		if(manchester_read_message(r, rxbuf) == DONE)
+		if(manchester_read_message(r, rxbuf) == DECODE_DONE)
 			break;
 	}
 	/* If there's a partial packet in the buffer, don't process yet */

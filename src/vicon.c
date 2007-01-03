@@ -162,7 +162,7 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *r,
 	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_EXTENDED)
-		return DONE;
+		return DECODE_DONE;
 	r->packet.receiver = decode_receiver(mess);
 	decode_pan(&r->packet, mess);
 	decode_tilt(&r->packet, mess);
@@ -179,14 +179,14 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *r,
 		decode_ex_speed(&r->packet, mess);
 	buffer_consume(rxbuf, SIZE_EXTENDED);
 	ccreader_process_packet(r);
-	return MORE;
+	return DECODE_MORE;
 }
 
 static inline enum decode_t vicon_decode_command(struct ccreader *r,
 	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_COMMAND)
-		return DONE;
+		return DECODE_DONE;
 	r->packet.receiver = decode_receiver(mess);
 	decode_pan(&r->packet, mess);
 	decode_tilt(&r->packet, mess);
@@ -196,19 +196,19 @@ static inline enum decode_t vicon_decode_command(struct ccreader *r,
 	decode_preset(&r->packet, mess);
 	buffer_consume(rxbuf, SIZE_COMMAND);
 	ccreader_process_packet(r);
-	return MORE;
+	return DECODE_MORE;
 }
 
 static inline enum decode_t vicon_decode_status(struct ccreader *r,
 	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_STATUS)
-		return DONE;
+		return DECODE_DONE;
 	r->packet.receiver = decode_receiver(mess);
 	r->packet.status = STATUS_REQUEST;
 	buffer_consume(rxbuf, SIZE_STATUS);
 	ccreader_process_packet(r);
-	return MORE;
+	return DECODE_MORE;
 }
 
 static inline enum decode_t vicon_decode_message(struct ccreader *r,
@@ -218,7 +218,7 @@ static inline enum decode_t vicon_decode_message(struct ccreader *r,
 	if((mess[0] & FLAG) == 0) {
 		log_println(r->log, "Vicon: unexpected byte %02X", mess[0]);
 		buffer_consume(rxbuf, 1);
-		return MORE;
+		return DECODE_MORE;
 	}
 	if(is_extended_command(mess))
 		return vicon_decode_extended(r, mess, rxbuf);
@@ -230,7 +230,7 @@ static inline enum decode_t vicon_decode_message(struct ccreader *r,
 
 void vicon_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_STATUS) {
-		if(vicon_decode_message(r, rxbuf) == DONE)
+		if(vicon_decode_message(r, rxbuf) == DECODE_DONE)
 			break;
 	}
 }
