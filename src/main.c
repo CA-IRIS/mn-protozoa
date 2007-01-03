@@ -33,7 +33,7 @@ struct poller *create_poller(struct log *log) {
 		log_println(log, "Check configuration file: %s", CONF_FILE);
 		goto fail_0;
 	}
-	if(poller_init(poll, n_channels, config_take_channels(&cfg)) == NULL)
+	if(poller_init(poll, n_channels, config_cede_channels(&cfg)) == NULL)
 		goto fail_0;
 	config_destroy(&cfg);
 	return poll;

@@ -6,8 +6,8 @@
 /*
  * config_init		Initialize a new configuration reader.
  *
- * log: message logger (borrowed reference)
- * cnt: packet counter (borrowed reference)
+ * log: message logger (borrowed pointer)
+ * cnt: packet counter (borrowed pointer)
  * return: pointer to struct config or NULL on error
  */
 struct config *config_init(struct config *cfg, struct log *log,
@@ -212,11 +212,11 @@ fail:
 }
 
 /*
- * config_take_channels		Take ownership of channel array memory.
+ * config_cede_channels		Cede ownership of channel array memory.
  *
- * return: pointer to channel array
+ * return: ceded pointer to channel array
  */
-struct channel *config_take_channels(struct config *cfg) {
+struct channel *config_cede_channels(struct config *cfg) {
 	struct channel *chns = cfg->chns;
 	cfg->n_channels = 0;
 	cfg->chns = NULL;
