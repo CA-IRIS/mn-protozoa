@@ -11,15 +11,15 @@ enum decode_t {
 };
 
 struct ccreader {
-	void	(*do_read)	(struct ccreader *r, struct buffer *rxbuf);
+	void	(*do_read)	(struct ccreader *rdr, struct buffer *rxbuf);
 	struct	ccpacket	packet;		/* camera control packet */
 	struct	ccwriter	*writer;	/* head of writer list */
 	const char		*name;		/* channel name */
 	struct	log		*log;		/* log file */
 };
 
-void ccreader_add_writer(struct ccreader *r, struct ccwriter *w);
-unsigned int ccreader_process_packet(struct ccreader *r);
+void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *w);
+unsigned int ccreader_process_packet(struct ccreader *rdr);
 struct ccreader *ccreader_create(const char *name, const char *protocol,
 	struct log *log);
 
