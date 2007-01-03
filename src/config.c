@@ -124,7 +124,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
-		reader = ccreader_create(chn_in->name, protocol_in, cfg->log);
+		reader = ccreader_new(chn_in->name, protocol_in, cfg->log);
 		chn_in->reader = reader;
 		reader->packet.counter = cfg->counter;
 	} else {

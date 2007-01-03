@@ -4,22 +4,6 @@
 #include "pelco_d.h"
 #include "vicon.h"
 
-static void ccreader_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
-	/* Do nothing */
-}
-
-void ccreader_init(struct ccreader *rdr, struct log *log) {
-	rdr->do_read = ccreader_do_read;
-	ccpacket_init(&rdr->packet);
-	rdr->writer = NULL;
-	rdr->log = log;
-}
-
-void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr) {
-	wtr->next = rdr->writer;
-	rdr->writer = wtr;
-}
-
 static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0)
 		rdr->do_read = manchester_do_read;
@@ -32,6 +16,38 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 		return -1;
 	}
 	return 0;
+}
+
+static void ccreader_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
+	/* Do nothing */
+}
+
+void ccreader_init(struct ccreader *rdr, struct log *log) {
+	rdr->do_read = ccreader_do_read;
+	ccpacket_init(&rdr->packet);
+	rdr->writer = NULL;
+	rdr->log = log;
+}
+
+struct ccreader *ccreader_new(const char *name, const char *protocol,
+	struct log *log)
+{
+	struct ccreader *rdr = malloc(sizeof(struct ccreader));
+	if(rdr == NULL)
+		return NULL;
+	ccreader_init(rdr, log);
+	if(ccreader_set_protocol(rdr, protocol) < 0)
+		goto fail;
+	rdr->name = name;
+	return rdr;
+fail:
+	free(rdr);
+	return NULL;
+}
+
+void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr) {
+	wtr->next = rdr->writer;
+	rdr->writer = wtr;
 }
 
 static inline unsigned int ccreader_do_writers(struct ccreader *rdr) {
@@ -66,20 +82,4 @@ unsigned int ccreader_process_packet(struct ccreader *rdr) {
 	}
 	ccpacket_clear(pkt);
 	return res;
-}
-
-struct ccreader *ccreader_create(const char *name, const char *protocol,
-	struct log *log)
-{
-	struct ccreader *rdr = malloc(sizeof(struct ccreader));
-	if(rdr == NULL)
-		return NULL;
-	ccreader_init(rdr, log);
-	if(ccreader_set_protocol(rdr, protocol) < 0)
-		goto fail;
-	rdr->name = name;
-	return rdr;
-fail:
-	free(rdr);
-	return NULL;
 }
