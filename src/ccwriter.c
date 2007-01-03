@@ -4,6 +4,11 @@
 #include "pelco_d.h"
 #include "vicon.h"
 
+/*
+ * ccwriter_do_write	Stub function for camera control writers.
+ *
+ * pkt: camera control packet to write
+ */
 static unsigned int ccwriter_do_write(struct ccwriter *wtr,
 	struct ccpacket *pkt)
 {
@@ -11,6 +16,11 @@ static unsigned int ccwriter_do_write(struct ccwriter *wtr,
 	return 0;
 }
 
+/*
+ * ccwriter_init	Initialize a new camera control writer.
+ *
+ * chn: channel to write camera control output
+ */
 static void ccwriter_init(struct ccwriter *wtr, struct channel *chn) {
 	wtr->do_write = ccwriter_do_write;
 	wtr->log = chn->log;
@@ -20,6 +30,12 @@ static void ccwriter_init(struct ccwriter *wtr, struct channel *chn) {
 	wtr->next = NULL;
 }
 
+/*
+ * ccwriter_set_protocol	Set protocol of the camera control writer.
+ *
+ * protocol: protocol name
+ * return: 0 on success; -1 if protocol not found
+ */
 static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0)
 		wtr->do_write = manchester_do_write;
@@ -34,6 +50,15 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	return 0;
 }
 
+/*
+ * ccwriter_new		Construct a new camera control writer.
+ *
+ * chn: channel to write camera control output
+ * protocol: protocol name
+ * base: base receiver address for output
+ * range: range of receiver addresses for output
+ * return: pointer to camera control writer
+ */
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
 	int base, int range)
 {
@@ -51,6 +76,12 @@ fail:
 	return NULL;
 }
 
+/*
+ * ccwriter_append	Append data to the camera control writer.
+ *
+ * n_bytes: number of bytes to append
+ * return: borrowed pointer to appended data
+ */
 uint8_t *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 	uint8_t *mess = buffer_append(wtr->txbuf, n_bytes);
 	if(mess)
@@ -61,6 +92,12 @@ uint8_t *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 	}
 }
 
+/*
+ * ccwriter_get_receiver	Get receiver address adjusted for the writer.
+ *
+ * receiver: input receiver address
+ * return: output receiver address; 0 indicates drop packet
+ */
 int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver) {
 	receiver += wtr->base;
 	if((receiver < 0) || ((wtr->range > 0) && (receiver > wtr->range)))
