@@ -18,7 +18,7 @@ struct ccreader {
 	struct	log		*log;		/* log file */
 };
 
-void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *w);
+void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr);
 unsigned int ccreader_process_packet(struct ccreader *rdr);
 struct ccreader *ccreader_create(const char *name, const char *protocol,
 	struct log *log);

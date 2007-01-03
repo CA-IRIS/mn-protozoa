@@ -15,9 +15,9 @@ void ccreader_init(struct ccreader *rdr, struct log *log) {
 	rdr->log = log;
 }
 
-void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *w) {
-	w->next = rdr->writer;
-	rdr->writer = w;
+void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr) {
+	wtr->next = rdr->writer;
+	rdr->writer = wtr;
 }
 
 static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
@@ -35,13 +35,13 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 }
 
 static inline unsigned int ccreader_do_writers(struct ccreader *rdr) {
-	struct ccwriter *w = rdr->writer;
+	struct ccwriter *wtr = rdr->writer;
 	unsigned int res = 0;
 	const int receiver = rdr->packet.receiver; /* save "true" receiver */
-	while(w) {
-		rdr->packet.receiver = ccwriter_get_receiver(w, receiver);
-		res += w->do_write(w, &rdr->packet);
-		w = w->next;
+	while(wtr) {
+		rdr->packet.receiver = ccwriter_get_receiver(wtr, receiver);
+		res += wtr->do_write(wtr, &rdr->packet);
+		wtr = wtr->next;
 	}
 	rdr->packet.receiver = receiver;  /* restore "true" receiver */
 	if(res && rdr->log->packet)
