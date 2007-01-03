@@ -249,7 +249,7 @@ static void channel_log_buffer(struct channel *chn, struct buffer *buf,
 	const char *prefix, void *start)
 {
 	uint8_t *mess;
-	uint8_t *stop = buffer_next(buf);
+	uint8_t *stop = buffer_input(buf);
 
 	log_line_start(chn->log);
 	log_printf(chn->log, prefix, chn->name);
@@ -266,7 +266,7 @@ static void channel_log_buffer(struct channel *chn, struct buffer *buf,
 static void channel_log_buffer_in(struct channel *chn, size_t n_bytes) {
 	if(chn->log->debug) {
 		channel_log_buffer(chn, chn->rxbuf, "%s  in:",
-			buffer_next(chn->rxbuf) - n_bytes);
+			buffer_input(chn->rxbuf) - n_bytes);
 	}
 }
 

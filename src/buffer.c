@@ -144,11 +144,11 @@ void *buffer_append(struct buffer *buf, size_t n_bytes) {
 }
 
 /*
- * buffer_next		Get the next position in the I/O buffer.
+ * buffer_input		Get the input position in the I/O buffer.
  *
- * return: borrowed pointer to the next buffer position
+ * return: borrowed pointer to the input buffer position
  */
-inline void *buffer_next(struct buffer *buf) {
+inline void *buffer_input(struct buffer *buf) {
 	return buf->pin;
 }
 

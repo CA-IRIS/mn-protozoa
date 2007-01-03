@@ -26,7 +26,7 @@ bool buffer_is_full(const struct buffer *buf);
 ssize_t buffer_read(struct buffer *buf, int fd);
 ssize_t buffer_write(struct buffer *buf, int fd);
 void *buffer_append(struct buffer *buf, size_t n_bytes);
-void *buffer_next(struct buffer *buf);
+void *buffer_input(struct buffer *buf);
 void *buffer_current(struct buffer *buf);
 void buffer_consume(struct buffer *buf, size_t n_bytes);
 
