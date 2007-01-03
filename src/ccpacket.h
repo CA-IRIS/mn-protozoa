@@ -84,16 +84,16 @@ enum aux_t {
  * message to a camera receiver driver.
  */
 struct ccpacket {
-	int	receiver;	/* receiver address: 1 to 255 */
-	enum status_t	status;	/* status request type */
-	enum command_t	command;/* bitmask of commands */
-	int		pan;	/* 0 (none) to 4095 (fast) */
-	int		tilt;	/* 0 (none) to 4095 (fast) */
-	enum zoom_t	zoom;	/* -1 (out), 0 (no change), or 1 (in) */
-	enum focus_t	focus;	/* -1 (near), 0 (no change), or 1 (far) */
-	enum iris_t	iris;	/* -1 (close), 0 (no change), or 1 (open) */
-	enum aux_t	aux;	/* bitmask of aux functions */
-	int		preset;	/* preset number */
+	int		receiver;	/* receiver address: 1 to 1024 */
+	enum status_t	status;		/* status request type */
+	enum command_t	command;	/* bitmask of commands */
+	int		pan;		/* 0 (none) to 4095 (fast) */
+	int		tilt;		/* 0 (none) to 4095 (fast) */
+	enum zoom_t	zoom;		/* -1 (out), 0, or 1 (in) */
+	enum focus_t	focus;		/* -1 (near), 0, or 1 (far) */
+	enum iris_t	iris;		/* -1 (close), 0, or 1 (open) */
+	enum aux_t	aux;		/* bitmask of aux functions */
+	int		preset;		/* preset number */
 	long long	n_packet;	/* packet number */
 	struct packet_counter *counter;	/* packet counter */
 };
