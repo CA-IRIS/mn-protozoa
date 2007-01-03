@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>	/* for uint8_t */
 #include <strings.h>
 #include "ccreader.h"
 #include "pelco_d.h"

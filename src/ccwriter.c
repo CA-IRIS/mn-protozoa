@@ -82,8 +82,8 @@ fail:
  * n_bytes: number of bytes to append
  * return: borrowed pointer to appended data
  */
-uint8_t *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
-	uint8_t *mess = buffer_append(wtr->txbuf, n_bytes);
+void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
+	void *mess = buffer_append(wtr->txbuf, n_bytes);
 	if(mess)
 		return mess;
 	else {

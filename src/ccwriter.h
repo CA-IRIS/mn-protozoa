@@ -1,7 +1,6 @@
 #ifndef __CCWRITER_H__
 #define __CCWRITER_H__
 
-#include <stdint.h>	/* for uint8_t */
 #include "ccpacket.h"	/* for struct ccpacket */
 #include "channel.h"	/* for struct channel */
 
@@ -16,7 +15,7 @@ struct ccwriter {
 
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
 	int base, int range);
-uint8_t *ccwriter_append(struct ccwriter *wtr, size_t n_bytes);
+void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes);
 int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver);
 
 #endif
