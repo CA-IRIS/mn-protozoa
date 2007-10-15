@@ -28,6 +28,17 @@
 
 #define JSPEED_MAX	(32767)
 
+#define JBUTTON_FOCUS_NEAR	(0)
+#define JBUTTON_FOCUS_FAR	(1)
+#define JBUTTON_IRIS_CLOSE	(2)
+#define JBUTTON_IRIS_OPEN	(3)
+#define JBUTTON_AUX_1		(4)
+#define JBUTTON_AUX_2		(5)
+#define JBUTTON_PRESET_1	(6)
+#define JBUTTON_PRESET_2	(7)
+#define JBUTTON_PRESET_3	(8)
+#define JBUTTON_PRESET_4	(9)
+
 /*
  * Event records are 8 octets long:
  *
@@ -39,6 +50,10 @@
 
 static inline int decode_speed(uint8_t *mess) {
 	return *(short *)(mess + 4);
+}
+
+static inline bool decode_pressed(uint8_t *mess) {
+	return *(short *)(mess + 4) != 0;
 }
 
 static inline int remap_int(int value, int irange, int orange) {
@@ -60,7 +75,7 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 
 	switch(number) {
 		case JAXIS_PAN:
-			p->command ^= (p->command & CC_PAN);
+			p->command ^= p->command & CC_PAN;
 			if(speed < 0)
 				p->command |= CC_PAN_LEFT;
 			if(speed > 0)
@@ -68,7 +83,7 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 			p->pan = remap_speed(speed);
 			break;
 		case JAXIS_TILT:
-			p->command ^= (p->command & CC_TILT);
+			p->command ^= p->command & CC_TILT;
 			if(speed < 0)
 				p->command |= CC_TILT_UP;
 			if(speed > 0)
@@ -84,6 +99,96 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 				p->zoom = ZOOM_NONE;
 			break;
 	}
+	p->command ^= p->command & CC_PRESET;
+}
+
+static bool moved_since_pressed(struct ccpacket *p) {
+	return (p->command & CC_RECALL) == 0;
+}
+
+static inline void decode_button(struct ccpacket *p, uint8_t *mess) {
+	uint8_t number = mess[7];
+	bool pressed = decode_pressed(mess);
+	bool moved = moved_since_pressed(p);
+
+	switch(number) {
+		case JBUTTON_FOCUS_NEAR:
+			if(pressed)
+				p->focus = FOCUS_NEAR;
+			else
+				p->focus = FOCUS_NONE;
+			break;
+		case JBUTTON_FOCUS_FAR:
+			if(pressed)
+				p->focus = FOCUS_FAR;
+			else
+				p->focus = FOCUS_NONE;
+			break;
+		case JBUTTON_IRIS_CLOSE:
+			if(pressed)
+				p->iris = IRIS_CLOSE;
+			else
+				p->iris = IRIS_NONE;
+			break;
+		case JBUTTON_IRIS_OPEN:
+			if(pressed)
+				p->iris = IRIS_OPEN;
+			else
+				p->iris = IRIS_NONE;
+			break;
+		case JBUTTON_AUX_1:
+			if(pressed)
+				p->aux = AUX_1;
+			else
+				p->aux = AUX_NONE;
+			break;
+		case JBUTTON_AUX_2:
+			if(pressed)
+				p->aux = AUX_2;
+			else
+				p->aux = AUX_NONE;
+			break;
+		case JBUTTON_PRESET_1:
+			p->command ^= p->command & CC_PRESET;
+			p->preset = 1;
+			if(pressed)
+				p->command |= CC_RECALL;
+			else if(moved)
+				p->command |= CC_STORE;
+			else
+				p->preset = 0;
+			break;
+		case JBUTTON_PRESET_2:
+			p->command ^= p->command & CC_PRESET;
+			p->preset = 2;
+			if(pressed)
+				p->command |= CC_RECALL;
+			else if(moved)
+				p->command |= CC_STORE;
+			else
+				p->preset = 0;
+			break;
+		case JBUTTON_PRESET_3:
+			p->command ^= p->command & CC_PRESET;
+			p->preset = 3;
+			if(pressed)
+				p->command |= CC_RECALL;
+			else if(moved)
+				p->command |= CC_STORE;
+			else
+				p->preset = 0;
+			break;
+		case JBUTTON_PRESET_4:
+			p->command ^= p->command & CC_PRESET;
+			p->preset = 4;
+			if(pressed)
+				p->command |= CC_RECALL;
+			else if(moved)
+				p->command |= CC_STORE;
+			else
+				p->preset = 0;
+			break;
+	}
 }
 
 static inline void joystick_decode_event(struct ccpacket *p, uint8_t *mess) {
@@ -91,8 +196,8 @@ static inline void joystick_decode_event(struct ccpacket *p, uint8_t *mess) {
 
 	if(ev_type & JEVENT_AXIS)
 		decode_pan_tilt_zoom(p, mess);
-//	if(ev_type & JEVENT_BUTTON)
-//		decode_button(p, mess);
+	else if(ev_type & JEVENT_BUTTON)
+		decode_button(p, mess);
 
 	p->receiver = 1;
 }
@@ -110,4 +215,5 @@ void joystick_do_read(struct ccreader *r, struct buffer *rxbuf) {
 		joystick_read_message(r, rxbuf);
 	/* FIXME: consolidate events if the writers can't keep up */
 	ccreader_process_packet_no_clear(r);
+	r->packet.preset = 0;
 }
