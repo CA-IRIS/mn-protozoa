@@ -92,16 +92,31 @@ fail:
 }
 
 /*
+ * split_colon		Chop off trailing colon suffix and return parsed value
+ *
+ * name: channel name (port:baud or host:port pair)
+ * return: parsed value of the suffix after the colon
+ */
+static int split_colon(char *name) {
+	char *c = rindex(name, (int)':');
+	if(c != NULL) {
+		int extra = 0;
+		*c = '\0';
+		sscanf(c + 1, "%d", &extra);
+		return extra;
+	} else
+		return 0;	
+}
+
+/*
  * config_get_channel	Find an existing channel or create a new one.
  *
- * name: name of the channel
- * extra: extra channel parameter (baud rate or tcp port)
+ * name: name of the channel (port:baud or host:port)
  * return: pointer to channel; or NULL on error
  */
-static struct channel *config_get_channel(struct config *cfg, const char *name,
-	int extra)
-{
+static struct channel *config_get_channel(struct config *cfg, char *name) {
 	struct channel *chn;
+	int extra = split_colon(name);
 
 	chn = config_find_channel(cfg, name);
 	if(chn)
@@ -114,41 +129,39 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
  * config_directive	Process one configuration directive.
  *
  * protocol_in: input protocol
- * port_in: input port name
- * extra_in: input extra parameter
+ * port_in: input port:baud pair or TCP host:port
+ * range_in: input receiver address range
  * protocol_out: output protocol
- * port_out: output port name
- * extra_out: output extra parameter
- * base: receiver address translation base
- * range: receiver address translation range
+ * port_out: output port:baud pair or TCP host:port
+ * shift_out: output receiver address shift offset
  * return: 0 on success; -1 on error
  */
 static int config_directive(struct config *cfg, const char *protocol_in,
-	const char *port_in, int extra_in, const char *protocol_out,
-	const char *port_out, int extra_out, int base, int range)
+	char *port_in, const char *range_in, const char *protocol_out,
+	char *port_out, const char *shift_out)
 {
 	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
 	struct ccwriter *writer;
 
-	log_println(cfg->log, "config: %s %s %d -> %s %s %d %d %d", protocol_in,
-		port_in, extra_in, protocol_out, port_out, extra_out,
-		base, range);
-	chn_in = config_get_channel(cfg, port_in, extra_in);
+	log_println(cfg->log, "config: %s %s %s -> %s %s %s", protocol_in,
+		port_in, range_in, protocol_out, port_out, shift_out);
+	chn_in = config_get_channel(cfg, port_in);
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
-		reader = ccreader_new(chn_in->name, cfg->log, protocol_in);
+		reader = ccreader_new(chn_in->name, cfg->log, protocol_in,
+			range_in);
 		chn_in->reader = reader;
 		reader->packet.counter = cfg->counter;
 	} else {
 		/* FIXME: check for redefined protocol */
 		reader = chn_in->reader;
 	}
-	chn_out = config_get_channel(cfg, port_out, extra_out);
+	chn_out = config_get_channel(cfg, port_out);
 	if(chn_out == NULL)
 		goto fail;
-	writer = ccwriter_new(chn_out, protocol_out, base, range);
+	writer = ccwriter_new(chn_out, protocol_out, shift_out);
 	if(writer == NULL)
 		goto fail;
 	ccreader_add_writer(reader, writer);
@@ -176,20 +189,16 @@ static void config_skip_comments(struct config *cfg) {
 static int config_scan_directive(struct config *cfg) {
 	int i;
 	char protocol_in[16], protocol_out[16];
-	char port_in[16], port_out[16];
-	int extra_in = 9600;	/* extra => baud rate for serial ports */
-	int extra_out = 9600;
-	int base = 0;
-	int range = 0;
+	char port_in[32], port_out[32];
+	char range[8], shift[32];
 
-	i = sscanf(cfg->line, "%15s %15s %d %15s %15s %d %d %d", protocol_in,
-		port_in, &extra_in, protocol_out, port_out, &extra_out, &base,
-		&range);
+	i = sscanf(cfg->line, "%15s %31s %8s %15s %31s %31s", protocol_in,
+		port_in, range, protocol_out, port_out, shift);
 	if(i == 5)
-		extra_out = extra_in;
-	if(i > 4)
-		return config_directive(cfg, protocol_in, port_in, extra_in,
-			protocol_out, port_out, extra_out, base, range);
+		strcpy(shift, "0");
+	if(i >= 5)
+		return config_directive(cfg, protocol_in, port_in, range,
+			protocol_out, port_out, shift);
 	else if(i <= 0)
 		return 0;
 	else {

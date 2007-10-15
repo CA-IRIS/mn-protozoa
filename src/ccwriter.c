@@ -43,17 +43,18 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
  *
  * chn: channel to write camera control output
  * protocol: protocol name
- * base: base receiver address for output
- * range: range of receiver addresses for output
+ * shift: receiver address shift offset
  * return: pointer to struct ccwriter on success; NULL on error
  */
 static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
-	const char *protocol, int base, int range)
+	const char *protocol, const char *shift)
 {
+	int s = 0;
+	sscanf(shift, "%d", &s);
+
 	wtr->log = chn->log;
 	wtr->txbuf = chn->txbuf;
-	wtr->base = base;
-	wtr->range = range;
+	wtr->shift = s;
 	wtr->next = NULL;
 	if(ccwriter_set_protocol(wtr, protocol) < 0)
 		return NULL;
@@ -66,17 +67,16 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
  *
  * chn: channel to write camera control output
  * protocol: protocol name
- * base: base receiver address for output
- * range: range of receiver addresses for output
+ * shift: receiver address shift offset
  * return: pointer to camera control writer
  */
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
-	int base, int range)
+	const char *shift)
 {
 	struct ccwriter *wtr = malloc(sizeof(struct ccwriter));
 	if(wtr == NULL)
 		return NULL;
-	if(ccwriter_init(wtr, chn, protocol, base, range) == NULL)
+	if(ccwriter_init(wtr, chn, protocol, shift) == NULL)
 		goto fail;
 	return wtr;
 fail:
@@ -107,8 +107,8 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
  * return: output receiver address; 0 indicates drop packet
  */
 int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver) {
-	receiver += wtr->base;
-	if((receiver < 0) || ((wtr->range > 0) && (receiver > wtr->range)))
+	receiver += wtr->shift;
+	if(receiver < 0)
 		return 0;
 	else
 		return receiver;

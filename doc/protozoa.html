@@ -33,11 +33,11 @@
 	The configuration file, /etc/protozoa.conf, contains a series of
 	serial data control directives. Each directive describes an input and
 	output serial port and protocol parameters. First, the input protocol,
-	port and baud rate are specified. Then comes the output protocol, port
-	and baud rate.
+	port, baud rate and address range are specified. Then comes the output
+	protocol, port, baud rate and address shift.
 </p>
 <pre>
-	manchester /dev/ttyS1 4800	vicon /dev/ttyS0 9600
+	manchester /dev/ttyS1:4800 1-255	vicon /dev/ttyS0:9600 0
 </pre>
 <p>
 	The above configuration reads camera control commands on /dev/ttyS1
@@ -45,10 +45,10 @@
 	the vicon protocol and sends them out on /dev/ttyS0 at 9600 baud.
 </p>
 <pre>
-	manchester /dev/ttyS1 9600	pelco_d /dev/ttyS0 9600
-	vicon /dev/ttyS2 4800		pelco_d /dev/ttyS0 9600
-	manchester /dev/ttyS4 9600	vicon /dev/ttyS3 9600
-	vicon /dev/ttyS5 9600		vicon /dev/ttyS3 9600
+	manchester /dev/ttyS1:9600 -	pelco_d /dev/ttyS0:9600
+	vicon /dev/ttyS2:4800 -		pelco_d /dev/ttyS0:9600
+	manchester /dev/ttyS4:9600 -	vicon /dev/ttyS3:9600
+	vicon /dev/ttyS5:9600 -		vicon /dev/ttyS3:9600
 </pre>
 <p>
 	This configuration interleaves commands from /dev/ttyS1 and /dev/ttyS2,
@@ -56,17 +56,17 @@
 	/dev/ttyS5 are interleaved onto /dev/ttyS3.
 </p>
 <pre>
-	vicon /dev/ttyS1 9600		manchester /dev/ttyS0 9600	0
-	vicon /dev/ttyS2 9600		manchester /dev/ttyS0 9600	256
-	vicon /dev/ttyS3 9600		manchester /dev/ttyS0 9600	512
+	vicon /dev/ttyS1:9600 1-255	manchester /dev/ttyS0:9600 0
+	vicon /dev/ttyS2:9600 1-255	manchester /dev/ttyS0:9600 256
+	vicon /dev/ttyS3:9600 1-255	manchester /dev/ttyS0:9600 512
 </pre>
 <p>
 	This configuration combines three vicon lines into one manchester line,
 	including receiver address translation.
 </p>
 <pre>
-	vicon /dev/ttya01 9600		manchester /dev/ttya03 9600
-	manchester /dev/ttya03 9600	pelco_d /dev/ttya02 9600
+	vicon /dev/ttya01:9600 -	manchester /dev/ttya03:9600
+	manchester /dev/ttya03:9600 -	pelco_d /dev/ttya02:9600
 </pre>
 <p>
 	It is possible to use a loopback plug on one port, and send / receive
@@ -74,7 +74,7 @@
 	protocol handlers. The configuration above is one example of this.
 </p>
 <p class="stamp">
-	2006 July 18
+	2007 Oct 15
 </p>
 </body>
 </html>

@@ -41,6 +41,21 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	return 0;
 }
 
+static void ccreader_set_range(struct ccreader *rdr, const char *range) {
+	int first, last;
+
+	rdr->range_first = 0;
+	rdr->range_last = 1024;
+
+	if(sscanf(range, "%d%d", &first, &last) == 2) {
+		rdr->range_first = first;
+		rdr->range_last = -last;
+	} else if(sscanf(range, "%d", &first) == 1) {
+		rdr->range_first = first;
+		rdr->range_last = first;
+	}
+}
+
 /*
  * ccreader_init	Initialize a new camera control reader.
  *
@@ -49,11 +64,12 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
  * return: pointer to struct ccreader on success; NULL on failure
  */
 static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
-	const char *protocol)
+	const char *protocol, const char *range)
 {
 	ccpacket_init(&rdr->packet);
 	rdr->writer = NULL;
 	rdr->log = log;
+	ccreader_set_range(rdr, range);
 	if(ccreader_set_protocol(rdr, protocol) < 0)
 		return NULL;
 	else
@@ -65,15 +81,16 @@ static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
  *
  * log: message logger
  * protocol: protocol name
+ * range: range of receiver addresses
  * return: pointer to struct ccreader on success; NULL on failure
  */
 struct ccreader *ccreader_new(const char *name, struct log *log,
-	const char *protocol)
+	const char *protocol, const char *range)
 {
 	struct ccreader *rdr = malloc(sizeof(struct ccreader));
 	if(rdr == NULL)
 		return NULL;
-	if(ccreader_init(rdr, log, protocol) == NULL)
+	if(ccreader_init(rdr, log, protocol, range) == NULL)
 		goto fail;
 	rdr->name = name;
 	return rdr;
@@ -122,8 +139,8 @@ static inline unsigned int ccreader_do_writers(struct ccreader *rdr) {
 unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	struct ccpacket *pkt = &rdr->packet;
 	unsigned int res = 0;
-	if(pkt->receiver == 0)
-		return 0;	/* Ignore if receiver is zero */
+	if(pkt->receiver < rdr->range_first || pkt->receiver > rdr->range_last)
+		return 0;	/* Ignore if receiver address is out of range */
 	else if(pkt->status)
 		ccpacket_drop(pkt);
 	else {

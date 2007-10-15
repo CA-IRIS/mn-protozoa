@@ -8,13 +8,12 @@ struct ccwriter {
 	unsigned int (*do_write) (struct ccwriter *wtr, struct ccpacket *pkt);
 	struct	log		*log;		/* message logger */
 	struct	buffer		*txbuf;		/* transmit buffer */
-	int			base;		/* receiver address base */
-	int			range;		/* receiver address range */
+	int			shift;		/* receiver address shift */
 	struct	ccwriter	*next;		/* next writer in the list */
 };
 
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
-	int base, int range);
+	const char *shift);
 void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes);
 int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver);
 

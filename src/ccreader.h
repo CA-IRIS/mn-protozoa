@@ -15,11 +15,13 @@ struct ccreader {
 	struct	ccpacket	packet;		/* camera control packet */
 	struct	ccwriter	*writer;	/* head of writer list */
 	const char		*name;		/* channel name */
+	int			range_first;	/* first address in range */
+	int			range_last;	/* last address in range */
 	struct	log		*log;		/* message logger */
 };
 
 struct ccreader *ccreader_new(const char *name, struct log *log,
-	const char *protocol);
+	const char *protocol, const char *range);
 void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr);
 unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr);
 unsigned int ccreader_process_packet(struct ccreader *rdr);
