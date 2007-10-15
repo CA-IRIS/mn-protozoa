@@ -60,6 +60,7 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 
 	switch(number) {
 		case JAXIS_PAN:
+			p->command ^= (p->command & CC_PAN);
 			if(speed < 0)
 				p->command |= CC_PAN_LEFT;
 			if(speed > 0)
@@ -67,6 +68,7 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 			p->pan = remap_speed(speed);
 			break;
 		case JAXIS_TILT:
+			p->command ^= (p->command & CC_TILT);
 			if(speed < 0)
 				p->command |= CC_TILT_UP;
 			if(speed > 0)
@@ -76,8 +78,10 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 		case JAXIS_ZOOM:
 			if(speed < 0)
 				p->zoom = ZOOM_OUT;
-			if(speed > 0)
+			else if(speed > 0)
 				p->zoom = ZOOM_IN;
+			else
+				p->zoom = ZOOM_NONE;
 			break;
 	}
 }
@@ -105,5 +109,5 @@ void joystick_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= JEVENT_OCTETS)
 		joystick_read_message(r, rxbuf);
 	/* FIXME: consolidate events if the writers can't keep up */
-	ccreader_process_packet(r);
+	ccreader_process_packet_no_clear(r);
 }

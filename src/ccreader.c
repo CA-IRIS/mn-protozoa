@@ -114,11 +114,12 @@ static inline unsigned int ccreader_do_writers(struct ccreader *rdr) {
 }
 
 /*
- * ccreader_process_packet	Process a packet from the camera control reader.
+ * ccreader_process_packet_no_clear	Process a packet (but don't clear it)
+ *					from the camera control reader.
  *
  * return: number of writers that wrote the packet
  */
-unsigned int ccreader_process_packet(struct ccreader *rdr) {
+unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	struct ccpacket *pkt = &rdr->packet;
 	unsigned int res = 0;
 	if(pkt->receiver == 0)
@@ -132,6 +133,17 @@ unsigned int ccreader_process_packet(struct ccreader *rdr) {
 		else
 			ccpacket_drop(pkt);
 	}
-	ccpacket_clear(pkt);
+	return res;
+}
+
+/*
+ * ccreader_process_packet	Process and clear a packet from the camera
+ *				control reader.
+ *
+ * return: number of writers that wrote the packet
+ */
+unsigned int ccreader_process_packet(struct ccreader *rdr) {
+	unsigned int res = ccreader_process_packet_no_clear(rdr);
+	ccpacket_clear(&rdr->packet);
 	return res;
 }
