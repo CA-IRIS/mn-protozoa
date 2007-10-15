@@ -44,7 +44,7 @@ static inline int decode_speed(uint8_t *mess) {
 static inline int remap_int(int value, int irange, int orange) {
 	int v = abs(value) * orange;
 	int result = v / irange;
-	if((v << 1) >= irange)
+	if((v * 2) >= irange)
 		return result + 1;
 	else
 		return result;
