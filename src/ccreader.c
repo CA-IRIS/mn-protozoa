@@ -14,6 +14,7 @@
  */
 #include <strings.h>
 #include "ccreader.h"
+#include "joystick.h"
 #include "manchester.h"
 #include "pelco_d.h"
 #include "vicon.h"
@@ -25,7 +26,9 @@
  * return: 0 on success; -1 if protocol not found
  */
 static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
-	if(strcasecmp(protocol, "manchester") == 0)
+	if(strcasecmp(protocol, "joystick") == 0)
+		rdr->do_read = joystick_do_read;
+	else if(strcasecmp(protocol, "manchester") == 0)
 		rdr->do_read = manchester_do_read;
 	else if(strcasecmp(protocol, "pelco_d") == 0)
 		rdr->do_read = pelco_d_do_read;

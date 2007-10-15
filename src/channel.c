@@ -150,7 +150,10 @@ static int channel_open_sport(struct channel *chn) {
 		chn->fd = 0;
 		return -1;
 	}
-	return channel_configure_sport(chn);
+	if(chn->extra)
+		return channel_configure_sport(chn);
+	else
+		return 0;
 }
 
 /*
