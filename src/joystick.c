@@ -16,6 +16,16 @@
 #include "ccreader.h"
 #include "joystick.h"
 
+/*
+ * Linux joystick input event driver.
+ *
+ * Event records are 8 octets long:
+ *
+ *	0-3	timestamp
+ *	4-5	value (-32767 to 32767)
+ *	6	event type {0x01: button, 0x02: joystick, 0x80: initial value}
+ *	7	number (button [0 - N] or axis {0: x, 1: y, 2: z})
+ */
 #define JEVENT_OCTETS	(8)
 
 #define JEVENT_BUTTON	(0x01)
@@ -39,15 +49,6 @@
 #define JBUTTON_PRESET_3	(8)
 #define JBUTTON_PRESET_4	(9)
 
-/*
- * Event records are 8 octets long:
- *
- *	0-3	timestamp
- *	4-5	value (-32767 to 32767)
- *	6	event type {0x01: button, 0x02: joystick, 0x80: initial value}
- *	7	number (button [0 - N] or axis {0: x, 1: y, 2: z})
- */
-
 static inline int decode_speed(uint8_t *mess) {
 	return *(short *)(mess + 4);
 }
@@ -58,11 +59,7 @@ static inline bool decode_pressed(uint8_t *mess) {
 
 static inline int remap_int(int value, int irange, int orange) {
 	int v = abs(value) * orange;
-	int result = v / irange;
-	if((v * 2) >= irange)
-		return result + 1;
-	else
-		return result;
+	return v / irange;
 }
 
 static inline int remap_speed(int value) {
