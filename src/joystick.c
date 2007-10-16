@@ -193,7 +193,7 @@ static inline void joystick_decode_event(struct ccpacket *p, uint8_t *mess) {
 
 	if(ev_type & JEVENT_AXIS)
 		decode_pan_tilt_zoom(p, mess);
-	else if(ev_type & JEVENT_BUTTON)
+	else if((ev_type & JEVENT_BUTTON) && !(ev_type & JEVENT_INITIAL))
 		decode_button(p, mess);
 
 	p->receiver = 1;
