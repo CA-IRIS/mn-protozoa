@@ -173,6 +173,8 @@ static int channel_open_tcp(struct channel *chn) {
 		chn->fd = 0;
 		return -1;
 	}
+	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
+		return -1;
 	if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
 		return -1;
 	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
