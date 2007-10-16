@@ -24,6 +24,46 @@
 #define BUFFER_SIZE 256
 
 /*
+ * channel_fill_sockaddr	Fill a sockaddr structure
+ *
+ * return: NULL on error; pointer to struct sockaddr on success
+ */
+static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
+	struct sockaddr_in *sa)
+{
+	struct hostent *host = gethostbyname(chn->name);
+	if(host == NULL)
+		return NULL;
+	sa->sin_family = AF_INET;
+	memcpy(&sa->sin_addr.s_addr, host->h_addr, host->h_length);
+	/* tcp port stored in chn->extra parameter */
+	sa->sin_port = htons(chn->extra);
+	return sa;
+}
+
+/*
+ * channel_open_socket	Open a TCP socket for the I/O channel.
+ *
+ * return: fd of socket on success; -1 on error
+ */
+static int channel_open_socket() {
+	int on = 1;	/* turn "on" values for setsockopt */
+	int fd = socket(PF_INET, SOCK_STREAM, 0);
+	if(fd < 0)
+		return -1;
+	if(fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+		goto fail;
+	if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
+		goto fail;
+	if(setsockopt(fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
+		goto fail;
+	return fd;
+fail:
+	close(fd);
+	return -1;
+}
+
+/*
  * channel_init		Initialize a new I/O channel.
  *
  * name: channel name
@@ -161,28 +201,14 @@ static int channel_open_sport(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 static int channel_open_tcp(struct channel *chn) {
-	struct hostent *host;
 	struct sockaddr_in sa;
-	int on = 1;	/* turn "on" values for setsockopt */
-
-	host = gethostbyname(chn->name);
-	if(host == NULL)
+	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
-	chn->fd = socket(PF_INET, SOCK_STREAM, 0);
+	chn->fd = channel_open_socket();
 	if(chn->fd < 0) {
 		chn->fd = 0;
 		return -1;
 	}
-	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
-		return -1;
-	if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
-		return -1;
-	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
-		return -1;
-	sa.sin_family = AF_INET;
-	memcpy(&sa.sin_addr.s_addr, host->h_addr, host->h_length);
-	/* tcp port stored in chn->extra parameter */
-	sa.sin_port = htons(chn->extra);
 	if(connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
 		return -1;
 	else
