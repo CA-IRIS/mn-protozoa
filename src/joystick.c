@@ -73,7 +73,7 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 	switch(number) {
 		case JAXIS_PAN:
 			p->command ^= p->command & CC_PAN;
-			if(speed < 0)
+			if(speed <= 0)
 				p->command |= CC_PAN_LEFT;
 			if(speed > 0)
 				p->command |= CC_PAN_RIGHT;
@@ -83,7 +83,7 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 			p->command ^= p->command & CC_TILT;
 			if(speed < 0)
 				p->command |= CC_TILT_UP;
-			if(speed > 0)
+			if(speed >= 0)
 				p->command |= CC_TILT_DOWN;
 			p->tilt = remap_speed(speed);
 			break;
