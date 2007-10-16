@@ -7,6 +7,7 @@
 
 struct channel {
 	char		*name;			/* channel name */
+	int		sfd;			/* server file descriptor */
 	int		fd;			/* file descriptor */
 	int		extra;			/* extra parameter */
 

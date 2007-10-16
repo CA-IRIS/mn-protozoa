@@ -13,6 +13,7 @@
  * GNU General Public License for more details.
  */
 #include <assert.h>		/* for assert */
+#include <errno.h>		/* for EINPROGRESS */
 #include <fcntl.h>		/* for open, O_RDWR, O_NOCTTY, O_NONBLOCK */
 #include <netdb.h>		/* for socket stuff */
 #include <netinet/tcp.h>	/* for TCP_NODELAY */
@@ -196,11 +197,11 @@ static int channel_open_sport(struct channel *chn) {
 }
 
 /*
- * channel_open_tcp	Open a tcp port for the I/O channel.
+ * channel_open_listener	Open a tcp port for listening.
  *
  * return: 0 on success; -1 on error
  */
-static int channel_open_tcp(struct channel *chn) {
+static int channel_open_listener(struct channel *chn) {
 	struct sockaddr_in sa;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
@@ -209,10 +210,48 @@ static int channel_open_tcp(struct channel *chn) {
 		chn->fd = 0;
 		return -1;
 	}
-	if(connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
+	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
 		return -1;
-	else
+	if(listen(chn->fd, 1) < 0)
+		return -1;
+	chn->sfd = chn->fd;
+	return 0;
+}
+
+/*
+ * channel_accept	Accept a tcp client connection on the I/O channel.
+ *
+ * return: fd on success; -1 on error
+ */
+static int channel_accept(struct channel *chn) {
+	int fd = accept(chn->sfd, NULL, 0);
+	if(fd < 0)
+		return fd;
+	channel_log(chn, "accepting");
+	chn->fd = fd;
+	return fd;
+}
+
+/*
+ * channel_open_tcp	Open a tcp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_open_tcp(struct channel *chn) {
+	struct sockaddr_in sa;
+	int r;
+	if(channel_fill_sockaddr(chn, &sa) == NULL)
+		return -1;
+	chn->fd = channel_open_socket();
+	if(chn->fd < 0) {
+		chn->fd = 0;
+		return -1;
+	}
+	r = connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa));
+	if(r < 0 && errno == EINPROGRESS)
 		return 0;
+	else
+		return r;
 }
 
 /*
@@ -225,8 +264,12 @@ int channel_open(struct channel *chn) {
 	channel_log(chn, "opening");
 	if(channel_is_sport(chn))
 		return channel_open_sport(chn);
-	else
-		return channel_open_tcp(chn);
+	else {
+		if(channel_has_reader(chn))
+			return channel_open_listener(chn);
+		else
+			return channel_open_tcp(chn);
+	}
 }
 
 /*
@@ -240,7 +283,7 @@ int channel_close(struct channel *chn) {
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
 		int r = close(chn->fd);
-		chn->fd = 0;
+		chn->fd = chn->sfd;
 		return r;
 	} else
 		return 0;
@@ -271,6 +314,15 @@ bool channel_has_reader(const struct channel *chn) {
  */
 bool channel_is_waiting(const struct channel *chn) {
 	return (!buffer_is_empty(chn->txbuf)) || (chn->reader != NULL);
+}
+
+/*
+ * channel_is_listening	Test if the I/O channel is listening.
+ *
+ * return: true if the channel is listening; otherwise false
+ */
+static inline bool channel_is_listening(const struct channel *chn) {
+	return chn->sfd == chn->fd;
 }
 
 /*
@@ -330,7 +382,11 @@ static void channel_log_buffer_out(struct channel *chn) {
  * return: number of bytes read; -1 on error
  */
 ssize_t channel_read(struct channel *chn) {
-	ssize_t n_bytes = buffer_read(chn->rxbuf, chn->fd);
+	ssize_t n_bytes;
+
+	if(channel_is_listening(chn))
+		return channel_accept(chn);
+	n_bytes = buffer_read(chn->rxbuf, chn->fd);
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(channel_has_reader(chn)) {
