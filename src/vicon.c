@@ -14,7 +14,7 @@
  */
 #include <stdbool.h>
 #include <stdint.h>	/* for uint8_t */
-#include <strings.h>
+#include <string.h>	/* for memset */
 #include "ccreader.h"
 #include "vicon.h"
 #include "bitarray.h"
@@ -323,7 +323,7 @@ static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_COMMAND);
 	if(mess) {
-		bzero(mess, SIZE_COMMAND);
+		memset(mess, 0, SIZE_COMMAND);
 		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_COMMAND);
 		encode_pan_tilt(mess, p);
@@ -344,7 +344,7 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
-		bzero(mess, SIZE_EXTENDED);
+		memset(mess, 0, SIZE_EXTENDED);
 		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
@@ -360,7 +360,7 @@ static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
 static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
-		bzero(mess, SIZE_EXTENDED);
+		memset(mess, 0, SIZE_EXTENDED);
 		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
@@ -380,7 +380,7 @@ static inline void encode_simple_status(struct ccwriter *w, struct ccpacket *p)
 {
 	uint8_t *mess = ccwriter_append(w, SIZE_STATUS);
 	if(mess) {
-		bzero(mess, SIZE_STATUS);
+		memset(mess, 0, SIZE_STATUS);
 		encode_receiver(mess, p->receiver);
 	}
 }
@@ -390,7 +390,7 @@ static inline void encode_extended_status(struct ccwriter *w,
 {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
-		bzero(mess, SIZE_EXTENDED);
+		memset(mess, 0, SIZE_EXTENDED);
 		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);

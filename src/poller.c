@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 #include <fcntl.h>	/* for open */
-#include <string.h>	/* for strerror */
+#include <string.h>	/* for memset, strerror */
 #include <sys/errno.h>	/* for errno */
 #include <unistd.h>	/* for close */
 #include "poller.h"	/* for struct poller, prototypes */
@@ -28,7 +28,7 @@
 struct poller *poller_init(struct poller *plr, int n_channels,
 	struct channel *chns)
 {
-	bzero(plr, sizeof(struct poller));
+	memset(plr, 0, sizeof(struct poller));
 	plr->n_channels = n_channels;
 	plr->chns = chns;
 	plr->pollfds = malloc(sizeof(struct pollfd) * n_channels);
@@ -46,7 +46,7 @@ void poller_destroy(struct poller *plr) {
 	close(plr->fd_null);
 	free(plr->pollfds);
 	free(plr->chns);
-	bzero(plr, sizeof(struct poller));
+	memset(plr, 0, sizeof(struct poller));
 }
 
 /*

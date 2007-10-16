@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 #include <stdlib.h>	/* for malloc */
-#include <strings.h>	/* for bzero */
+#include <string.h>	/* for memset */
 #include "ccpacket.h"
 
 /*
@@ -25,7 +25,7 @@
 struct packet_counter *packet_counter_init(struct packet_counter *cnt,
 	struct log *log)
 {
-	bzero(cnt, sizeof(struct packet_counter));
+	memset(cnt, 0, sizeof(struct packet_counter));
 	cnt->log = log;
 	return cnt;
 }

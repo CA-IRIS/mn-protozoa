@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#include <string.h>
+#include <string.h>		/* for memset */
 #include "config.h"
 #include "ccreader.h"
 #include "ccwriter.h"
@@ -27,7 +27,7 @@
 struct config *config_init(struct config *cfg, struct log *log,
 	struct packet_counter *cnt)
 {
-	bzero(cfg, sizeof(struct config));
+	memset(cfg, 0, sizeof(struct config));
 	cfg->line = malloc(LINE_LENGTH);
 	if(cfg->line == NULL)
 		return NULL;
@@ -45,7 +45,7 @@ void config_destroy(struct config *cfg) {
 		channel_destroy(cfg->chns + i);
 	free(cfg->chns);
 	free(cfg->line);
-	bzero(cfg, sizeof(struct config));
+	memset(cfg, 0, sizeof(struct config));
 }
 
 /*

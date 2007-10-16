@@ -17,8 +17,7 @@
 #include <netdb.h>		/* for socket stuff */
 #include <netinet/tcp.h>	/* for TCP_NODELAY */
 #include <unistd.h>		/* for close */
-#include <string.h>		/* for bzero, strlen, strcpy */
-#include <strings.h>		/* for bcopy */
+#include <string.h>		/* for memset, memcpy, strlen, strcpy */
 #include <termios.h>		/* for serial port stuff */
 #include "channel.h"		/* for struct channel and prototypes */
 
@@ -35,7 +34,7 @@
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	struct log *log)
 {
-	bzero(chn, sizeof(struct channel));
+	memset(chn, 0, sizeof(struct channel));
 	chn->extra = extra;
 	chn->log = log;
 	chn->name = malloc(strlen(name) + 1);
@@ -60,7 +59,7 @@ fail:
 	free(chn->txbuf);
 	free(chn->rxbuf);
 	free(chn->name);
-	bzero(chn, sizeof(struct channel));
+	memset(chn, 0, sizeof(struct channel));
 	return NULL;
 }
 
@@ -74,7 +73,7 @@ void channel_destroy(struct channel *chn) {
 	free(chn->rxbuf);
 	free(chn->txbuf);
 	free(chn->name);
-	bzero(chn, sizeof(struct channel));
+	memset(chn, 0, sizeof(struct channel));
 }
 
 /*
@@ -179,7 +178,7 @@ static int channel_open_tcp(struct channel *chn) {
 	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
 		return -1;
 	sa.sin_family = AF_INET;
-	bcopy(host->h_addr, &sa.sin_addr.s_addr, host->h_length);
+	memcpy(&sa.sin_addr.s_addr, host->h_addr, host->h_length);
 	/* tcp port stored in chn->extra parameter */
 	sa.sin_port = htons(chn->extra);
 	if(connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
