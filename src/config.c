@@ -52,15 +52,18 @@ void config_destroy(struct config *cfg) {
  * config_find_channel	Find a configured channel by name.
  *
  * name: name of channel to find
+ * extra: extra channel parameter
+ * listen: flag to indicate tcp listening channel
  * return: pointer to channel; or NULL if not found
  */
 static struct channel *config_find_channel(struct config *cfg,
-	const char *name)
+	const char *name, int extra, bool listen)
 {
 	int i;
 	for(i = 0; i < cfg->n_channels; i++) {
-		if(strcmp(name, cfg->chns[i].name) == 0)
-			return cfg->chns + i;
+		struct channel *chn = cfg->chns + i;
+		if(channel_matches(chn, name, extra, listen))
+			return chn;
 	}
 	return NULL;
 }
@@ -70,10 +73,11 @@ static struct channel *config_find_channel(struct config *cfg,
  *
  * name: name of the channel
  * extra: extra channel parameter (baud rate or tcp port)
+ * listen: flag to indicate whether the channel is a listen channel
  * return: pointer to channel; or NULL on error
  */
 static struct channel *config_new_channel(struct config *cfg, const char *name,
-	int extra)
+	int extra, bool listen)
 {
 	struct channel *chn, *chns;
 
@@ -81,7 +85,7 @@ static struct channel *config_new_channel(struct config *cfg, const char *name,
 	if(chns == NULL)
 		goto fail;
 	chn = chns + cfg->n_channels;
-	if(channel_init(chn, name, extra, cfg->log) == NULL)
+	if(channel_init(chn, name, extra, listen, cfg->log) == NULL)
 		goto fail;
 	cfg->n_channels++;
 	cfg->chns = chns;
@@ -92,37 +96,88 @@ fail:
 }
 
 /*
- * split_colon		Chop off trailing colon suffix and return parsed value
+ * parse_extra		Parse the extra value after a colon.
  *
  * name: channel name (port:baud or host:port pair)
  * return: parsed value of the suffix after the colon
  */
-static int split_colon(char *name) {
-	char *c = rindex(name, (int)':');
-	if(c != NULL) {
-		int extra = 0;
-		*c = '\0';
+static int parse_extra(const char *name) {
+	int extra = 0;
+	char *c = strrchr(name, (int)':');
+	if(c)
 		sscanf(c + 1, "%d", &extra);
-		return extra;
-	} else
-		return 0;	
+	return extra;
+}
+
+/*
+ * find_colon		Find a colon in a string.
+ */
+static inline size_t find_colon(const char *name) {
+	char *c = strrchr(name, (int)':');
+	if(c)
+		return c - name;
+	else
+		return strlen(name);
+}
+
+/*
+ * parse_name		Parse the channel name.
+ *
+ * name: channel name (port:baud or host:port pair)
+ * pname: parsed value of the channel name.
+ */
+static void parse_name(const char *name, char *pname) {
+	size_t len = find_colon(name);
+	strncpy(pname, name, len);
+	pname[len] = '\0';
+}
+
+/*
+ * name_is_tcp		Test if a channel name is for a tcp address.
+ *
+ * return: true if channel is a serial port; otherwise false
+ */
+static inline bool name_is_tcp(const char *name) {
+	return name[0] != '/';
+}
+
+/*
+ * _config_get_channel	Find an existing channel or create a new one.
+ *
+ * name: name of the channel (device node or hostname)
+ * extra: extra parameter (baud rate or tcp port)
+ * listen: flag to indicate a tcp listening channel
+ * return: pointer to channel; or NULL on error
+ */
+static struct channel *_config_get_channel(struct config *cfg, const char *name,
+	int extra, bool listen)
+{
+	struct channel *chn = config_find_channel(cfg, name, extra, listen);
+	if(chn)
+		return chn;
+	else
+		return config_new_channel(cfg, name, extra, listen);
 }
 
 /*
  * config_get_channel	Find an existing channel or create a new one.
  *
- * name: name of the channel (port:baud or host:port)
+ * name: name of the channel (device node or hostname)
+ * listen: flag to incidate tcp listening channels
  * return: pointer to channel; or NULL on error
  */
-static struct channel *config_get_channel(struct config *cfg, char *name) {
-	struct channel *chn;
-	int extra = split_colon(name);
+static struct channel *config_get_channel(struct config *cfg, const char *name,
+	bool listen)
+{
+	char pname[32];
+	int extra = parse_extra(name);
 
-	chn = config_find_channel(cfg, name);
-	if(chn)
-		return chn;
+	parse_name(name, pname);
+
+	if(name_is_tcp(pname))
+		return _config_get_channel(cfg, pname, extra, listen);
 	else
-		return config_new_channel(cfg, name, extra);
+		return _config_get_channel(cfg, pname, extra, false);
 }
 
 /*
@@ -137,8 +192,8 @@ static struct channel *config_get_channel(struct config *cfg, char *name) {
  * return: 0 on success; -1 on error
  */
 static int config_directive(struct config *cfg, const char *protocol_in,
-	char *port_in, const char *range_in, const char *protocol_out,
-	char *port_out, const char *shift_out)
+	const char *port_in, const char *range_in, const char *protocol_out,
+	const char *port_out, const char *shift_out)
 {
 	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
@@ -146,7 +201,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 
 	log_println(cfg->log, "config: %s %s %s -> %s %s %s", protocol_in,
 		port_in, range_in, protocol_out, port_out, shift_out);
-	chn_in = config_get_channel(cfg, port_in);
+	chn_in = config_get_channel(cfg, port_in, true);
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
@@ -158,7 +213,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 		/* FIXME: check for redefined protocol */
 		reader = chn_in->reader;
 	}
-	chn_out = config_get_channel(cfg, port_out);
+	chn_out = config_get_channel(cfg, port_out, false);
 	if(chn_out == NULL)
 		goto fail;
 	writer = ccwriter_new(chn_out, protocol_out, shift_out);

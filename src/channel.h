@@ -10,6 +10,7 @@ struct channel {
 	int		sfd;			/* server file descriptor */
 	int		fd;			/* file descriptor */
 	int		extra;			/* extra parameter */
+	bool		listen;			/* tcp listen flag */
 
 	struct buffer	*rxbuf;			/* receive buffer */
 	struct buffer	*txbuf;			/* transmit buffer */
@@ -19,8 +20,10 @@ struct channel {
 };
 
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	struct log *log);
+	bool listen, struct log *log);
 void channel_destroy(struct channel *chn);
+bool channel_matches(struct channel *chn, const char *name, int extra,
+	bool listen);
 int channel_open(struct channel *chn);
 int channel_close(struct channel *chn);
 bool channel_is_open(const struct channel *chn);

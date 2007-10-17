@@ -69,14 +69,16 @@ fail:
  *
  * name: channel name
  * extra: extra data to initialize the channel
+ * listen: flag to indicate tcp listen channel
  * log: message logger
  * return: struct channel or NULL on error
  */
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	struct log *log)
+	bool listen, struct log *log)
 {
 	memset(chn, 0, sizeof(struct channel));
 	chn->extra = extra;
+	chn->listen = listen;
 	chn->log = log;
 	chn->name = malloc(strlen(name) + 1);
 	if(chn->name == NULL)
@@ -115,6 +117,18 @@ void channel_destroy(struct channel *chn) {
 	free(chn->txbuf);
 	free(chn->name);
 	memset(chn, 0, sizeof(struct channel));
+}
+
+/*
+ * channel_matches	Test if a channel matches the given parameters.
+ */
+bool channel_matches(struct channel *chn, const char *name, int extra,
+	bool listen)
+{
+	if(strcmp(chn->name, name) == 0)
+		return (chn->extra == extra) && (chn->listen == listen);
+	else
+		return false;
 }
 
 /*
