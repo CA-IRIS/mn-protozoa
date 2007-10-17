@@ -12,8 +12,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include <string.h>		/* for strcpy, strlen */
 #include <strings.h>		/* for strcasecmp */
 #include "ccwriter.h"
+#include "axis.h"
 #include "manchester.h"
 #include "pelco_d.h"
 #include "vicon.h"
@@ -31,6 +33,8 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 		wtr->do_write = pelco_d_do_write;
 	else if(strcasecmp(protocol, "vicon") == 0)
 		wtr->do_write = vicon_do_write;
+	else if(strcasecmp(protocol, "axis") == 0)
+		wtr->do_write = axis_do_write;
 	else {
 		log_println(wtr->log, "Unknown protocol: %s", protocol);
 		return -1;
@@ -44,10 +48,11 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
  * chn: channel to write camera control output
  * protocol: protocol name
  * shift: receiver address shift offset
+ * auth: authentication token
  * return: pointer to struct ccwriter on success; NULL on error
  */
 static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
-	const char *protocol, const char *shift)
+	const char *protocol, const char *shift, const char *auth)
 {
 	int s = 0;
 	sscanf(shift, "%d", &s);
@@ -55,6 +60,14 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 	wtr->log = chn->log;
 	wtr->txbuf = chn->txbuf;
 	wtr->shift = s;
+	wtr->auth = NULL;
+	if(auth) {
+		wtr->auth = malloc(strlen(auth) + 1);
+		if(wtr->auth == NULL)
+			return NULL;
+		else
+			strcpy(wtr->auth, auth);
+	}
 	wtr->next = NULL;
 	if(ccwriter_set_protocol(wtr, protocol) < 0)
 		return NULL;
@@ -68,15 +81,16 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
  * chn: channel to write camera control output
  * protocol: protocol name
  * shift: receiver address shift offset
+ * auth: authentication token
  * return: pointer to camera control writer
  */
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
-	const char *shift)
+	const char *shift, const char *auth)
 {
 	struct ccwriter *wtr = malloc(sizeof(struct ccwriter));
 	if(wtr == NULL)
 		return NULL;
-	if(ccwriter_init(wtr, chn, protocol, shift) == NULL)
+	if(ccwriter_init(wtr, chn, protocol, shift, auth) == NULL)
 		goto fail;
 	return wtr;
 fail:

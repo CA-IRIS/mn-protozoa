@@ -193,7 +193,7 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
  */
 static int config_directive(struct config *cfg, const char *protocol_in,
 	const char *port_in, const char *range_in, const char *protocol_out,
-	const char *port_out, const char *shift_out)
+	const char *port_out, const char *shift_out, const char *auth_out)
 {
 	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
@@ -216,7 +216,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	chn_out = config_get_channel(cfg, port_out, false);
 	if(chn_out == NULL)
 		goto fail;
-	writer = ccwriter_new(chn_out, protocol_out, shift_out);
+	writer = ccwriter_new(chn_out, protocol_out, shift_out, auth_out);
 	if(writer == NULL)
 		goto fail;
 	ccreader_add_writer(reader, writer);
@@ -245,15 +245,19 @@ static int config_scan_directive(struct config *cfg) {
 	int i;
 	char protocol_in[16], protocol_out[16];
 	char port_in[32], port_out[32];
-	char range[8], shift[32];
+	char range[8], shift[8];
+	char auth_out[32];
 
-	i = sscanf(cfg->line, "%15s %31s %8s %15s %31s %31s", protocol_in,
-		port_in, range, protocol_out, port_out, shift);
+	shift[0] = '\0';
+	auth_out[0] = '\0';
+
+	i = sscanf(cfg->line, "%15s %31s %7s %15s %31s %7s %31s", protocol_in,
+		port_in, range, protocol_out, port_out, shift, auth_out);
 	if(i == 5)
 		strcpy(shift, "0");
 	if(i >= 5)
 		return config_directive(cfg, protocol_in, port_in, range,
-			protocol_out, port_out, shift);
+			protocol_out, port_out, shift, auth_out);
 	else if(i <= 0)
 		return 0;
 	else {
