@@ -159,6 +159,8 @@ static inline bool has_preset(struct ccpacket *p) {
 
 unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int somein = 0;
+	if(!buffer_is_empty(w->txbuf))
+		return 0;
 	if(has_preset(p))
 		somein = encode_preset(w, p, somein);
 	else if(has_command(p))

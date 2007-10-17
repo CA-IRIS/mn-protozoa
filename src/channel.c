@@ -22,7 +22,7 @@
 #include <termios.h>		/* for serial port stuff */
 #include "channel.h"		/* for struct channel and prototypes */
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 256
 
 /*
  * channel_fill_sockaddr	Fill a sockaddr structure
