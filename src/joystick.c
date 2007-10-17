@@ -68,7 +68,7 @@ static inline int remap_speed(int value) {
 	return remap_int(value, JSPEED_MAX, SPEED_MAX);
 }
 
-static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
+static inline bool decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 	uint8_t number = mess[7];
 	short speed = decode_speed(mess);
 
@@ -99,13 +99,14 @@ static inline void decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
 			break;
 	}
 	p->command ^= p->command & CC_PRESET;
+	return true;
 }
 
 static bool moved_since_pressed(struct ccpacket *p) {
 	return (p->command & CC_RECALL) == 0;
 }
 
-static inline void decode_button(struct ccreader *r, uint8_t *mess) {
+static inline bool decode_button(struct ccreader *r, uint8_t *mess) {
 	struct ccpacket *p = &r->packet;
 	uint8_t number = mess[7];
 	bool pressed = decode_pressed(mess);
@@ -117,37 +118,37 @@ static inline void decode_button(struct ccreader *r, uint8_t *mess) {
 				p->focus = FOCUS_NEAR;
 			else
 				p->focus = FOCUS_NONE;
-			break;
+			return true;
 		case JBUTTON_FOCUS_FAR:
 			if(pressed)
 				p->focus = FOCUS_FAR;
 			else
 				p->focus = FOCUS_NONE;
-			break;
+			return true;
 		case JBUTTON_IRIS_CLOSE:
 			if(pressed)
 				p->iris = IRIS_CLOSE;
 			else
 				p->iris = IRIS_NONE;
-			break;
+			return true;
 		case JBUTTON_IRIS_OPEN:
 			if(pressed)
 				p->iris = IRIS_OPEN;
 			else
 				p->iris = IRIS_NONE;
-			break;
+			return true;
 		case JBUTTON_AUX_1:
 			if(pressed)
 				p->aux = AUX_1;
 			else
 				p->aux = AUX_NONE;
-			break;
+			return true;
 		case JBUTTON_AUX_2:
 			if(pressed)
 				p->aux = AUX_2;
 			else
 				p->aux = AUX_NONE;
-			break;
+			return true;
 		case JBUTTON_PRESET_1:
 			p->command ^= p->command & CC_PRESET;
 			p->preset = 1;
@@ -156,8 +157,8 @@ static inline void decode_button(struct ccreader *r, uint8_t *mess) {
 			else if(moved)
 				p->command |= CC_STORE;
 			else
-				p->preset = 0;
-			break;
+				break;
+			return true;
 		case JBUTTON_PRESET_2:
 			p->command ^= p->command & CC_PRESET;
 			p->preset = 2;
@@ -166,8 +167,8 @@ static inline void decode_button(struct ccreader *r, uint8_t *mess) {
 			else if(moved)
 				p->command |= CC_STORE;
 			else
-				p->preset = 0;
-			break;
+				break;
+			return true;
 		case JBUTTON_PRESET_3:
 			p->command ^= p->command & CC_PRESET;
 			p->preset = 3;
@@ -176,8 +177,8 @@ static inline void decode_button(struct ccreader *r, uint8_t *mess) {
 			else if(moved)
 				p->command |= CC_STORE;
 			else
-				p->preset = 0;
-			break;
+				break;
+			return true;
 		case JBUTTON_PRESET_4:
 			p->command ^= p->command & CC_PRESET;
 			p->preset = 4;
@@ -186,8 +187,8 @@ static inline void decode_button(struct ccreader *r, uint8_t *mess) {
 			else if(moved)
 				p->command |= CC_STORE;
 			else
-				p->preset = 0;
-			break;
+				break;
+			return true;
 		case JBUTTON_PREVIOUS:
 			if(pressed)
 				ccreader_previous_camera(r);
@@ -197,29 +198,36 @@ static inline void decode_button(struct ccreader *r, uint8_t *mess) {
 				ccreader_next_camera(r);
 			break;
 	}
+	p->preset = 0;
+	return false;
 }
 
-static inline void joystick_decode_event(struct ccreader *r, uint8_t *mess) {
+static inline bool joystick_decode_event(struct ccreader *r, uint8_t *mess) {
 	uint8_t ev_type = mess[6];
 
 	if(ev_type & JEVENT_AXIS)
-		decode_pan_tilt_zoom(&r->packet, mess);
+		return decode_pan_tilt_zoom(&r->packet, mess);
 	else if((ev_type & JEVENT_BUTTON) && !(ev_type & JEVENT_INITIAL))
-		decode_button(r, mess);
+		return decode_button(r, mess);
+	else
+		return false;
 }
 
-static inline void joystick_read_message(struct ccreader *r,
+static inline bool joystick_read_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_output(rxbuf);
-	joystick_decode_event(r, mess);
+	bool m = joystick_decode_event(r, mess);
 	buffer_consume(rxbuf, JEVENT_OCTETS);
+	return m;
 }
 
 void joystick_do_read(struct ccreader *r, struct buffer *rxbuf) {
+	int c = 0;
 	while(buffer_available(rxbuf) >= JEVENT_OCTETS)
-		joystick_read_message(r, rxbuf);
+		c += joystick_read_message(r, rxbuf);
 	/* FIXME: consolidate events if the writers can't keep up */
-	ccreader_process_packet_no_clear(r);
+	if(c)
+		ccreader_process_packet_no_clear(r);
 	r->packet.preset = 0;
 }
