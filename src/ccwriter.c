@@ -47,19 +47,14 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
  *
  * chn: channel to write camera control output
  * protocol: protocol name
- * shift: receiver address shift offset
  * auth: authentication token
  * return: pointer to struct ccwriter on success; NULL on error
  */
 static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
-	const char *protocol, const char *shift, const char *auth)
+	const char *protocol, const char *auth)
 {
-	int s = 0;
-	sscanf(shift, "%d", &s);
-
 	wtr->log = chn->log;
 	wtr->txbuf = chn->txbuf;
-	wtr->shift = s;
 	wtr->auth = NULL;
 	if(auth) {
 		wtr->auth = malloc(strlen(auth) + 1);
@@ -68,7 +63,6 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 		else
 			strcpy(wtr->auth, auth);
 	}
-	wtr->next = NULL;
 	if(ccwriter_set_protocol(wtr, protocol) < 0)
 		return NULL;
 	else
@@ -80,17 +74,16 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
  *
  * chn: channel to write camera control output
  * protocol: protocol name
- * shift: receiver address shift offset
  * auth: authentication token
  * return: pointer to camera control writer
  */
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
-	const char *shift, const char *auth)
+	const char *auth)
 {
 	struct ccwriter *wtr = malloc(sizeof(struct ccwriter));
 	if(wtr == NULL)
 		return NULL;
-	if(ccwriter_init(wtr, chn, protocol, shift, auth) == NULL)
+	if(ccwriter_init(wtr, chn, protocol, auth) == NULL)
 		goto fail;
 	return wtr;
 fail:
@@ -112,18 +105,4 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 		log_println(wtr->log, "ccwriter_append: output buffer full");
 		return NULL;
 	}
-}
-
-/*
- * ccwriter_get_receiver	Get receiver address adjusted for the writer.
- *
- * receiver: input receiver address
- * return: output receiver address; 0 indicates drop packet
- */
-int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver) {
-	receiver += wtr->shift;
-	if(receiver < 0)
-		return 0;
-	else
-		return receiver;
 }

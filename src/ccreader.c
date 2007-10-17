@@ -41,29 +41,42 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	return 0;
 }
 
-static void ccreader_set_range(struct ccreader *rdr, const char *range) {
+static struct ccnode *ccnode_new() {
+	return malloc(sizeof(struct ccnode));
+}
+
+static struct ccnode *ccnode_init(struct ccnode *node) {
+	node->writer = NULL;
+	node->range_first = 1;
+	node->range_last = 1024;
+	node->shift = 0;
+	node->next = NULL;
+	return node;
+}
+
+static void ccnode_set_range(struct ccnode *node, const char *range) {
 	int first, last;
 
-	rdr->range_first = 1;
-	rdr->range_last = 1024;
-
 	if(sscanf(range, "%d%d", &first, &last) == 2) {
-		rdr->range_first = first;
-		rdr->range_last = -last;
+		node->range_first = first;
+		node->range_last = -last;
 	} else if(sscanf(range, "%d", &first) == 1) {
-		rdr->range_first = first;
-		rdr->range_last = first;
+		node->range_first = first;
+		node->range_last = first;
 	}
-	rdr->packet.receiver = rdr->range_first;
+}  
+
+static void ccnode_set_shift(struct ccnode *node, const char *shift) {
+	sscanf(shift, "%d", &node->shift);
 }
 
 void ccreader_previous_camera(struct ccreader *rdr) {
-	if(rdr->packet.receiver > rdr->range_first)
+	if(rdr->packet.receiver > 0)
 		rdr->packet.receiver--;
 }
 
 void ccreader_next_camera(struct ccreader *rdr) {
-	if(rdr->packet.receiver < rdr->range_last)
+	if(rdr->packet.receiver < 1024)
 		rdr->packet.receiver++;
 }
 
@@ -75,12 +88,11 @@ void ccreader_next_camera(struct ccreader *rdr) {
  * return: pointer to struct ccreader on success; NULL on failure
  */
 static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
-	const char *protocol, const char *range)
+	const char *protocol)
 {
 	ccpacket_init(&rdr->packet);
-	rdr->writer = NULL;
+	rdr->head = NULL;
 	rdr->log = log;
-	ccreader_set_range(rdr, range);
 	if(ccreader_set_protocol(rdr, protocol) < 0)
 		return NULL;
 	else
@@ -92,16 +104,15 @@ static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
  *
  * log: message logger
  * protocol: protocol name
- * range: range of receiver addresses
  * return: pointer to struct ccreader on success; NULL on failure
  */
 struct ccreader *ccreader_new(const char *name, struct log *log,
-	const char *protocol, const char *range)
+	const char *protocol)
 {
 	struct ccreader *rdr = malloc(sizeof(struct ccreader));
 	if(rdr == NULL)
 		return NULL;
-	if(ccreader_init(rdr, log, protocol, range) == NULL)
+	if(ccreader_init(rdr, log, protocol) == NULL)
 		goto fail;
 	rdr->name = name;
 	return rdr;
@@ -114,10 +125,39 @@ fail:
  * ccreader_add_writer		Add a writer to the camera control reader.
  *
  * wtr: camera control writer to link with the reader
+ * range: range of receiver addresses
+ * shift: receiver address shift offset
  */
-void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr) {
-	wtr->next = rdr->writer;
-	rdr->writer = wtr;
+void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr,
+	const char *range, const char *shift)
+{
+	struct ccnode *node = ccnode_new();
+	if(node == NULL)
+		return;
+	if(ccnode_init(node) == NULL)
+		return;
+	node->writer = wtr;
+	ccnode_set_range(node, range);
+	ccnode_set_shift(node, shift);
+	node->next = rdr->head;
+	rdr->head = node;
+	rdr->packet.receiver = node->range_first;
+}
+
+/*
+ * ccnode_get_receiver	Get receiver address adjusted for the node.
+ *
+ * receiver: input receiver address
+ * return: output receiver address; 0 indicates drop packet
+ */
+static int ccnode_get_receiver(const struct ccnode *node, int receiver) {
+	if(receiver < node->range_first || receiver > node->range_last)
+		return 0;	/* Ignore if receiver address is out of range */
+	receiver += node->shift;
+	if(receiver < 0)
+		return 0;
+	else
+		return receiver;
 }
 
 /*
@@ -125,15 +165,18 @@ void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr) {
  *
  * return: number of writers that wrote the packet
  */
-static inline unsigned int ccreader_do_writers(struct ccreader *rdr) {
+static unsigned int ccreader_do_writers(struct ccreader *rdr) {
 	unsigned int res = 0;
 	struct ccpacket *pkt = &rdr->packet;
 	const int receiver = pkt->receiver;	/* save "true" receiver */
-	struct ccwriter *wtr = rdr->writer;
-	while(wtr) {
-		pkt->receiver = ccwriter_get_receiver(wtr, receiver);
-		res += wtr->do_write(wtr, pkt);
-		wtr = wtr->next;
+	struct ccnode *node = rdr->head;
+	while(node) {
+		pkt->receiver = ccnode_get_receiver(node, receiver);
+		if(pkt->receiver) {
+			struct ccwriter *wtr = node->writer;
+			res += wtr->do_write(wtr, pkt);
+		}
+		node = node->next;
 	}
 	pkt->receiver = receiver;	/* restore "true" receiver */
 	if(res && rdr->log->packet)
@@ -150,9 +193,7 @@ static inline unsigned int ccreader_do_writers(struct ccreader *rdr) {
 unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	struct ccpacket *pkt = &rdr->packet;
 	unsigned int res = 0;
-	if(pkt->receiver < rdr->range_first || pkt->receiver > rdr->range_last)
-		return 0;	/* Ignore if receiver address is out of range */
-	else if(pkt->status)
+	if(pkt->status)
 		ccpacket_drop(pkt);
 	else {
 		res = ccreader_do_writers(rdr);

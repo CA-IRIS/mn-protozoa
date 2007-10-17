@@ -185,28 +185,27 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
  *
  * protocol_in: input protocol
  * port_in: input port:baud pair or TCP host:port
- * range_in: input receiver address range
+ * range: input receiver address range
  * protocol_out: output protocol
  * port_out: output port:baud pair or TCP host:port
- * shift_out: output receiver address shift offset
+ * shift: output receiver address shift offset
  * return: 0 on success; -1 on error
  */
 static int config_directive(struct config *cfg, const char *protocol_in,
-	const char *port_in, const char *range_in, const char *protocol_out,
-	const char *port_out, const char *shift_out, const char *auth_out)
+	const char *port_in, const char *range, const char *protocol_out,
+	const char *port_out, const char *shift, const char *auth_out)
 {
 	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
 	struct ccwriter *writer;
 
 	log_println(cfg->log, "config: %s %s %s -> %s %s %s", protocol_in,
-		port_in, range_in, protocol_out, port_out, shift_out);
+		port_in, range, protocol_out, port_out, shift);
 	chn_in = config_get_channel(cfg, port_in, true);
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
-		reader = ccreader_new(chn_in->name, cfg->log, protocol_in,
-			range_in);
+		reader = ccreader_new(chn_in->name, cfg->log, protocol_in);
 		chn_in->reader = reader;
 		reader->packet.counter = cfg->counter;
 	} else {
@@ -216,10 +215,10 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	chn_out = config_get_channel(cfg, port_out, false);
 	if(chn_out == NULL)
 		goto fail;
-	writer = ccwriter_new(chn_out, protocol_out, shift_out, auth_out);
+	writer = ccwriter_new(chn_out, protocol_out, auth_out);
 	if(writer == NULL)
 		goto fail;
-	ccreader_add_writer(reader, writer);
+	ccreader_add_writer(reader, writer, range, shift);
 	return 0;
 fail:
 	return -1;
