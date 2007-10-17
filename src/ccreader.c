@@ -44,7 +44,7 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 static void ccreader_set_range(struct ccreader *rdr, const char *range) {
 	int first, last;
 
-	rdr->range_first = 0;
+	rdr->range_first = 1;
 	rdr->range_last = 1024;
 
 	if(sscanf(range, "%d%d", &first, &last) == 2) {
@@ -54,6 +54,17 @@ static void ccreader_set_range(struct ccreader *rdr, const char *range) {
 		rdr->range_first = first;
 		rdr->range_last = first;
 	}
+	rdr->packet.receiver = rdr->range_first;
+}
+
+void ccreader_previous_camera(struct ccreader *rdr) {
+	if(rdr->packet.receiver > rdr->range_first)
+		rdr->packet.receiver--;
+}
+
+void ccreader_next_camera(struct ccreader *rdr) {
+	if(rdr->packet.receiver < rdr->range_last)
+		rdr->packet.receiver++;
 }
 
 /*

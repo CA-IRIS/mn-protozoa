@@ -48,6 +48,8 @@
 #define JBUTTON_PRESET_2	(7)
 #define JBUTTON_PRESET_3	(8)
 #define JBUTTON_PRESET_4	(9)
+#define JBUTTON_PREVIOUS	(10)
+#define JBUTTON_NEXT		(11)
 
 static inline int decode_speed(uint8_t *mess) {
 	return *(short *)(mess + 4);
@@ -103,7 +105,8 @@ static bool moved_since_pressed(struct ccpacket *p) {
 	return (p->command & CC_RECALL) == 0;
 }
 
-static inline void decode_button(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_button(struct ccreader *r, uint8_t *mess) {
+	struct ccpacket *p = &r->packet;
 	uint8_t number = mess[7];
 	bool pressed = decode_pressed(mess);
 	bool moved = moved_since_pressed(p);
@@ -185,25 +188,31 @@ static inline void decode_button(struct ccpacket *p, uint8_t *mess) {
 			else
 				p->preset = 0;
 			break;
+		case JBUTTON_PREVIOUS:
+			if(pressed)
+				ccreader_previous_camera(r);
+			break;
+		case JBUTTON_NEXT:
+			if(pressed)
+				ccreader_next_camera(r);
+			break;
 	}
 }
 
-static inline void joystick_decode_event(struct ccpacket *p, uint8_t *mess) {
+static inline void joystick_decode_event(struct ccreader *r, uint8_t *mess) {
 	uint8_t ev_type = mess[6];
 
 	if(ev_type & JEVENT_AXIS)
-		decode_pan_tilt_zoom(p, mess);
+		decode_pan_tilt_zoom(&r->packet, mess);
 	else if((ev_type & JEVENT_BUTTON) && !(ev_type & JEVENT_INITIAL))
-		decode_button(p, mess);
-
-	p->receiver = 1;
+		decode_button(r, mess);
 }
 
 static inline void joystick_read_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_output(rxbuf);
-	joystick_decode_event(&r->packet, mess);
+	joystick_decode_event(r, mess);
 	buffer_consume(rxbuf, JEVENT_OCTETS);
 }
 
