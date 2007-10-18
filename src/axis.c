@@ -26,8 +26,9 @@ static const char *axis_header[] = {
 	"GET /axis-cgi/com/ptz.cgi?",
 	"GET /axis-cgi/com/ptzconfig.cgi?"
 };
-static const char *axis_trailer = " HTTP/1.0\r\n";
-static const char *axis_auth = "Authorization: Basic ";
+static const char *axis_trailer = " HTTP/1.0";
+static const char *axis_auth = "\r\nAuthorization: Basic ";
+static const char *axis_ending = "\r\n\r\n";
 
 static void axis_add_to_buffer(struct ccwriter *w, const char *msg) {
 	char* mess = buffer_append(w->txbuf, strlen(msg));
@@ -170,8 +171,9 @@ unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
 		if(somein == 2) {
 			axis_add_to_buffer(w, axis_auth);
 			axis_add_to_buffer(w, w->auth);
-			axis_add_to_buffer(w, "\r\n");
 		}
-	}
-	return 1;
+		axis_add_to_buffer(w, axis_ending);
+		return 1;
+	} else
+		return 0;
 }
