@@ -275,7 +275,10 @@ static int channel_open_tcp(struct channel *chn) {
  */
 int channel_open(struct channel *chn) {
 	assert(chn->fd == 0);
-	channel_log(chn, "opening");
+	if(chn->listen)
+		channel_log(chn, "listening");
+	else
+		channel_log(chn, "opening");
 	if(channel_is_sport(chn))
 		return channel_open_sport(chn);
 	else {
@@ -345,7 +348,8 @@ static inline bool channel_is_listening(const struct channel *chn) {
  * msg: message to write to log
  */
 void channel_log(struct channel *chn, const char* msg) {
-	log_println(chn->log, "channel: %s %s", msg, chn->name);
+	log_println(chn->log, "channel: %s %s:%d", msg, chn->name,
+		chn->extra);
 }
 
 /*

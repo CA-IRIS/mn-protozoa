@@ -88,6 +88,22 @@ static void poller_register_events(struct poller *plr) {
 }
 
 /*
+ * debug_poll_events		Debug the channel poll events.
+ *
+ * pfd: pollfd struct
+ */
+static void debug_poll_events(struct channel *chn, const struct pollfd *pfd) {
+	if(pfd->revents & POLLHUP)
+		channel_log(chn, "POLLHUP");
+	if(pfd->revents & POLLERR)
+		channel_log(chn, "POLLERR");
+	if(pfd->revents & POLLIN)
+		channel_log(chn, "POLLIN");
+	if(pfd->revents & POLLOUT)
+		channel_log(chn, "POLLOUT");
+}
+
+/*
  * poller_channel_events	Process polled events for one channel.
  *
  * chn: channel to process
@@ -96,6 +112,8 @@ static void poller_register_events(struct poller *plr) {
 static inline void poller_channel_events(struct poller *plr,
 	struct channel *chn, struct pollfd *pfd)
 {
+	if(chn->log->debug)
+		debug_poll_events(chn, pfd);
 	if(pfd->revents & (POLLHUP | POLLERR)) {
 		channel_close(chn);
 		return;
