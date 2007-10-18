@@ -110,8 +110,9 @@ static inline void poller_channel_events(struct poller *plr,
 	}
 	if(pfd->revents & POLLIN) {
 		ssize_t n_bytes = channel_read(chn);
-		if(n_bytes < 0) {
+		if(n_bytes < 0)
 			channel_log(chn, strerror(errno));
+		if(n_bytes <= 0) {
 			channel_close(chn);
 			return;
 		}
