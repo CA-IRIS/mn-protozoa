@@ -87,6 +87,10 @@ static void poller_register_events(struct poller *plr) {
 		poller_register_channel(plr, plr->chns + i, plr->pollfds + i);
 }
 
+static void debug_log(struct channel *chn, const char *msg) {
+	log_println(chn->log, "debug: %s %s:%d", msg, chn->name, chn->extra);
+}
+
 /*
  * debug_poll_events		Debug the channel poll events.
  *
@@ -94,13 +98,13 @@ static void poller_register_events(struct poller *plr) {
  */
 static void debug_poll_events(struct channel *chn, const struct pollfd *pfd) {
 	if(pfd->revents & POLLHUP)
-		channel_log(chn, "POLLHUP");
+		debug_log(chn, "POLLHUP");
 	if(pfd->revents & POLLERR)
-		channel_log(chn, "POLLERR");
+		debug_log(chn, "POLLERR");
 	if(pfd->revents & POLLIN)
-		channel_log(chn, "POLLIN");
+		debug_log(chn, "POLLIN");
 	if(pfd->revents & POLLOUT)
-		channel_log(chn, "POLLOUT");
+		debug_log(chn, "POLLOUT");
 }
 
 /*

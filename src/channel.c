@@ -366,7 +366,8 @@ static void channel_log_buffer(struct channel *chn, struct buffer *buf,
 	uint8_t *stop = buffer_input(buf);
 
 	log_line_start(chn->log);
-	log_printf(chn->log, prefix, chn->name);
+	log_printf(chn->log, prefix);
+	log_printf(chn->log, " %s:%d", chn->name, chn->extra);
 	for(mess = start; mess < stop; mess++)
 		log_printf(chn->log, " %02x", *mess);
 	log_line_end(chn->log);
@@ -379,7 +380,7 @@ static void channel_log_buffer(struct channel *chn, struct buffer *buf,
  */
 static void channel_log_buffer_in(struct channel *chn, size_t n_bytes) {
 	if(chn->log->debug) {
-		channel_log_buffer(chn, chn->rxbuf, "%s  in:",
+		channel_log_buffer(chn, chn->rxbuf, "debug: IN",
 			buffer_input(chn->rxbuf) - n_bytes);
 	}
 }
@@ -389,7 +390,7 @@ static void channel_log_buffer_in(struct channel *chn, size_t n_bytes) {
  */
 static void channel_log_buffer_out(struct channel *chn) {
 	if(chn->log->debug) {
-		channel_log_buffer(chn, chn->txbuf, "%s out:",
+		channel_log_buffer(chn, chn->txbuf, "debug: OUT",
 			buffer_output(chn->txbuf));
 	}
 }
