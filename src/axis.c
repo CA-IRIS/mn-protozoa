@@ -160,8 +160,10 @@ static inline bool has_preset(struct ccpacket *p) {
 
 unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int somein = 0;
-	if(!buffer_is_empty(&w->chn->txbuf))
-		return 0;
+	if(!buffer_is_empty(&w->chn->txbuf)) {
+		log_println(w->chn->log, "axis: dropping packet(s)");
+		buffer_clear(&w->chn->txbuf);
+	}
 	if(has_preset(p))
 		somein = encode_preset(w, p, somein);
 	else if(has_command(p))
