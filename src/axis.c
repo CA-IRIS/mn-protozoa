@@ -59,6 +59,42 @@ static int axis_check_buffer(struct ccwriter *w, int somein, int which) {
 }
 
 /*
+ * encode_pan		Encode the pan speed.
+ *
+ * p: Packet to encode pan speed from
+ * mess: string to append to
+ */
+static void encode_pan(struct ccpacket *p, char *mess) {
+	char speed_str[8];
+
+	int speed = ((p->pan * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
+	if(p->command & CC_PAN_LEFT)
+		speed = -speed;
+	if(snprintf(speed_str, 8, "%d,", speed) > 0)
+		strcat(mess, speed_str);
+	else
+		strcat(mess, "0,");
+}
+
+/*
+ * encode_tilt		Encode the tilt speed.
+ *
+ * p: Packet to encode tilt speed from
+ * mess: string to append to
+ */
+static void encode_tilt(struct ccpacket *p, char *mess) {
+	char speed_str[8];
+
+	int speed = ((p->tilt * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
+	if(p->command & CC_TILT_DOWN)
+		speed = -speed;
+	if(snprintf(speed_str, 8, "%d,", speed) > 0)
+		strcat(mess, speed_str);
+	else
+		strcat(mess, "0,");
+}
+
+/*
  * encode_pan_tilt	Encode an axis pan/tilt request.
  *
  * p: Packet with pan/tilt values to encode.
@@ -66,36 +102,18 @@ static int axis_check_buffer(struct ccwriter *w, int somein, int which) {
  * return: new somein value
  */
 static int encode_pan_tilt(struct ccwriter *w, struct ccpacket *p, int somein) {
-	int speed;
-	char speed_str[8];
 	char mess[64];
 	mess[0] = '\0';
 	if(p->command & CC_PAN_TILT) {
 		somein = axis_check_buffer(w, somein, 0);
 		strcat(mess, "continuouspantiltmove=");
-		if(p->pan) {
-			speed = ((p->pan * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
-			sprintf(speed_str, "%d,", speed);
-			if(p->command & CC_PAN_LEFT) {
-				strcat(mess, "-");
-				strcat(mess, speed_str);
-			} else if(p->command & CC_PAN_RIGHT)
-				strcat(mess, speed_str);
-			else
-				strcat(mess, "0,");
-		} else
+		if(p->pan)
+			encode_pan(p, mess);
+		else
 			strcat(mess, "0,");
-		if(p->tilt) {
-			speed = ((p->tilt * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
-			sprintf(speed_str, "%d", speed);
-			if(p->command & CC_TILT_DOWN) {
-				strcat(mess, "-");
-				strcat(mess, speed_str);
-			} else if(p->command & CC_TILT_UP)
-				strcat(mess, speed_str);
-			else
-				strcat(mess, "0");
-		} else
+		if(p->tilt)
+			encode_tilt(p, mess);
+		else
 			strcat(mess, "0");
 		axis_add_to_buffer(w, mess);
 	}
