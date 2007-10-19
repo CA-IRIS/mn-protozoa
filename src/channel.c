@@ -84,23 +84,13 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	if(chn->name == NULL)
 		goto fail;
 	strcpy(chn->name, name);
-	/* NOTE: rxbuf / txbuf must be malloc'd pointers so that an array of
-	 * channels can be realloc'd without invalidating buffer pointers */
-	chn->rxbuf = malloc(sizeof(struct buffer));
-	if(chn->rxbuf == NULL)
+	if(buffer_init(&chn->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
-	chn->txbuf = malloc(sizeof(struct buffer));
-	if(chn->txbuf == NULL)
-		goto fail;
-	if(buffer_init(chn->rxbuf, BUFFER_SIZE) == NULL)
-		goto fail;
-	if(buffer_init(chn->txbuf, BUFFER_SIZE) == NULL)
+	if(buffer_init(&chn->txbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	chn->reader = NULL;
 	return chn;
 fail:
-	free(chn->txbuf);
-	free(chn->rxbuf);
 	free(chn->name);
 	memset(chn, 0, sizeof(struct channel));
 	return NULL;
@@ -111,10 +101,8 @@ fail:
  */
 void channel_destroy(struct channel *chn) {
 	channel_close(chn);
-	buffer_destroy(chn->rxbuf);
-	buffer_destroy(chn->txbuf);
-	free(chn->rxbuf);
-	free(chn->txbuf);
+	buffer_destroy(&chn->rxbuf);
+	buffer_destroy(&chn->txbuf);
 	free(chn->name);
 	memset(chn, 0, sizeof(struct channel));
 }
@@ -295,8 +283,8 @@ int channel_open(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 int channel_close(struct channel *chn) {
-	buffer_clear(chn->rxbuf);
-	buffer_clear(chn->txbuf);
+	buffer_clear(&chn->rxbuf);
+	buffer_clear(&chn->txbuf);
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
 		int r = close(chn->fd);
@@ -339,7 +327,7 @@ bool channel_needs_reading(const struct channel *chn) {
  * return: true if the channel is waiting; otherwise false
  */
 bool channel_is_waiting(const struct channel *chn) {
-	return (!buffer_is_empty(chn->txbuf)) || (chn->reader != NULL);
+	return (!buffer_is_empty(&chn->txbuf)) || (chn->reader != NULL);
 }
 
 /*
@@ -389,8 +377,8 @@ static void channel_log_buffer(struct channel *chn, struct buffer *buf,
  */
 static void channel_log_buffer_in(struct channel *chn, size_t n_bytes) {
 	if(chn->log->debug) {
-		channel_log_buffer(chn, chn->rxbuf, "debug: IN",
-			buffer_input(chn->rxbuf) - n_bytes);
+		channel_log_buffer(chn, &chn->rxbuf, "debug: IN",
+			buffer_input(&chn->rxbuf) - n_bytes);
 	}
 }
 
@@ -399,8 +387,8 @@ static void channel_log_buffer_in(struct channel *chn, size_t n_bytes) {
  */
 static void channel_log_buffer_out(struct channel *chn) {
 	if(chn->log->debug) {
-		channel_log_buffer(chn, chn->txbuf, "debug: OUT",
-			buffer_output(chn->txbuf));
+		channel_log_buffer(chn, &chn->txbuf, "debug: OUT",
+			buffer_output(&chn->txbuf));
 	}
 }
 
@@ -414,17 +402,17 @@ ssize_t channel_read(struct channel *chn) {
 
 	if(channel_is_listening(chn))
 		return channel_accept(chn);
-	n_bytes = buffer_read(chn->rxbuf, chn->fd);
+	n_bytes = buffer_read(&chn->rxbuf, chn->fd);
 	if(n_bytes <= 0)
 		return n_bytes;
 	if(channel_has_reader(chn)) {
 		channel_log_buffer_in(chn, n_bytes);
-		chn->reader->do_read(chn->reader, chn->rxbuf);
+		chn->reader->do_read(chn->reader, &chn->rxbuf);
 		return n_bytes;
 	} else {
 		/* Data is coming in on the channel, but we're not set up to
 		 * handle it -- just ignore. */
-		buffer_clear(chn->rxbuf);
+		buffer_clear(&chn->rxbuf);
 		return 0;
 	}
 }
@@ -436,5 +424,5 @@ ssize_t channel_read(struct channel *chn) {
  */
 ssize_t channel_write(struct channel *chn) {
 	channel_log_buffer_out(chn);
-	return buffer_write(chn->txbuf, chn->fd);
+	return buffer_write(&chn->txbuf, chn->fd);
 }

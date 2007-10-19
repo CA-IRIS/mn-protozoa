@@ -22,7 +22,7 @@
  * poller_init		Initialize a new I/O channel poller.
  *
  * n_channels: number of channels to poll
- * chns: array of channels (poller takes ownership of memory)
+ * chns: linked list of channels (poller takes ownership of memory)
  * return: pointer to struct poller or NULL on error
  */
 struct poller *poller_init(struct poller *plr, int n_channels,
@@ -43,9 +43,15 @@ struct poller *poller_init(struct poller *plr, int n_channels,
  * poller_destroy	Destroy a previously initialized poller.
  */
 void poller_destroy(struct poller *plr) {
+	struct channel *chn = plr->chns;
 	close(plr->fd_null);
 	free(plr->pollfds);
-	free(plr->chns);
+	while(chn) {
+		struct channel *nchn = chn->next;
+		channel_destroy(chn);
+		free(chn);
+		chn = nchn;
+	}
 	memset(plr, 0, sizeof(struct poller));
 }
 
@@ -69,7 +75,7 @@ static inline void poller_register_channel(struct poller *plr,
 		pfd->events = POLLHUP | POLLERR;
 		if(channel_needs_reading(chn))
 			pfd->events |= POLLIN;
-		if(!buffer_is_empty(chn->txbuf))
+		if(!buffer_is_empty(&chn->txbuf))
 			pfd->events |= POLLOUT;
 	} else {
 		pfd->fd = plr->fd_null;
@@ -82,9 +88,10 @@ static inline void poller_register_channel(struct poller *plr,
  */
 static void poller_register_events(struct poller *plr) {
 	int i;
+	struct channel *chn = plr->chns;
 
-	for(i = 0; i < plr->n_channels; i++)
-		poller_register_channel(plr, plr->chns + i, plr->pollfds + i);
+	for(i = 0; i < plr->n_channels; i++, chn = chn->next)
+		poller_register_channel(plr, chn, plr->pollfds + i);
 }
 
 static void debug_log(struct channel *chn, const char *msg) {
@@ -146,11 +153,12 @@ static inline void poller_channel_events(struct poller *plr,
  */
 static int poller_do_poll(struct poller *plr) {
 	int i;
+	struct channel *chn = plr->chns;
 
 	if(poll(plr->pollfds, plr->n_channels, -1) < 0)
 		return -1;
-	for(i = 0; i < plr->n_channels; i++)
-		poller_channel_events(plr, plr->chns + i, plr->pollfds + i);
+	for(i = 0; i < plr->n_channels; i++, chn = chn->next)
+		poller_channel_events(plr, chn, plr->pollfds + i);
 	return 0;
 }
 

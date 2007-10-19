@@ -31,7 +31,7 @@ static const char *axis_auth = "\r\nAuthorization: Basic ";
 static const char *axis_ending = "\r\n\r\n";
 
 static void axis_add_to_buffer(struct ccwriter *wtr, const char *msg) {
-	char* mess = buffer_append(wtr->chn->txbuf, strlen(msg));
+	char* mess = buffer_append(&wtr->chn->txbuf, strlen(msg));
 	if(mess)
 		memcpy(mess, msg, strlen(msg));
 }
@@ -160,7 +160,7 @@ static inline bool has_preset(struct ccpacket *p) {
 
 unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int somein = 0;
-	if(!buffer_is_empty(w->chn->txbuf))
+	if(!buffer_is_empty(&w->chn->txbuf))
 		return 0;
 	if(has_preset(p))
 		somein = encode_preset(w, p, somein);

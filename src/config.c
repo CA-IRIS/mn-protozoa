@@ -40,10 +40,13 @@ struct config *config_init(struct config *cfg, struct log *log,
  * config_destroy	Destroy a previously initialized config.
  */
 void config_destroy(struct config *cfg) {
-	int i;
-	for(i = 0; i < cfg->n_channels; i++)
-		channel_destroy(cfg->chns + i);
-	free(cfg->chns);
+	struct channel *chn = cfg->chns;
+	while(chn) {
+		struct channel *nchn = chn->next;
+		channel_destroy(chn);
+		free(chn);
+		chn = nchn;
+	}
 	free(cfg->line);
 	memset(cfg, 0, sizeof(struct config));
 }
@@ -59,11 +62,11 @@ void config_destroy(struct config *cfg) {
 static struct channel *config_find_channel(struct config *cfg,
 	const char *name, int extra, bool listen)
 {
-	int i;
-	for(i = 0; i < cfg->n_channels; i++) {
-		struct channel *chn = cfg->chns + i;
+	struct channel *chn = cfg->chns;
+	while(chn) {
 		if(channel_matches(chn, name, extra, listen))
 			return chn;
+		chn = chn->next;
 	}
 	return NULL;
 }
@@ -79,16 +82,14 @@ static struct channel *config_find_channel(struct config *cfg,
 static struct channel *config_new_channel(struct config *cfg, const char *name,
 	int extra, bool listen)
 {
-	struct channel *chn, *chns;
-
-	chns = realloc(cfg->chns, sizeof(struct channel) * (cfg->n_channels+1));
-	if(chns == NULL)
+	struct channel *chn = malloc(sizeof(struct channel));
+	if(chn == NULL)
 		goto fail;
-	chn = chns + cfg->n_channels;
 	if(channel_init(chn, name, extra, listen, cfg->log) == NULL)
 		goto fail;
+	chn->next = cfg->chns;
+	cfg->chns = chn;
 	cfg->n_channels++;
-	cfg->chns = chns;
 	return chn;
 fail:
 	log_println(cfg->log, "config: channel %s init error", name);
@@ -295,11 +296,11 @@ fail:
 /*
  * config_cede_channels		Cede ownership of channel array memory.
  *
- * return: ceded pointer to channel array
+ * return: ceded pointer to channel list
  */
 struct channel *config_cede_channels(struct config *cfg) {
-	struct channel *chns = cfg->chns;
+	struct channel *chn = cfg->chns;
 	cfg->n_channels = 0;
 	cfg->chns = NULL;
-	return chns;
+	return chn;
 }

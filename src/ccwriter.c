@@ -98,7 +98,7 @@ fail:
  * return: borrowed pointer to appended data
  */
 void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
-	void *mess = buffer_append(wtr->chn->txbuf, n_bytes);
+	void *mess = buffer_append(&wtr->chn->txbuf, n_bytes);
 	if(mess)
 		return mess;
 	else {

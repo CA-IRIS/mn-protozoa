@@ -14,11 +14,12 @@ struct channel {
 	bool		response_required;	/* flag response required */
 	bool		needs_response;		/* flag needs response */
 
-	struct buffer	*rxbuf;			/* receive buffer */
-	struct buffer	*txbuf;			/* transmit buffer */
+	struct buffer	rxbuf;			/* receive buffer */
+	struct buffer	txbuf;			/* transmit buffer */
 
 	struct ccreader *reader;		/* camera control reader */
 	struct log	*log;			/* message logger */
+	struct channel	*next;			/* next channel in list */
 };
 
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
