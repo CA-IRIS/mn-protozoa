@@ -75,7 +75,7 @@ static inline void poller_register_channel(struct poller *plr,
 		pfd->events = POLLHUP | POLLERR;
 		if(channel_needs_reading(chn))
 			pfd->events |= POLLIN;
-		if(!buffer_is_empty(&chn->txbuf))
+		if(channel_needs_writing(chn))
 			pfd->events |= POLLOUT;
 	} else {
 		pfd->fd = plr->fd_null;

@@ -263,6 +263,7 @@ static int channel_open_tcp(struct channel *chn) {
  */
 int channel_open(struct channel *chn) {
 	assert(chn->fd == 0);
+	chn->needs_response = false;
 	if(chn->listen)
 		channel_log(chn, "listening");
 	else
@@ -319,6 +320,15 @@ bool channel_has_reader(const struct channel *chn) {
  */
 bool channel_needs_reading(const struct channel *chn) {
 	return channel_has_reader(chn) || chn->needs_response;
+}
+
+/*
+ * channel_needs_writing	Test if the I/O channel needs writing.
+ *
+ * return true if channel needs to be writtin; otherwise false
+ */
+bool channel_needs_writing(const struct channel *chn) {
+	return !(buffer_is_empty(&chn->txbuf) || chn->needs_response);
 }
 
 /*
@@ -405,6 +415,7 @@ ssize_t channel_read(struct channel *chn) {
 	n_bytes = buffer_read(&chn->rxbuf, chn->fd);
 	if(n_bytes <= 0)
 		return n_bytes;
+	chn->needs_response = false;
 	if(channel_has_reader(chn)) {
 		channel_log_buffer_in(chn, n_bytes);
 		chn->reader->do_read(chn->reader, &chn->rxbuf);
@@ -423,6 +434,7 @@ ssize_t channel_read(struct channel *chn) {
  * return: number of bytes written; -1 on error
  */
 ssize_t channel_write(struct channel *chn) {
+	chn->needs_response = chn->response_required;
 	channel_log_buffer_out(chn);
 	return buffer_write(&chn->txbuf, chn->fd);
 }

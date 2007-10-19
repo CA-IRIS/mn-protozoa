@@ -32,6 +32,7 @@ int channel_close(struct channel *chn);
 bool channel_is_open(const struct channel *chn);
 bool channel_has_reader(const struct channel *chn);
 bool channel_needs_reading(const struct channel *chn);
+bool channel_needs_writing(const struct channel *chn);
 bool channel_is_waiting(const struct channel *chn);
 void channel_log(struct channel *chn, const char* msg);
 ssize_t channel_read(struct channel *chn);
