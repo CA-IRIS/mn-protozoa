@@ -42,18 +42,18 @@ static void axis_add_to_buffer(struct ccwriter *wtr, const char *msg) {
 }
 
 /*
- * axis_check_buffer	Prepare the transmit buffer for writing.
+ * axis_prepare_buffer	Prepare the transmit buffer for writing.
  *
- * somein: Flag to determine whether some data is already in the buffer
- * which: 0 -> normal request, 1 -> authenticated request
+ * somein: 1 -> some data in buffer; 2 -> authenticated request in buffer
+ * auth: Flag to incidate an authenticated request
  * return: new value of somein
  */
-static int axis_check_buffer(struct ccwriter *w, int somein, int which) {
+static int axis_prepare_buffer(struct ccwriter *w, int somein, bool auth) {
 	if(somein)
 		axis_add_to_buffer(w, "&");
 	else {
-		axis_add_to_buffer(w, axis_header[which]);
-		somein = which + 1;
+		axis_add_to_buffer(w, axis_header[auth]);
+		somein = 1 + auth;
 	}
 	return somein;
 }
@@ -105,7 +105,7 @@ static int encode_pan_tilt(struct ccwriter *w, struct ccpacket *p, int somein) {
 	char mess[64];
 	mess[0] = '\0';
 	if(p->command & CC_PAN_TILT) {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcat(mess, "continuouspantiltmove=");
 		if(p->pan)
 			encode_pan(p, mess);
@@ -131,14 +131,14 @@ static int encode_focus(struct ccwriter *w, struct ccpacket *p, int somein) {
 	char mess[32];
 	strcpy(mess, "continuousfocusmove=");
 	if(p->focus == FOCUS_NEAR) {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcat(mess, default_speed);
 	} else if(p->focus == FOCUS_FAR) {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);
 	} else {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcat(mess, "0");
 	}
 	axis_add_to_buffer(w, mess);
@@ -156,14 +156,14 @@ static int encode_zoom(struct ccwriter *w, struct ccpacket *p, int somein) {
 	char mess[32];
 	strcpy(mess, "continuouszoommove=");
 	if(p->zoom == ZOOM_IN) {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcat(mess, default_speed);
 	} else if(p->zoom == ZOOM_OUT) {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);
 	} else {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcat(mess, "0");
 	}
 	axis_add_to_buffer(w, mess);
@@ -209,13 +209,13 @@ static int encode_preset(struct ccwriter *w, struct ccpacket *p, int somein) {
 	char mess[32];
 
 	if(p->command & CC_RECALL) {
-		somein = axis_check_buffer(w, somein, 0);
+		somein = axis_prepare_buffer(w, somein, false);
 		strcpy(mess, "goto");
 	} else if(p->command & CC_STORE) {
-		somein = axis_check_buffer(w, somein, 1);
+		somein = axis_prepare_buffer(w, somein, true);
 		strcpy(mess, "set");
 	} else if(p->command & CC_CLEAR) {
-		somein = axis_check_buffer(w, somein, 1);
+		somein = axis_prepare_buffer(w, somein, true);
 		strcpy(mess, "remove");
 	}
 	strcat(mess, "serverpresetname=");
