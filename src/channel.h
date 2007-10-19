@@ -11,6 +11,8 @@ struct channel {
 	int		fd;			/* file descriptor */
 	int		extra;			/* extra parameter */
 	bool		listen;			/* tcp listen flag */
+	bool		response_required;	/* flag response required */
+	bool		needs_response;		/* flag needs response */
 
 	struct buffer	*rxbuf;			/* receive buffer */
 	struct buffer	*txbuf;			/* transmit buffer */
@@ -28,6 +30,7 @@ int channel_open(struct channel *chn);
 int channel_close(struct channel *chn);
 bool channel_is_open(const struct channel *chn);
 bool channel_has_reader(const struct channel *chn);
+bool channel_needs_reading(const struct channel *chn);
 bool channel_is_waiting(const struct channel *chn);
 void channel_log(struct channel *chn, const char* msg);
 ssize_t channel_read(struct channel *chn);

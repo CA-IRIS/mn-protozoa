@@ -33,10 +33,11 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 		wtr->do_write = pelco_d_do_write;
 	else if(strcasecmp(protocol, "vicon") == 0)
 		wtr->do_write = vicon_do_write;
-	else if(strcasecmp(protocol, "axis") == 0)
+	else if(strcasecmp(protocol, "axis") == 0) {
 		wtr->do_write = axis_do_write;
-	else {
-		log_println(wtr->log, "Unknown protocol: %s", protocol);
+		wtr->chn->response_required = true;
+	} else {
+		log_println(wtr->chn->log, "Unknown protocol: %s", protocol);
 		return -1;
 	}
 	return 0;
@@ -53,8 +54,7 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 	const char *protocol, const char *auth)
 {
-	wtr->log = chn->log;
-	wtr->txbuf = chn->txbuf;
+	wtr->chn = chn;
 	wtr->auth = NULL;
 	if(auth) {
 		wtr->auth = malloc(strlen(auth) + 1);
@@ -98,11 +98,12 @@ fail:
  * return: borrowed pointer to appended data
  */
 void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
-	void *mess = buffer_append(wtr->txbuf, n_bytes);
+	void *mess = buffer_append(wtr->chn->txbuf, n_bytes);
 	if(mess)
 		return mess;
 	else {
-		log_println(wtr->log, "ccwriter_append: output buffer full");
+		log_println(wtr->chn->log,
+			"ccwriter_append: output buffer full");
 		return NULL;
 	}
 }

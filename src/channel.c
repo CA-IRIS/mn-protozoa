@@ -325,6 +325,15 @@ bool channel_has_reader(const struct channel *chn) {
 }
 
 /*
+ * channel_needs_reading	Test if the I/O channel needs reading.
+ *
+ * return: true if channel needs to be read; otherwise false
+ */
+bool channel_needs_reading(const struct channel *chn) {
+	return channel_has_reader(chn) || chn->needs_response;
+}
+
+/*
  * channel_is_waiting	Test if the I/O channel is waiting to read or write.
  *
  * return: true if the channel is waiting; otherwise false
