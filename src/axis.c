@@ -21,11 +21,8 @@
 #define AXIS_MAX_SPEED (100)
 
 static const char *default_speed = "100";
-
-static const char *axis_header[] = {
-	"GET /axis-cgi/com/ptz.cgi?",
-	"GET /axis-cgi/com/ptzconfig.cgi?"
-};
+static const char *axis_header = "GET /axis-cgi/com/ptz.cgi?";
+static const char *axis_header_auth = "GET /axis-cgi/com/ptzconfig.cgi?";
 static const char *axis_trailer = " HTTP/1.0";
 static const char *axis_auth = "\r\nAuthorization: Basic ";
 static const char *axis_ending = "\r\n\r\n";
@@ -52,7 +49,10 @@ static int axis_prepare_buffer(struct ccwriter *w, int somein, bool auth) {
 	if(somein)
 		axis_add_to_buffer(w, "&");
 	else {
-		axis_add_to_buffer(w, axis_header[auth]);
+		if(auth)
+			axis_add_to_buffer(w, axis_header_auth);
+		else
+			axis_add_to_buffer(w, axis_header);
 		somein = 1 + auth;
 	}
 	return somein;
