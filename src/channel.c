@@ -285,7 +285,6 @@ int channel_open(struct channel *chn) {
  */
 int channel_close(struct channel *chn) {
 	buffer_clear(&chn->rxbuf);
-	buffer_clear(&chn->txbuf);
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
 		int r = close(chn->fd);
