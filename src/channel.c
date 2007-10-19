@@ -284,6 +284,7 @@ int channel_open(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 int channel_close(struct channel *chn) {
+	/* don't clear txbuf; send buffered data after channel is reopened */
 	buffer_clear(&chn->rxbuf);
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
