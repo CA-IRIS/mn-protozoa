@@ -226,16 +226,6 @@ static int encode_preset(struct ccwriter *w, struct ccpacket *p, int somein) {
 }
 
 /*
- * has_preset		Test if a packet has a preset to encode.
- *
- * p: Packet to check for preset
- * return: True is command is present; false otherwise
- */
-static inline bool has_preset(struct ccpacket *p) {
-	return p->command & CC_PRESET;
-}
-
-/*
  * axis_do_write	Encode a packet to the axis protocol.
  *
  * p: Packet to encode.
@@ -247,7 +237,7 @@ unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
 		log_println(w->chn->log, "axis: dropping packet(s)");
 		buffer_clear(&w->chn->txbuf);
 	}
-	if(has_preset(p))
+	if(ccpacket_has_preset(p))
 		somein = encode_preset(w, p, somein);
 	else if(has_command(p))
 		somein = encode_command(w, p, somein);

@@ -400,10 +400,6 @@ static inline bool has_command(struct ccpacket *p) {
 	return has_sense(p);
 }
 
-static inline bool has_preset(struct ccpacket *p) {
-	return p->command & CC_PRESET;
-}
-
 static inline bool has_aux(struct ccpacket *p) {
 	if(p->aux)
 		return true;
@@ -416,7 +412,7 @@ unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
 		return 0;
 	if(has_command(p))
 		encode_command(w, p);
-	if(has_preset(p))
+	if(ccpacket_has_preset(p))
 		encode_preset(w, p);
 	if(has_aux(p))
 		encode_aux(w, p);

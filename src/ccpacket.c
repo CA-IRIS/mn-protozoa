@@ -133,6 +133,13 @@ void ccpacket_clear(struct ccpacket *pkt) {
 }
 
 /*
+ * ccpacket_has_preset	Test if the packet has a preset command.
+ */
+bool ccpacket_has_preset(struct ccpacket *pkt) {
+	return pkt->command & CC_PRESET;
+}
+
+/*
  * ccpacket_log_pan	Log any pan command in the camera control packet.
  *
  * log: message logger
