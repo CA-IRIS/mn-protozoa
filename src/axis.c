@@ -30,12 +30,24 @@ static const char *axis_trailer = " HTTP/1.0";
 static const char *axis_auth = "\r\nAuthorization: Basic ";
 static const char *axis_ending = "\r\n\r\n";
 
+/*
+ * axis_add_to_buffer	Add a string to the transmit buffer.
+ *
+ * msg: char string to add to the buffer
+ */
 static void axis_add_to_buffer(struct ccwriter *wtr, const char *msg) {
-	char* mess = buffer_append(&wtr->chn->txbuf, strlen(msg));
+	char *mess = buffer_append(&wtr->chn->txbuf, strlen(msg));
 	if(mess)
 		memcpy(mess, msg, strlen(msg));
 }
 
+/*
+ * axis_check_buffer	Prepare the transmit buffer for writing.
+ *
+ * somein: Flag to determine whether some data is already in the buffer
+ * which: 0 -> normal request, 1 -> authenticated request
+ * return: new value of somein
+ */
 static int axis_check_buffer(struct ccwriter *w, int somein, int which) {
 	if(somein)
 		axis_add_to_buffer(w, "&");
@@ -46,6 +58,13 @@ static int axis_check_buffer(struct ccwriter *w, int somein, int which) {
 	return somein;
 }
 
+/*
+ * encode_pan_tilt	Encode an axis pan/tilt request.
+ *
+ * p: Packet with pan/tilt values to encode.
+ * somein: Flag to determine whether some data is already in the buffer
+ * return: new somein value
+ */
 static int encode_pan_tilt(struct ccwriter *w, struct ccpacket *p, int somein) {
 	int speed;
 	char speed_str[8];
@@ -83,6 +102,13 @@ static int encode_pan_tilt(struct ccwriter *w, struct ccpacket *p, int somein) {
 	return somein;
 }
 
+/*
+ * encode_focus		Encode an axis focus request.
+ *
+ * p: Packet with focus value to encode.
+ * somein: Flag to determine whether some data is already in the buffer
+ * return: new somein value
+ */
 static int encode_focus(struct ccwriter *w, struct ccpacket *p, int somein) {
 	char mess[32];
 	strcpy(mess, "continuousfocusmove=");
@@ -101,6 +127,13 @@ static int encode_focus(struct ccwriter *w, struct ccpacket *p, int somein) {
 	return somein;
 }
 
+/*
+ * encode_zoom		Encode an axis zoom request.
+ *
+ * p: Packet with zoom value to encode.
+ * somein: Flag to determine whether some data is already in the buffer
+ * return: new somein value
+ */
 static int encode_zoom(struct ccwriter *w, struct ccpacket *p, int somein) {
 	char mess[32];
 	strcpy(mess, "continuouszoommove=");
@@ -119,12 +152,25 @@ static int encode_zoom(struct ccwriter *w, struct ccpacket *p, int somein) {
 	return somein;
 }
 
+/*
+ * encode_command	Encode an axis pan/tilt/zoom or focus request.
+ *
+ * p: Packet with zoom value to encode.
+ * somein: Flag to determine whether some data is already in the buffer
+ * return: new somein value
+ */
 static int encode_command(struct ccwriter *w, struct ccpacket *p, int somein) {
 	somein = encode_pan_tilt(w, p, somein);
 	somein = encode_focus(w, p, somein);
 	return encode_zoom(w, p, somein);
 }
 
+/*
+ * has_command		Test if a packet has a command to encode.
+ *
+ * p: Packet to check for command
+ * return: True is command is present; false otherwise
+ */
 static inline bool has_command(struct ccpacket *p) {
 	if(p->command & CC_PAN_TILT)
 		return true;
@@ -133,6 +179,13 @@ static inline bool has_command(struct ccpacket *p) {
 	return false;
 }
 
+/*
+ * encode_preset	Encode an axis preset request.
+ *
+ * p: Packet with preset value to encode.
+ * somein: Flag to determine whether some data is already in the buffer
+ * return: new somein value
+ */
 static int encode_preset(struct ccwriter *w, struct ccpacket *p, int somein) {
 	char num[16];
 	char mess[32];
@@ -154,10 +207,22 @@ static int encode_preset(struct ccwriter *w, struct ccpacket *p, int somein) {
 	return somein;
 }
 
+/*
+ * has_preset		Test if a packet has a preset to encode.
+ *
+ * p: Packet to check for preset
+ * return: True is command is present; false otherwise
+ */
 static inline bool has_preset(struct ccpacket *p) {
 	return p->command & CC_PRESET;
 }
 
+/*
+ * axis_do_write	Encode a packet to the axis protocol.
+ *
+ * p: Packet to encode.
+ * return: count of encoded packets
+ */
 unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
 	int somein = 0;
 	if(!buffer_is_empty(&w->chn->txbuf)) {
