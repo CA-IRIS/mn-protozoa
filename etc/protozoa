@@ -13,8 +13,8 @@
 prog="protozoa"
 
 start() {
-    echo -n $"Starting $prog: " 
-    /usr/local/bin/protozoa --daemonize
+    echo -n $"Starting $prog: "
+    nice --adjustment=-20 /usr/local/bin/protozoa --daemonize
     RETVAL=$?
     if [ $RETVAL -ne 0 ]; then
 	failure;
@@ -27,7 +27,7 @@ stop() {
     echo -n $"Stopping $prog: "
     killproc protozoa
     RETVAL=$?
-    if [ $RETVAL -ne 0 ]; then 
+    if [ $RETVAL -ne 0 ]; then
 	failure;
     fi;
     echo
@@ -38,11 +38,11 @@ case "$1" in
 	start)
 	    start
 	    ;;
-	
+
 	stop)
 	    stop
 	    ;;
-	
+
 	status)
 	    status protozoa
 	    ;;
