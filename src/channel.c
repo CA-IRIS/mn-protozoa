@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -271,7 +271,7 @@ int channel_open(struct channel *chn) {
 	if(channel_is_sport(chn))
 		return channel_open_sport(chn);
 	else {
-		if(channel_has_reader(chn))
+		if(channel_is_localhost(chn))
 			return channel_open_listener(chn);
 		else
 			return channel_open_tcp(chn);
@@ -302,6 +302,19 @@ int channel_close(struct channel *chn) {
  */
 bool channel_is_open(const struct channel *chn) {
 	return (bool)(chn->fd);
+}
+
+/*
+ * channel_is_localhost	Test if the I/O channel is a localhost address.
+ *
+ * return: true if channel is defined to be a localhost address
+ */
+bool channel_is_localhost(const struct channel *chn) {
+	if(strstr(chn->name, "localhost") == chn->name)
+		return true;
+	if(strstr(chn->name, "0.0.0.0") == chn->name)
+		return true;
+	return false;
 }
 
 /*
