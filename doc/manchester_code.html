@@ -25,11 +25,10 @@
 	camera number to get the receiver address.
 </p>
 <p>
-	There are some parts which are not certain. The p/t speed ranges from
-	0-6, not 0-7 as expected. Also, strange bit patterns occur when holding
-	the joystick all the way left (80 0E 00), right (80 12 00), up
-	(80 10 00) and down (80 00 00). These examples are all with camera
-	receiver 1. These are apparently full speed or "turbo" functions.
+	The p/t speed ranges from 0-6, not 0-7 as expected. There are also
+	special full speed, or "turbo" commands for each direction. This makes
+	a total of eight pan/tilt speed settings. Note, speed 0 is the slowest
+	speed, but is not "stopped"; there is no command to stop pan/tilt.
 </p>
 
 <div class="left">
@@ -382,7 +381,7 @@
 </table>
 
 <p class="stamp">
-	2006 June 20
+	2008 Jan 18
 </p>
 </body>
 </html>
