@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,13 +40,13 @@ static inline int pt_extra(uint8_t *mess) {
 
 /* Valid pan/tilt speeds are 0 - 6 (or 7), here's a lookup table */
 static const int SPEED[] = {
-	(0 << 8) + (0 << 8) / 7,
-	(1 << 8) + (1 << 8) / 7,
-	(2 << 8) + (2 << 8) / 7,
-	(3 << 8) + (3 << 8) / 7,
-	(4 << 8) + (4 << 8) / 7,
-	(5 << 8) + (5 << 8) / 7,
-	(6 << 8) + (6 << 8) / 7,
+	1 << 8,
+	2 << 8,
+	3 << 8,
+	4 << 8,
+	5 << 8,
+	6 << 8,
+	7 << 8,
 	SPEED_MAX,
 };
 
@@ -386,8 +386,10 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 unsigned int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(p->receiver < 1 || p->receiver > 1024)
 		return 0;
-	encode_pan(w, p);
-	encode_tilt(w, p);
+	if(p->pan)
+		encode_pan(w, p);
+	if(p->tilt)
+		encode_tilt(w, p);
 	encode_zoom(w, p);
 	encode_focus(w, p);
 	encode_iris(w, p);
