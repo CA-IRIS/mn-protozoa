@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,15 +26,19 @@
  * return: 0 on success; -1 if protocol not found
  */
 static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
-	if(strcasecmp(protocol, "joystick") == 0)
+	if(strcasecmp(protocol, "joystick") == 0) {
 		rdr->do_read = joystick_do_read;
-	else if(strcasecmp(protocol, "manchester") == 0)
+		ccpacket_set_timeout(&rdr->packet, JOYSTICK_TIMEOUT);
+	} else if(strcasecmp(protocol, "manchester") == 0) {
 		rdr->do_read = manchester_do_read;
-	else if(strcasecmp(protocol, "pelco_d") == 0)
+		ccpacket_set_timeout(&rdr->packet, MANCHESTER_TIMEOUT);
+	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		rdr->do_read = pelco_d_do_read;
-	else if(strcasecmp(protocol, "vicon") == 0)
+		ccpacket_set_timeout(&rdr->packet, PELCO_D_TIMEOUT);
+	} else if(strcasecmp(protocol, "vicon") == 0) {
 		rdr->do_read = vicon_do_read;
-	else {
+		ccpacket_set_timeout(&rdr->packet, VICON_TIMEOUT);
+	} else {
 		log_println(rdr->log, "Unknown protocol: %s", protocol);
 		return -1;
 	}

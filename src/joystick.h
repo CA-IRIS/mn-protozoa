@@ -3,6 +3,8 @@
 
 #include "ccwriter.h"
 
+#define JOYSTICK_TIMEOUT (60)
+
 void joystick_do_read(struct ccreader *r, struct buffer *rxbuf);
 
 #endif

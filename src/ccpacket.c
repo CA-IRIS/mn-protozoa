@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,9 +111,17 @@ static void packet_counter_count(struct packet_counter *cnt,
  * ccpacket_init	Initialize a new camera control packet.
  */
 void ccpacket_init(struct ccpacket *pkt) {
+	pkt->timeout = DEFAULT_TIMEOUT;
 	pkt->counter = NULL;
 	pkt->n_packet = 0;
 	ccpacket_clear(pkt);
+}
+
+/*
+ * ccpacket_set_timeout	Set the timeout for a camera control packet.
+ */
+void ccpacket_set_timeout(struct ccpacket *pkt, int timeout) {
+	pkt->timeout = timeout;
 }
 
 /*
