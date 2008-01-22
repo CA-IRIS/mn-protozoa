@@ -1,9 +1,9 @@
 #ifndef __CCWRITER_H__
 #define __CCWRITER_H__
 
-#include <sys/time.h>	/* for struct timeval */
+#include <sys/time.h>	/* for struct timeval, gettimeofday */
 #include "ccpacket.h"	/* for struct ccpacket */
-#include "channel.h"	/* for struct channel, gettimeofday */
+#include "channel.h"	/* for struct channel */
 
 struct ccwriter {
 	unsigned int (*do_write) (struct ccwriter *wtr, struct ccpacket *pkt);
