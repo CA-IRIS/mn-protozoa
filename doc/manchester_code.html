@@ -15,22 +15,20 @@
 <p>
 	The "manchester" PTZ camera control code is understood by receiver
 	drivers from American Dynamics, and probably other vendors. Each
-	command is a 24-bit (3 byte) sequence. After receiving a PTZ command,
-	the receiver will "hold" a PTZ action until another command is
-	received or a timeout is reached. Timeouts are generally on the order
-	of a few seconds.
+	command is a 24-bit (3 byte) sequence.
 </p>
 <p>
-	Receiver addresses are zero-relative (0-1023). So, subtract 1 from the
-	camera number to get the receiver address.
+	Receiver addresses are encoded zero-relative (0-1023). So, subtract 1
+	from the address before encoding, and add 1 after decoding.
 </p>
 <p>
 	The p/t speed ranges from 0-6, not 0-7 as expected. There are also
 	special full speed, or "turbo" commands for each direction. This makes
 	a total of eight pan/tilt speed settings. Note, speed 0 is the slowest
-	speed, but is not "stopped"; there is no command to stop pan/tilt.
+	speed, but is not "stopped". There is no command to stop pan/tilt;
+	the last pan/tilt command will time out automatically if no pan/tilt
+	command is received after FIXME milliseconds.
 </p>
-
 <div class="left">
 <table>
 <tr>
