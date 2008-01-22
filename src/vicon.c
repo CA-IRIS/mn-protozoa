@@ -426,11 +426,14 @@ unsigned int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
 		return 0;
 	if(p->status)
 		encode_status(w, p);
-	else if(is_extended_preset(p))
-		encode_extended_preset(w, p);
-	else if(p->command & CC_PAN_TILT)
-		encode_extended_speed(w, p);
-	else
-		encode_command(w, p);
+	else {
+		ccwriter_command_receiver(w, p->receiver);
+		if(is_extended_preset(p))
+			encode_extended_preset(w, p);
+		else if(p->command & CC_PAN_TILT)
+			encode_extended_speed(w, p);
+		else
+			encode_command(w, p);
+	}
 	return 1;
 }

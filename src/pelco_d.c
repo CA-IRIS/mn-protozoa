@@ -410,6 +410,7 @@ static inline bool has_aux(struct ccpacket *p) {
 unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(p->receiver < 1 || p->receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
+	ccwriter_command_receiver(w, p->receiver);
 	if(has_command(p))
 		encode_command(w, p);
 	if(ccpacket_has_preset(p))

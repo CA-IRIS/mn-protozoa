@@ -15,6 +15,6 @@ struct ccwriter {
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
 	const char *auth);
 void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes);
-int ccwriter_get_receiver(const struct ccwriter *wtr, int receiver);
+void ccwriter_command_receiver(struct ccwriter *wtr, const int receiver);
 
 #endif
