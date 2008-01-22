@@ -1,2 +1,3 @@
+*	Handle packet timeouts in each *_do_write method.
 *	Perform some sort of check for wrong protocol.
 *	Add protocol driver for NTCIP camera control.
