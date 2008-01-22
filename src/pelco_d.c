@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -408,7 +408,7 @@ static inline bool has_aux(struct ccpacket *p) {
 }
 
 unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
-	if(p->receiver < 1 || p->receiver > 254)
+	if(p->receiver < 1 || p->receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
 	if(has_command(p))
 		encode_command(w, p);
