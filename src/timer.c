@@ -16,6 +16,7 @@
 #include <signal.h>	/* for sigfillset, sigaction, SA_RESTART, SIGALRM */
 #include <stdio.h>	/* for NULL */
 #include <sys/time.h>	/* for setitimer, ITIMER_REAL, struct itimerval */
+#include <unistd.h>	/* for write */
 #include "timer.h"
 
 struct timer timer_singleton;

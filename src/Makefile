@@ -5,7 +5,7 @@ TARGET = protozoa
 
 all:  $(TARGET)
 
-SOURCES = poller.c channel.c config.c ccpacket.c buffer.c axis.c joystick.c manchester.c vicon.c pelco_d.c ccreader.c ccwriter.c log.c
+SOURCES = poller.c channel.c config.c ccpacket.c buffer.c axis.c joystick.c manchester.c vicon.c pelco_d.c ccreader.c ccwriter.c log.c pool.c rbtree.c timer.c
 
 $(TARGET): main.c $(SOURCES)
 	$(CC) -o $(TARGET) $(CFLAGS) $(SOURCES) $<
