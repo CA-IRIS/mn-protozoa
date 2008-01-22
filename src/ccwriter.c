@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,26 +21,46 @@
 #include "vicon.h"
 
 /*
+ * ccwriter_set_receivers	Set the number of receivers for the writer.
+ */
+static int ccwriter_set_receivers(struct ccwriter *wtr, const int n_rcv) {
+	struct timeval now;
+	int i;
+
+	wtr->ptime = malloc(sizeof(struct timeval) * n_rcv);
+	if(wtr->ptime == NULL)
+		return -1;
+	if(gettimeofday(&now, NULL) == 0) {
+		for(i = 0; i < n_rcv; i++)
+			memcpy(wtr->ptime + i, &now, sizeof(struct timeval));
+	}
+	return 0;
+}
+
+/*
  * ccwriter_set_protocol	Set protocol of the camera control writer.
  *
  * protocol: protocol name
- * return: 0 on success; -1 if protocol not found
+ * return: 0 on success; -1 if protocol not found or allocation error
  */
 static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
-	if(strcasecmp(protocol, "manchester") == 0)
+	if(strcasecmp(protocol, "manchester") == 0) {
 		wtr->do_write = manchester_do_write;
-	else if(strcasecmp(protocol, "pelco_d") == 0)
+		return ccwriter_set_receivers(wtr, MANCHESTER_MAX_ADDRESS);
+	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		wtr->do_write = pelco_d_do_write;
-	else if(strcasecmp(protocol, "vicon") == 0)
+		return ccwriter_set_receivers(wtr, PELCO_D_MAX_ADDRESS);
+	} else if(strcasecmp(protocol, "vicon") == 0) {
 		wtr->do_write = vicon_do_write;
-	else if(strcasecmp(protocol, "axis") == 0) {
+		return ccwriter_set_receivers(wtr, VICON_MAX_ADDRESS);
+	} else if(strcasecmp(protocol, "axis") == 0) {
 		wtr->do_write = axis_do_write;
 		wtr->chn->response_required = true;
+		return 0;
 	} else {
 		log_println(wtr->chn->log, "Unknown protocol: %s", protocol);
 		return -1;
 	}
-	return 0;
 }
 
 /*
@@ -55,6 +75,7 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 	const char *protocol, const char *auth)
 {
 	wtr->chn = chn;
+	wtr->ptime = NULL;
 	wtr->auth = NULL;
 	if(auth) {
 		wtr->auth = malloc(strlen(auth) + 1);
