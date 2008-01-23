@@ -19,6 +19,10 @@
 #include "pelco_d.h"
 #include "vicon.h"
 
+static void ccreader_set_timeout(struct ccreader *rdr, unsigned int timeout) {
+	rdr->timeout = timeout;
+}
+
 /*
  * ccreader_set_protocol	Set protocol of the camera control reader.
  *
@@ -28,16 +32,16 @@
 static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	if(strcasecmp(protocol, "joystick") == 0) {
 		rdr->do_read = joystick_do_read;
-		ccpacket_set_timeout(&rdr->packet, JOYSTICK_TIMEOUT);
+		ccreader_set_timeout(rdr, JOYSTICK_TIMEOUT);
 	} else if(strcasecmp(protocol, "manchester") == 0) {
 		rdr->do_read = manchester_do_read;
-		ccpacket_set_timeout(&rdr->packet, MANCHESTER_TIMEOUT);
+		ccreader_set_timeout(rdr, MANCHESTER_TIMEOUT);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		rdr->do_read = pelco_d_do_read;
-		ccpacket_set_timeout(&rdr->packet, PELCO_D_TIMEOUT);
+		ccreader_set_timeout(rdr, PELCO_D_TIMEOUT);
 	} else if(strcasecmp(protocol, "vicon") == 0) {
 		rdr->do_read = vicon_do_read;
-		ccpacket_set_timeout(&rdr->packet, VICON_TIMEOUT);
+		ccreader_set_timeout(rdr, VICON_TIMEOUT);
 	} else {
 		log_println(rdr->log, "Unknown protocol: %s", protocol);
 		return -1;
@@ -95,6 +99,7 @@ static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
 	const char *protocol)
 {
 	ccpacket_init(&rdr->packet);
+	rdr->timeout = DEFAULT_TIMEOUT;
 	rdr->head = NULL;
 	rdr->log = log;
 	if(ccreader_set_protocol(rdr, protocol) < 0)
@@ -200,6 +205,7 @@ unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	if(pkt->status)
 		ccpacket_drop(pkt);
 	else {
+		ccpacket_set_timeout(pkt, rdr->timeout);
 		res = ccreader_do_writers(rdr);
 		if(res)
 			ccpacket_count(pkt);

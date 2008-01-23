@@ -5,6 +5,8 @@
 #include "ccpacket.h"
 #include "log.h"
 
+#define DEFAULT_TIMEOUT (1000)
+
 enum decode_t {
 	DECODE_MORE = 0,	/* more buffered packets may be decoded */
 	DECODE_DONE = 1,	/* buffered packet decoding is done */
@@ -21,6 +23,7 @@ struct ccnode {
 struct ccreader {
 	void	(*do_read)	(struct ccreader *rdr, struct buffer *rxbuf);
 	struct	ccpacket	packet;		/* camera control packet */
+	unsigned int		timeout;	/* time to hold commands (ms) */
 	struct	ccnode		*head;		/* head of writer list */
 	const char		*name;		/* channel name */
 	struct	log		*log;		/* message logger */

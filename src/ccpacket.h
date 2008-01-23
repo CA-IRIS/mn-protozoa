@@ -1,6 +1,7 @@
 #ifndef __CCPACKET_H__
 #define __CCPACKET_H__
 
+#include <sys/time.h>	/* for struct timeval, gettimeofday */
 #include "log.h"
 
 struct packet_counter {
@@ -50,7 +51,6 @@ enum command_t {
 	CC_CAMERA_OFF = 1 << 13,
 };
 
-#define DEFAULT_TIMEOUT (1000)
 #define SPEED_MAX ((1 << 11) - 1)
 
 enum zoom_t {
@@ -99,13 +99,13 @@ struct ccpacket {
 	enum iris_t	iris;		/* -1 (close), 0, or 1 (open) */
 	enum aux_t	aux;		/* bitmask of aux functions */
 	int		preset;		/* preset number */
-	int		timeout;	/* time to hold command (ms) */
+	struct timeval	expire;		/* expiration time */
 	long long	n_packet;	/* packet number */
 	struct packet_counter *counter;	/* packet counter */
 };
 
 void ccpacket_init(struct ccpacket *pkt);
-void ccpacket_set_timeout(struct ccpacket *pkt, int timeout);
+void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
 void ccpacket_clear(struct ccpacket *pkt);
 bool ccpacket_has_preset(struct ccpacket *pkt);
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name);
