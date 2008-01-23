@@ -133,7 +133,7 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
  */
 int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	unsigned int c = wtr->do_write(wtr, pkt);
-	if(pkt->receiver <= wtr->n_rcv)
+	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv)
 		ccpacket_copy(wtr->packet + pkt->receiver - 1, pkt);
 	return c;
 }
