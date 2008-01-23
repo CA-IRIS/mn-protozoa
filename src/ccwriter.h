@@ -9,6 +9,7 @@ struct ccwriter {
 	struct channel		*chn;		/* channel to write */
 	struct ccpacket		*packet;	/* previous command packets */
 	unsigned int		n_rcv;		/* number of receivers */
+	unsigned int		timeout;	/* time command is held (ms) */
 	char			*auth;		/* authentication token */
 };
 

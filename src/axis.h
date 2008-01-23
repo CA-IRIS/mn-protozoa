@@ -3,6 +3,7 @@
 
 #include "ccwriter.h"
 
+#define AXIS_TIMEOUT (2000)
 #define AXIS_MAX_ADDRESS (1)
 
 /* There is no reader for axis protocol (http output only) */
