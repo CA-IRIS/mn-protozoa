@@ -132,6 +132,6 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 /*
  * ccwriter_command_receiver	Update the command time for a receiver
  */
-void ccwriter_command_receiver(struct ccwriter *wtr, const int receiver) {
+void ccwriter_command_receiver(struct ccwriter *wtr, int receiver) {
 	gettimeofday(wtr->ptime + receiver - 1, NULL);
 }

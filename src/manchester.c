@@ -386,7 +386,6 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 unsigned int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(p->receiver < 1 || p->receiver > MANCHESTER_MAX_ADDRESS)
 		return 0;
-	ccwriter_command_receiver(w, p->receiver);
 	if(p->pan)
 		encode_pan(w, p);
 	if(p->tilt)
