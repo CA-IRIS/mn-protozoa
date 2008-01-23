@@ -141,8 +141,10 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
  * ccwriter_do_write	Process one packet for the writer.
  */
 int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+	// FIXME: if pkt == wtr->packet (w/timeout), drop pkt
 	unsigned int c = wtr->do_write(wtr, pkt);
 	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv)
 		ccpacket_copy(wtr->packet + pkt->receiver - 1, pkt);
+	// FIXME: if pkt timeout < wtr timeout, schedule a deferred pkt
 	return c;
 }
