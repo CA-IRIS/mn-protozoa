@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2007  Minnesota Department of Transportation
+ * Copyright (C) 2007-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -228,7 +228,6 @@ void joystick_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	int c = 0;
 	while(buffer_available(rxbuf) >= JEVENT_OCTETS)
 		c += joystick_read_message(r, rxbuf);
-	/* FIXME: consolidate events if the writers can't keep up */
 	if(c)
 		ccreader_process_packet_no_clear(r);
 	r->packet.preset = 0;

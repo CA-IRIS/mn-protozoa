@@ -12,6 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include <errno.h>	/* for errno */
 #include <fcntl.h>	/* for fcntl, F_SETFL, O_NONBLOCK */
 #include <signal.h>	/* for sigfillset, sigaction, SA_RESTART, SIGALRM */
 #include <stdio.h>	/* for NULL */
@@ -63,7 +64,35 @@ void timer_destroy() {
 	close(timer_singleton.pipe_fd[PIPE_READ]);
 }
 
+int timer_read() {
+	ssize_t b;
+	char c;
+	int fd = timer_singleton.pipe_fd[PIPE_READ];
+
+	do {
+		b = read(fd, &c, 1);
+	} while(b < 0 && errno == EINTR);
+	return b;
+}
+
+static int timer_write() {
+	ssize_t b;
+	char c = 0;
+	int fd = timer_singleton.pipe_fd[PIPE_WRITE];
+
+	do {
+		b = write(fd, &c, 1);
+	} while(b < 0 && errno == EINTR);
+	return b;
+}
+
 int timer_arm(unsigned int msec) {
+	if(msec == 0) {
+		// Too late to arm timer, just write to the pipe
+		int b = timer_write();
+		if(b < 0)
+			return b;
+	}
 	timer_singleton.itimer.it_interval.tv_sec = 0;
 	timer_singleton.itimer.it_interval.tv_usec = 0;
 	timer_singleton.itimer.it_value.tv_sec = msec / 1000;
@@ -73,7 +102,12 @@ int timer_arm(unsigned int msec) {
 }
 
 int timer_disarm() {
-	return timer_arm(0);
+	timer_singleton.itimer.it_interval.tv_sec = 0;
+	timer_singleton.itimer.it_interval.tv_usec = 0;
+	timer_singleton.itimer.it_value.tv_sec = 0;
+	timer_singleton.itimer.it_value.tv_usec = 0;
+
+	return setitimer(ITIMER_REAL, &timer_singleton.itimer, NULL);
 }
 
 int timer_get_fd() {

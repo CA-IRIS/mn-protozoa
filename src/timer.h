@@ -19,6 +19,7 @@ struct timer *timer_init();
 void timer_destroy();
 int timer_arm(unsigned int msec);
 int timer_disarm();
+int timer_read();
 int timer_get_fd();
 
 #endif
