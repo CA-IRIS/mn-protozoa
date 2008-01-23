@@ -17,6 +17,18 @@
 #include "ccpacket.h"
 
 /*
+ * timeval_set_timeout	Set a timeval to current time plus a timeout (ms).
+ */
+void timeval_set_timeout(struct timeval *tv, unsigned int timeout) {
+	gettimeofday(tv, NULL);
+	tv->tv_usec += timeout * 1000;
+	while(tv->tv_usec >= 1000000) {
+		tv->tv_sec++;
+		tv->tv_usec -= 1000000;
+	}
+}
+
+/*
  * packet_counter_init	Initialize a new packet counter.
  *
  * log: message logger
@@ -122,12 +134,7 @@ void ccpacket_init(struct ccpacket *pkt) {
  * ccpacket_set_timeout	Set the timeout for a camera control packet.
  */
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout) {
-	gettimeofday(&pkt->expire, NULL);
-	pkt->expire.tv_usec += timeout * 1000;
-	while(pkt->expire.tv_usec >= 1000000) {
-		pkt->expire.tv_sec++;
-		pkt->expire.tv_usec -= 1000000;
-	}
+	timeval_set_timeout(&pkt->expire, timeout);
 }
 
 /*

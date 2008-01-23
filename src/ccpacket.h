@@ -4,6 +4,8 @@
 #include <sys/time.h>	/* for struct timeval, gettimeofday */
 #include "log.h"
 
+void timeval_set_timeout(struct timeval *tv, unsigned int timeout);
+
 struct packet_counter {
 	struct log	*log;		/* logger */
 	long long	n_packets;	/* total count of packets */
