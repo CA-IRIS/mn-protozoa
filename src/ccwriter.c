@@ -24,16 +24,14 @@
  * ccwriter_set_receivers	Set the number of receivers for the writer.
  */
 static int ccwriter_set_receivers(struct ccwriter *wtr, const int n_rcv) {
-	struct timeval now;
 	int i;
 
-	wtr->ptime = malloc(sizeof(struct timeval) * n_rcv);
-	if(wtr->ptime == NULL)
+	wtr->packet = malloc(sizeof(struct ccpacket) * n_rcv);
+	if(wtr->packet == NULL)
 		return -1;
-	if(gettimeofday(&now, NULL) == 0) {
-		for(i = 0; i < n_rcv; i++)
-			memcpy(wtr->ptime + i, &now, sizeof(struct timeval));
-	}
+	for(i = 0; i < n_rcv; i++)
+		ccpacket_init(wtr->packet + i);
+	wtr->n_rcv = n_rcv;
 	return 0;
 }
 
@@ -56,7 +54,7 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	} else if(strcasecmp(protocol, "axis") == 0) {
 		wtr->do_write = axis_do_write;
 		wtr->chn->response_required = true;
-		return 0;
+		return ccwriter_set_receivers(wtr, AXIS_MAX_ADDRESS);
 	} else {
 		log_println(wtr->chn->log, "Unknown protocol: %s", protocol);
 		return -1;
@@ -75,7 +73,8 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 	const char *protocol, const char *auth)
 {
 	wtr->chn = chn;
-	wtr->ptime = NULL;
+	wtr->packet = NULL;
+	wtr->n_rcv = 0;
 	wtr->auth = NULL;
 	if(auth) {
 		wtr->auth = malloc(strlen(auth) + 1);
@@ -130,8 +129,11 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 }
 
 /*
- * ccwriter_command_receiver	Update the command time for a receiver
+ * ccwriter_do_write	Process one packet for the writer.
  */
-void ccwriter_command_receiver(struct ccwriter *wtr, int receiver) {
-	gettimeofday(wtr->ptime + receiver - 1, NULL);
+int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+	unsigned int c = wtr->do_write(wtr, pkt);
+	if(pkt->receiver <= wtr->n_rcv)
+		ccpacket_copy(wtr->packet + pkt->receiver - 1, pkt);
+	return c;
 }

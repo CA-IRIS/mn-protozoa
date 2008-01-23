@@ -111,5 +111,6 @@ bool ccpacket_has_preset(struct ccpacket *pkt);
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name);
 void ccpacket_count(struct ccpacket *pkt);
 void ccpacket_drop(struct ccpacket *pkt);
+void ccpacket_copy(struct ccpacket *dest, struct ccpacket *src);
 
 #endif

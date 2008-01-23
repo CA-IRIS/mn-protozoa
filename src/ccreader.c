@@ -170,21 +170,6 @@ static int ccnode_get_receiver(const struct ccnode *node, int receiver) {
 }
 
 /*
- * ccreader_do_one_writer	Write a packet to one linked writer.
- *
- * return: 1 if the writer wrote the packet; 0 otherwise
- */
-static inline unsigned int ccreader_do_one_writer(struct ccreader *rdr,
-	struct ccwriter *wtr)
-{
-	struct ccpacket *pkt = &rdr->packet;
-	unsigned int r = wtr->do_write(wtr, pkt);
-	if(r)
-		ccwriter_command_receiver(wtr, pkt->receiver);
-	return r;
-}
-
-/*
  * ccreader_do_writers		Write a packet to all linked writers.
  *
  * return: number of writers that wrote the packet
@@ -197,7 +182,7 @@ static unsigned int ccreader_do_writers(struct ccreader *rdr) {
 	while(node) {
 		pkt->receiver = ccnode_get_receiver(node, receiver);
 		if(pkt->receiver)
-			res += ccreader_do_one_writer(rdr, node->writer);
+			res += ccwriter_do_write(node->writer, pkt);
 		node = node->next;
 	}
 	pkt->receiver = receiver;	/* restore "true" receiver */

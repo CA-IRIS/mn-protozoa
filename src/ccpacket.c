@@ -267,3 +267,10 @@ void ccpacket_drop(struct ccpacket *pkt) {
 		ccpacket_count(pkt);
 	}
 }
+
+/*
+ * ccpacket_copy	Copy a camera control packet.
+ */
+void ccpacket_copy(struct ccpacket *dest, struct ccpacket *src) {
+	memcpy(dest, src, sizeof(struct ccpacket));
+}
