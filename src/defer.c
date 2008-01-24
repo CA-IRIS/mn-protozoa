@@ -45,13 +45,30 @@ fail:
 	return NULL;
 }
 
+static int time_elapsed(const struct timeval *start, const struct timeval *end)
+{
+	return (end->tv_sec - start->tv_sec) * 1000 +
+		(end->tv_usec - start->tv_usec) / 1000;
+}
+
+static int time_from_now(const struct timeval *tv) {
+	struct timeval now;
+	int ms;
+
+	gettimeofday(&now, NULL);
+
+	ms = time_elapsed(&now, tv);
+	if(ms < 0)
+		return 0;
+	else
+		return ms;
+}
+
 static int defer_rearm(struct defer *dfr) {
 	struct deferred_pkt *dpkt = cl_rbtree_peek(&dfr->tree);
-	if(dpkt) {
-		unsigned int ms = 0;
-		// FIXME: calculate the ms to the next deferred packet time
-		return timer_arm(ms);
-	} else
+	if(dpkt)
+		return timer_arm(time_from_now(&dpkt->tv));
+	else
 		return timer_disarm();
 }
 
@@ -70,6 +87,21 @@ int defer_packet(struct defer *dfr, struct ccpacket *pkt,
 	return defer_rearm(dfr);
 }
 
+static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
+	int timeout = dpkt->writer->timeout;
+
+	cl_rbtree_remove(&dfr->tree, dpkt);
+	if(time_elapsed(&dpkt->packet->sent, &dpkt->tv) >= timeout) {
+		ccwriter_do_write(dpkt->writer, dpkt->packet);
+		gettimeofday(&dpkt->packet->sent, NULL);
+		timeval_set_timeout(&dpkt->tv, timeout);
+	}
+	if(time_elapsed(&dpkt->packet->sent, &dpkt->tv) >= timeout)
+		cl_rbtree_add(&dfr->tree, dpkt);
+	else
+		cl_pool_release(&dfr->pool, dpkt);
+}
+
 int defer_next(struct defer *dfr) {
 	struct deferred_pkt *dpkt;
 
@@ -77,10 +109,7 @@ int defer_next(struct defer *dfr) {
 		return -1;
 
 	dpkt = cl_rbtree_peek(&dfr->tree);
-	if(dpkt) {
-		cl_rbtree_remove(&dfr->tree, dpkt);
-		// FIXME: send the deferred packet
-		cl_pool_release(&dfr->pool, dpkt);
-	}
+	if(dpkt)
+		defer_packet_now(dfr, dpkt);
 	return defer_rearm(dfr);
 }

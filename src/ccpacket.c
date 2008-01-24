@@ -123,6 +123,8 @@ static void packet_counter_count(struct packet_counter *cnt,
  * ccpacket_init	Initialize a new camera control packet.
  */
 void ccpacket_init(struct ccpacket *pkt) {
+	pkt->sent.tv_sec = 0;
+	pkt->sent.tv_usec = 0;
 	pkt->expire.tv_sec = 0;
 	pkt->expire.tv_usec = 0;
 	pkt->counter = NULL;
@@ -134,6 +136,7 @@ void ccpacket_init(struct ccpacket *pkt) {
  * ccpacket_set_timeout	Set the timeout for a camera control packet.
  */
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout) {
+	gettimeofday(&pkt->sent, NULL);
 	timeval_set_timeout(&pkt->expire, timeout);
 }
 
