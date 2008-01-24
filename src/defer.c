@@ -72,6 +72,9 @@ static int defer_rearm(struct defer *dfr) {
 		return timer_disarm();
 }
 
+/*
+ * defer_packet		Defer one packet to be sent at a later time.
+ */
 int defer_packet(struct defer *dfr, struct ccpacket *pkt,
 	struct ccwriter *wtr)
 {
@@ -102,6 +105,9 @@ static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
 		cl_pool_release(&dfr->pool, dpkt);
 }
 
+/*
+ * defer_next		Process the next deferred packet
+ */
 int defer_next(struct defer *dfr) {
 	struct deferred_pkt *dpkt;
 
