@@ -21,5 +21,6 @@ struct defer *defer_init(struct defer *dfr);
 int defer_packet(struct defer *dfr, struct ccpacket *pkt,
 	struct ccwriter *wtr);
 int defer_next(struct defer *dfr);
+int defer_get_fd(struct defer *dfr);
 
 #endif

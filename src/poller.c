@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,15 @@
  * return: pointer to struct poller or NULL on error
  */
 struct poller *poller_init(struct poller *plr, int n_channels,
-	struct channel *chns)
+	struct channel *chns, struct defer *dfr)
 {
 	memset(plr, 0, sizeof(struct poller));
 	plr->n_channels = n_channels;
 	plr->chns = chns;
-	plr->pollfds = malloc(sizeof(struct pollfd) * n_channels);
+	plr->pollfds = malloc(sizeof(struct pollfd) * (n_channels + 1));
 	if(plr->pollfds == NULL)
 		return NULL;
+	plr->defer = dfr;
 	/* open an fd to poll for closed channels */
 	plr->fd_null = open("/dev/null", O_RDONLY);
 	return plr;
@@ -83,6 +84,17 @@ static inline void poller_register_channel(struct poller *plr,
 	}
 }
 
+static struct pollfd *poller_deferred_pollfd(const struct poller *plr) {
+	return plr->pollfds + plr->n_channels;
+}
+
+static void poller_register_deferred(struct poller *plr) {
+	struct pollfd *pfd = poller_deferred_pollfd(plr);
+
+	pfd->fd = defer_get_fd(plr->defer);
+	pfd->events = POLLIN;
+}
+
 /*
  * poller_register_events	Register events for all channels to poll.
  */
@@ -92,6 +104,7 @@ static void poller_register_events(struct poller *plr) {
 
 	for(i = 0; i < plr->n_channels; i++, chn = chn->next)
 		poller_register_channel(plr, chn, plr->pollfds + i);
+	poller_register_deferred(plr);
 }
 
 static void debug_log(struct channel *chn, const char *msg) {
@@ -148,6 +161,13 @@ static inline void poller_channel_events(struct poller *plr,
 	}
 }
 
+static void poller_defer_events(struct poller *plr) {
+	struct pollfd *pfd = poller_deferred_pollfd(plr);
+
+	if(pfd->revents & POLLIN)
+		defer_next(plr->defer);
+}
+
 /*
  * poller_do_poll	Poll all channels for new events.
  */
@@ -155,10 +175,11 @@ static int poller_do_poll(struct poller *plr) {
 	int i;
 	struct channel *chn = plr->chns;
 
-	if(poll(plr->pollfds, plr->n_channels, -1) < 0)
+	if(poll(plr->pollfds, plr->n_channels + 1, -1) < 0)
 		return -1;
 	for(i = 0; i < plr->n_channels; i++, chn = chn->next)
 		poller_channel_events(plr, chn, plr->pollfds + i);
+	poller_defer_events(plr);
 	return 0;
 }
 

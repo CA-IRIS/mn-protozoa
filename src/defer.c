@@ -102,3 +102,7 @@ int defer_next(struct defer *dfr) {
 		defer_packet_now(dfr, dpkt);
 	return defer_rearm(dfr);
 }
+
+int defer_get_fd(struct defer *dfr) {
+	return timer_get_fd();
+}
