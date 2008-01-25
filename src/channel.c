@@ -273,7 +273,7 @@ int channel_open(struct channel *chn) {
 	if(channel_is_sport(chn))
 		return channel_open_sport(chn);
 	else {
-		if(channel_is_localhost(chn))
+		if(chn->listen && channel_is_localhost(chn))
 			return channel_open_listener(chn);
 		else
 			return channel_open_tcp(chn);
