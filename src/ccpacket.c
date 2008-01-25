@@ -17,18 +17,6 @@
 #include "ccpacket.h"
 
 /*
- * timeval_set_timeout	Set a timeval to current time plus a timeout (ms).
- */
-void timeval_set_timeout(struct timeval *tv, unsigned int timeout) {
-	gettimeofday(tv, NULL);
-	tv->tv_usec += timeout * 1000;
-	while(tv->tv_usec >= 1000000) {
-		tv->tv_sec++;
-		tv->tv_usec -= 1000000;
-	}
-}
-
-/*
  * packet_counter_init	Initialize a new packet counter.
  *
  * log: message logger

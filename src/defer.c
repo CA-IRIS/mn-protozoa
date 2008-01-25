@@ -13,6 +13,7 @@
  * GNU General Public License for more details.
  */
 #include "timer.h"	/* for timer_init */
+#include "timeval.h"
 #include "defer.h"
 
 static cl_compare_t compare_pkts(const void *value0, const void *value1) {
@@ -45,24 +46,6 @@ fail:
 	return NULL;
 }
 
-static int time_elapsed(const struct timeval *start, const struct timeval *end)
-{
-	return (end->tv_sec - start->tv_sec) * 1000 +
-		(end->tv_usec - start->tv_usec) / 1000;
-}
-
-static int time_from_now(const struct timeval *tv) {
-	struct timeval now;
-	int ms;
-
-	gettimeofday(&now, NULL);
-
-	ms = time_elapsed(&now, tv);
-	if(ms < 0)
-		return 0;
-	else
-		return ms;
-}
 
 static int defer_rearm(struct defer *dfr) {
 	struct deferred_pkt *dpkt = cl_rbtree_peek(&dfr->tree);

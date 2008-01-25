@@ -15,9 +15,11 @@
 #include <string.h>		/* for strcpy, strlen */
 #include <strings.h>		/* for strcasecmp */
 #include "ccwriter.h"
+#include "defer.h"
 #include "axis.h"
 #include "manchester.h"
 #include "pelco_d.h"
+#include "timeval.h"
 #include "vicon.h"
 
 static void ccwriter_set_timeout(struct ccwriter *wtr, unsigned int timeout) {
@@ -141,10 +143,13 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
  * ccwriter_do_write	Process one packet for the writer.
  */
 int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+	unsigned int c;
+
 	// FIXME: if pkt == wtr->packet (w/timeout), drop pkt
-	unsigned int c = wtr->do_write(wtr, pkt);
+	c = wtr->do_write(wtr, pkt);
 	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv)
 		ccpacket_copy(wtr->packet + pkt->receiver - 1, pkt);
-	// FIXME: if pkt timeout < wtr timeout, schedule a deferred pkt
+	if(time_from_now(&pkt->expire) < wtr->timeout)
+		defer_packet(wtr->defer, pkt, wtr);
 	return c;
 }

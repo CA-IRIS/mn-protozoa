@@ -4,6 +4,8 @@
 #include "ccpacket.h"	/* for struct ccpacket */
 #include "channel.h"	/* for struct channel */
 
+struct defer;
+
 struct ccwriter {
 	unsigned int (*do_write) (struct ccwriter *wtr, struct ccpacket *pkt);
 	struct channel		*chn;		/* channel to write */
@@ -11,6 +13,7 @@ struct ccwriter {
 	unsigned int		n_rcv;		/* number of receivers */
 	unsigned int		timeout;	/* time command is held (ms) */
 	char			*auth;		/* authentication token */
+	struct defer		*defer;		/* deferred packet handler */
 };
 
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,

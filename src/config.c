@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,13 @@ struct config *config_init(struct config *cfg, struct log *log,
 		return NULL;
 	cfg->log = log;
 	cfg->counter = cnt;
+	cfg->defer = malloc(sizeof(struct defer));
+	if(defer_init(cfg->defer) == NULL)
+		goto fail;
 	return cfg;
+fail:
+	free(cfg->line);
+	return NULL;
 }
 
 /*
@@ -219,6 +225,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	writer = ccwriter_new(chn_out, protocol_out, auth_out);
 	if(writer == NULL)
 		goto fail;
+	writer->defer = cfg->defer;
 	ccreader_add_writer(reader, writer, range, shift);
 	return 0;
 fail:

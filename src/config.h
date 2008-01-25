@@ -3,6 +3,7 @@
 
 #include "channel.h"
 #include "ccpacket.h"
+#include "defer.h"
 
 #define LINE_LENGTH (256)
 
@@ -12,6 +13,7 @@ struct config {
 	int			n_channels;
 	struct log		*log;
 	struct packet_counter	*counter;
+	struct defer		*defer;
 };
 
 struct config *config_init(struct config *cfg, struct log *log,
