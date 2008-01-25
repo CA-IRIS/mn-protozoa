@@ -4,7 +4,7 @@
 #include "ccpacket.h"	/* for struct ccpacket */
 #include "channel.h"	/* for struct channel */
 
-struct defer;
+struct defer;	/* avoid circular dependancy */
 
 struct ccwriter {
 	unsigned int (*do_write) (struct ccwriter *wtr, struct ccpacket *pkt);
