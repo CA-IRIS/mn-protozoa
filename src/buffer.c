@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
 #include <unistd.h>	/* for read, write */
 #include <sys/errno.h>	/* for errno */
 #include "buffer.h"	/* for struct buffer and prototypes */
-
-extern int errno;
 
 /*
  * buffer_init		Initialize a new I/O buffer.
@@ -110,6 +108,7 @@ static inline void buffer_compact(struct buffer *buf) {
  * return: number of bytes read; -1 on error (with errno set)
  */
 ssize_t buffer_read(struct buffer *buf, int fd) {
+	ssize_t n_bytes;
 	size_t count = buffer_space(buf);
 	if(count == 0) {
 		buffer_compact(buf);
@@ -119,7 +118,9 @@ ssize_t buffer_read(struct buffer *buf, int fd) {
 			return -1;
 		}
 	}
-	ssize_t n_bytes = read(fd, buf->pin, count);
+	do {
+		n_bytes = read(fd, buf->pin, count);
+	} while(n_bytes < 0 && errno == EINTR);
 	if(n_bytes > 0)
 		buf->pin += n_bytes;
 	return n_bytes;
@@ -132,12 +133,15 @@ ssize_t buffer_read(struct buffer *buf, int fd) {
  * return: number of bytes written; -1 on error (with errno set)
  */
 ssize_t buffer_write(struct buffer *buf, int fd) {
+	ssize_t n_bytes;
 	size_t count = buffer_available(buf);
 	if(count == 0) {
 		errno = ENOBUFS;
 		return -1;
 	}
-	ssize_t n_bytes = write(fd, buf->pout, count);
+	do {
+		n_bytes = write(fd, buf->pout, count);
+	} while(n_bytes < 0 && errno == EINTR);
 	if(n_bytes > 0)
 		buffer_consume(buf, n_bytes);
 	return n_bytes;

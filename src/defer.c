@@ -73,16 +73,23 @@ int defer_packet(struct defer *dfr, struct ccpacket *pkt,
 	return defer_rearm(dfr);
 }
 
+static bool deferred_pkt_again(struct deferred_pkt *dpkt) {
+	int timeout = dpkt->writer->timeout;
+
+	return (time_elapsed(&dpkt->packet->sent, &dpkt->tv) >= timeout) &&
+		(time_elapsed(&dpkt->tv, &dpkt->packet->expire) >= timeout);
+}
+
 static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
 	int timeout = dpkt->writer->timeout;
 
 	cl_rbtree_remove(&dfr->tree, dpkt);
-	if(time_elapsed(&dpkt->packet->sent, &dpkt->tv) >= timeout) {
+	if(deferred_pkt_again(dpkt)) {
 		ccwriter_do_write(dpkt->writer, dpkt->packet);
 		gettimeofday(&dpkt->packet->sent, NULL);
 		timeval_set_timeout(&dpkt->tv, timeout);
 	}
-	if(time_elapsed(&dpkt->packet->sent, &dpkt->tv) >= timeout)
+	if(deferred_pkt_again(dpkt))
 		cl_rbtree_add(&dfr->tree, dpkt);
 	else
 		cl_pool_release(&dfr->pool, dpkt);

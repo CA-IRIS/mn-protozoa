@@ -149,7 +149,7 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	c = wtr->do_write(wtr, pkt);
 	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv)
 		ccpacket_copy(wtr->packet + pkt->receiver - 1, pkt);
-	if(time_from_now(&pkt->expire) < wtr->timeout)
+	if(time_from_now(&pkt->expire) > wtr->timeout)
 		defer_packet(wtr->defer, pkt, wtr);
 	return c;
 }

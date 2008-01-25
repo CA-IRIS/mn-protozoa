@@ -172,11 +172,14 @@ static void poller_defer_events(struct poller *plr) {
  * poller_do_poll	Poll all channels for new events.
  */
 static int poller_do_poll(struct poller *plr) {
-	int i;
+	int i, r;
 	struct channel *chn = plr->chns;
 
-	if(poll(plr->pollfds, plr->n_channels + 1, -1) < 0)
-		return -1;
+	do {
+		r = poll(plr->pollfds, plr->n_channels + 1, -1);
+	} while(r < 0 && errno == EINTR);
+	if(r < 0)
+		return r;
 	for(i = 0; i < plr->n_channels; i++, chn = chn->next)
 		poller_channel_events(plr, chn, plr->pollfds + i);
 	poller_defer_events(plr);

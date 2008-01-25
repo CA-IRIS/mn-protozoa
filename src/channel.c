@@ -187,7 +187,9 @@ static inline int channel_configure_sport(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 static int channel_open_sport(struct channel *chn) {
-	chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
+	do {
+		chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
+	} while(chn->fd < 0 && errno == EINTR);
 	if(chn->fd < 0) {
 		chn->fd = 0;
 		return -1;
