@@ -50,3 +50,21 @@ int time_from_now(const struct timeval *tv) {
 	else
 		return ms;
 }
+
+/*
+ * timeval_compare	Compare two timevals.
+ */
+cl_compare_t timeval_compare(const void *value0, const void *value1) {
+	const struct timeval *t0 = value0;
+	const struct timeval *t1 = value1;
+
+	if(t0->tv_sec < t1->tv_sec)
+		return CL_LESS;
+	if(t0->tv_sec > t1->tv_sec)
+		return CL_GREATER;
+	if(t0->tv_usec < t1->tv_usec)
+		return CL_LESS;
+	if(t0->tv_usec > t1->tv_usec)
+		return CL_GREATER;
+	return CL_EQUAL;
+}

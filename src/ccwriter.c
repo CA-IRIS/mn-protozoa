@@ -52,18 +52,22 @@ static int ccwriter_set_receivers(struct ccwriter *wtr, const int n_rcv) {
  */
 static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0) {
+		wtr->encode_speed = manchester_encode_speed;
 		wtr->do_write = manchester_do_write;
 		ccwriter_set_timeout(wtr, MANCHESTER_TIMEOUT);
 		return ccwriter_set_receivers(wtr, MANCHESTER_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
+		wtr->encode_speed = pelco_d_encode_speed;
 		wtr->do_write = pelco_d_do_write;
 		ccwriter_set_timeout(wtr, PELCO_D_TIMEOUT);
 		return ccwriter_set_receivers(wtr, PELCO_D_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "vicon") == 0) {
+		wtr->encode_speed = vicon_encode_speed;
 		wtr->do_write = vicon_do_write;
 		ccwriter_set_timeout(wtr, VICON_TIMEOUT);
 		return ccwriter_set_receivers(wtr, VICON_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "axis") == 0) {
+		wtr->encode_speed = axis_encode_speed;
 		wtr->do_write = axis_do_write;
 		wtr->chn->response_required = true;
 		ccwriter_set_timeout(wtr, AXIS_TIMEOUT);
@@ -90,6 +94,7 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 	wtr->n_rcv = 0;
 	wtr->timeout = DEFAULT_TIMEOUT;
 	wtr->auth = NULL;
+	wtr->encode_speed = NULL;
 	if(auth) {
 		wtr->auth = malloc(strlen(auth) + 1);
 		if(wtr->auth == NULL)
@@ -149,7 +154,10 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	unsigned int c;
 	struct ccpacket *wpkt = wtr->packet + pkt->receiver - 1;
 
-	// FIXME: if pkt == wtr->packet (w/timeout), drop pkt
+	if(time_from_now(&pkt->expire) < wtr->timeout) {
+		if(ccpacket_equals(pkt, wpkt, wtr->encode_speed))
+			return 0;
+	}
 	c = wtr->do_write(wtr, pkt);
 	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv) {
 		if(wpkt != pkt)

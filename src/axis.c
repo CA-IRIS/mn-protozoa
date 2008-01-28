@@ -1,7 +1,7 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
  * Copyright (C) 2007  Traffic Technologies
- * Copyright (C) 2007  Minnesota Department of Transportation
+ * Copyright (C) 2007-2008  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,13 @@ static int axis_prepare_buffer(struct ccwriter *w, int somein, bool auth) {
 }
 
 /*
+ * axis_encode_speed	Encode pan/tilt speed.
+ */
+int axis_encode_speed(int speed) {
+	return ((speed * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
+}
+
+/*
  * encode_pan		Encode the pan speed.
  *
  * p: Packet to encode pan speed from
@@ -67,7 +74,7 @@ static int axis_prepare_buffer(struct ccwriter *w, int somein, bool auth) {
 static void encode_pan(struct ccpacket *p, char *mess) {
 	char speed_str[8];
 
-	int speed = ((p->pan * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
+	int speed = axis_encode_speed(p->pan);
 	if(p->command & CC_PAN_LEFT)
 		speed = -speed;
 	if(snprintf(speed_str, 8, "%d,", speed) > 0)
@@ -85,7 +92,7 @@ static void encode_pan(struct ccpacket *p, char *mess) {
 static void encode_tilt(struct ccpacket *p, char *mess) {
 	char speed_str[8];
 
-	int speed = ((p->tilt * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
+	int speed = axis_encode_speed(p->tilt);
 	if(p->command & CC_TILT_DOWN)
 		speed = -speed;
 	if(snprintf(speed_str, 8, "%d,", speed) > 0)

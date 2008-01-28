@@ -14,6 +14,7 @@ struct ccwriter {
 	unsigned int		timeout;	/* time command is held (ms) */
 	char			*auth;		/* authentication token */
 	struct defer		*defer;		/* deferred packet handler */
+	SPEED_CALLBACK		*encode_speed;	/* callback to encode speed */
 };
 
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,

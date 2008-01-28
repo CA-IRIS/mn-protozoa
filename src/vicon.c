@@ -334,6 +334,10 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+int vicon_encode_speed(int speed) {
+	return speed & 0x7ff;
+}
+
 static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 	mess[6] = (p->pan >> 7) & 0x0f;
 	mess[7] = p->pan & 0x7f;

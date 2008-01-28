@@ -250,7 +250,7 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[1] = receiver;
 }
 
-static int encode_speed(int speed) {
+int pelco_d_encode_speed(int speed) {
 	int s = speed >> 5;
 	/* round up to the next speed level */
 	if(speed % 32)
@@ -262,7 +262,7 @@ static int encode_speed(int speed) {
 }
 
 static void encode_pan(uint8_t *mess, struct ccpacket *p) {
-	int pan = encode_speed(p->pan);
+	int pan = pelco_d_encode_speed(p->pan);
 	if(p->pan > SPEED_MAX - 8)
 		pan = TURBO_SPEED;
 	mess[4] = pan;
@@ -277,7 +277,7 @@ static void encode_pan(uint8_t *mess, struct ccpacket *p) {
 }
 
 static void encode_tilt(uint8_t *mess, struct ccpacket *p) {
-	int tilt = encode_speed(p->tilt);
+	int tilt = pelco_d_encode_speed(p->tilt);
 	mess[5] = tilt;
 	if(tilt) {
 		if(p->command & CC_TILT_UP)

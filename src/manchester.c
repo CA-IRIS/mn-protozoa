@@ -56,7 +56,7 @@ static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
-static int speed_code(int speed) {
+int manchester_encode_speed(int speed) {
 	int s;
 	for(s = 0; s < SPEED_FULL; s++) {
 		/* round up to the next higher speed level */
@@ -283,7 +283,7 @@ static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
 }
 
 static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
-	int speed = speed_code(p->pan);
+	int speed = manchester_encode_speed(p->pan);
 	if(p->command & CC_PAN_LEFT) {
 		if(speed == SPEED_FULL)
 			encode_lens_function(w, p, XL_PAN_LEFT);
@@ -298,7 +298,7 @@ static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
 }
 
 static void encode_tilt(struct ccwriter *w, struct ccpacket *p) {
-	int speed = speed_code(p->tilt);
+	int speed = manchester_encode_speed(p->tilt);
 	if(p->command & CC_TILT_DOWN) {
 		if(speed == SPEED_FULL)
 			encode_lens_function(w, p, XL_TILT_DOWN);

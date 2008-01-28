@@ -23,15 +23,7 @@ static cl_compare_t compare_pkts(const void *value0, const void *value1) {
 	const struct deferred_pkt *dpkt0 = value0;
 	const struct deferred_pkt *dpkt1 = value1;
 
-	if(dpkt0->tv.tv_sec < dpkt1->tv.tv_sec)
-		return CL_LESS;
-	if(dpkt0->tv.tv_sec > dpkt1->tv.tv_sec)
-		return CL_GREATER;
-	if(dpkt0->tv.tv_usec < dpkt1->tv.tv_usec)
-		return CL_LESS;
-	if(dpkt0->tv.tv_usec > dpkt1->tv.tv_usec)
-		return CL_GREATER;
-	return CL_EQUAL;
+	return timeval_compare(&dpkt0->tv, &dpkt1->tv);
 }
 
 /*

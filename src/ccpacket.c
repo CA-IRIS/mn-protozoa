@@ -272,3 +272,32 @@ void ccpacket_drop(struct ccpacket *pkt) {
 void ccpacket_copy(struct ccpacket *dest, struct ccpacket *src) {
 	memcpy(dest, src, sizeof(struct ccpacket));
 }
+
+/*
+ * ccpacket_equals	Compare two packets for "equality"
+ */
+bool ccpacket_equals(const struct ccpacket *p0, const struct ccpacket *p1,
+	SPEED_CALLBACK *encode_speed)
+{
+	if(p0->receiver != p1->receiver)
+		return false;
+	if(p0->status != p1->status)
+		return false;
+	if(p0->command != p1->command)
+		return false;
+	if(encode_speed(p0->pan) != encode_speed(p1->pan))
+		return false;
+	if(encode_speed(p0->tilt) != encode_speed(p1->tilt))
+		return false;
+	if(p0->zoom != p1->zoom)
+		return false;
+	if(p0->focus != p1->focus)
+		return false;
+	if(p0->iris != p1->iris)
+		return false;
+	if(p0->aux != p1->aux)
+		return false;
+	if(p0->preset != p1->preset)
+		return false;
+	return true;
+}
