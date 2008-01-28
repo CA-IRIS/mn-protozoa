@@ -22,12 +22,18 @@
 
 struct timer timer_singleton;
 
+/*
+ * timer_handler		Signal handler for timer signals.
+ */
 static void timer_handler(int signo) {
 	static const char c = 0;
 
 	write(timer_singleton.pipe_fd[PIPE_WRITE], &c, 1);
 }
 
+/*
+ * timer_install_handler	Install the timer signal handler.
+ */
 static int timer_install_handler() {
 	struct sigaction sa;
 
@@ -38,6 +44,9 @@ static int timer_install_handler() {
 	return sigaction(SIGALRM, &sa, &timer_singleton.sa_original);
 }
 
+/*
+ * timer_init			Initialize the timer.
+ */
 struct timer *timer_init() {
 	if(pipe(timer_singleton.pipe_fd) < 0)
 		return NULL;
@@ -54,16 +63,25 @@ fail:
 	return NULL;
 }
 
+/*
+ * timer_remove_handler		Remove the timer signal handler.
+ */
 static void timer_remove_handler() {
 	sigaction(SIGALRM, &timer_singleton.sa_original, NULL);
 }
 
+/*
+ * timer_destroy		Destroy the timer.
+ */
 void timer_destroy() {
 	timer_remove_handler();
 	close(timer_singleton.pipe_fd[PIPE_WRITE]);
 	close(timer_singleton.pipe_fd[PIPE_READ]);
 }
 
+/*
+ * timer_read			Read one event from the timer.
+ */
 int timer_read() {
 	ssize_t b;
 	char c;
@@ -75,6 +93,9 @@ int timer_read() {
 	return b;
 }
 
+/*
+ * timer_write			Write one event to the timer.
+ */
 static int timer_write() {
 	ssize_t b;
 	char c = 0;
@@ -86,6 +107,9 @@ static int timer_write() {
 	return b;
 }
 
+/*
+ * timer_arm			Arm the timer with specified timeout.
+ */
 int timer_arm(unsigned int msec) {
 	if(msec == 0) {
 		// Too late to arm timer, just write to the pipe
@@ -101,6 +125,9 @@ int timer_arm(unsigned int msec) {
 	return setitimer(ITIMER_REAL, &timer_singleton.itimer, NULL);
 }
 
+/*
+ * timer_disarm			Stop the timer from firing for now.
+ */
 int timer_disarm() {
 	timer_singleton.itimer.it_interval.tv_sec = 0;
 	timer_singleton.itimer.it_interval.tv_usec = 0;
@@ -110,6 +137,9 @@ int timer_disarm() {
 	return setitimer(ITIMER_REAL, &timer_singleton.itimer, NULL);
 }
 
+/*
+ * timer_get_fd			Get the file descriptor for timer events.
+ */
 int timer_get_fd() {
 	return timer_singleton.pipe_fd[PIPE_READ];
 }

@@ -22,6 +22,9 @@
 #include "timeval.h"
 #include "vicon.h"
 
+/*
+ * ccwriter_set_timeout		Set the timeout for the writer's protocol.
+ */
 static void ccwriter_set_timeout(struct ccwriter *wtr, unsigned int timeout) {
 	wtr->timeout = timeout;
 }

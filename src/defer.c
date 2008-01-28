@@ -16,6 +16,9 @@
 #include "timeval.h"
 #include "defer.h"
 
+/*
+ * compare_pkts		Compare two packets for sorting them by time.
+ */
 static cl_compare_t compare_pkts(const void *value0, const void *value1) {
 	const struct deferred_pkt *dpkt0 = value0;
 	const struct deferred_pkt *dpkt1 = value1;
@@ -31,6 +34,9 @@ static cl_compare_t compare_pkts(const void *value0, const void *value1) {
 	return CL_EQUAL;
 }
 
+/*
+ * defer_init		Initialize the deferred packet engine.
+ */
 struct defer *defer_init(struct defer *dfr) {
 	if(cl_pool_init(&dfr->pool, sizeof(struct deferred_pkt)) == NULL)
 		return NULL;
@@ -46,7 +52,9 @@ fail:
 	return NULL;
 }
 
-
+/*
+ * defer_rearm		Rearm the timer for the next deferred packet.
+ */
 static int defer_rearm(struct defer *dfr) {
 	struct deferred_pkt *dpkt = cl_rbtree_peek(&dfr->tree);
 	if(dpkt)
@@ -73,6 +81,9 @@ int defer_packet(struct defer *dfr, struct ccpacket *pkt,
 	return defer_rearm(dfr);
 }
 
+/*
+ * deferred_pkt_again		Check if a packet should be deferred again.
+ */
 static bool deferred_pkt_again(struct deferred_pkt *dpkt) {
 	int timeout = dpkt->writer->timeout;
 
@@ -80,6 +91,9 @@ static bool deferred_pkt_again(struct deferred_pkt *dpkt) {
 		(time_elapsed(&dpkt->tv, &dpkt->packet->expire) >= timeout);
 }
 
+/*
+ * defer_packet_now		Send a deferred packet right now.
+ */
 static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
 	int timeout = dpkt->writer->timeout;
 
@@ -110,6 +124,9 @@ int defer_next(struct defer *dfr) {
 	return defer_rearm(dfr);
 }
 
+/*
+ * defer_get_fd		Get the file descriptor for deferred events.
+ */
 int defer_get_fd(struct defer *dfr) {
 	return timer_get_fd();
 }

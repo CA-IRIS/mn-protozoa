@@ -27,11 +27,17 @@ void timeval_set_timeout(struct timeval *tv, unsigned int timeout) {
 	}
 }
 
+/*
+ * time_elapsed		Calculate the time elapsed between two timevals
+ */
 int time_elapsed(const struct timeval *start, const struct timeval *end) {
 	return (end->tv_sec - start->tv_sec) * 1000 +
 		(end->tv_usec - start->tv_usec) / 1000;
 }
 
+/*
+ * time_from_now	Determine milliseconds a timeval is in the future.
+ */
 int time_from_now(const struct timeval *tv) {
 	struct timeval now;
 	int ms;

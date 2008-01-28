@@ -19,6 +19,9 @@
 #include "pelco_d.h"
 #include "vicon.h"
 
+/*
+ * ccreader_set_timeout		Set the timeout for the reader's protocol.
+ */
 static void ccreader_set_timeout(struct ccreader *rdr, unsigned int timeout) {
 	rdr->timeout = timeout;
 }
