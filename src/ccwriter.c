@@ -151,9 +151,11 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 
 	// FIXME: if pkt == wtr->packet (w/timeout), drop pkt
 	c = wtr->do_write(wtr, pkt);
-	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv)
-		ccpacket_copy(wpkt, pkt);
-	if(time_from_now(&wpkt->expire) > wtr->timeout)
-		defer_packet(wtr->defer, wpkt, wtr);
+	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv) {
+		if(wpkt != pkt)
+			ccpacket_copy(wpkt, pkt);
+		if(time_from_now(&wpkt->expire) > wtr->timeout)
+			defer_packet(wtr->defer, wpkt, wtr);
+	}
 	return c;
 }
