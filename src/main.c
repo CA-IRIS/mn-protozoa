@@ -25,8 +25,6 @@
 static const char *CONF_FILE = "/etc/protozoa.conf";
 static const char *LOG_FILE = "/var/log/protozoa";
 
-extern int errno;
-
 struct poller *create_poller(struct log *log) {
 	int n_channels;
 	struct config cfg;
