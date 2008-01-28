@@ -3,7 +3,7 @@
 
 #include "ccwriter.h"
 
-#define MANCHESTER_TIMEOUT (60)
+#define MANCHESTER_TIMEOUT (80)
 #define MANCHESTER_MAX_ADDRESS (1024)
 
 void manchester_do_read(struct ccreader *r, struct buffer *rxbuf);
