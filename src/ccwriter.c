@@ -154,7 +154,7 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	unsigned int c;
 	struct ccpacket *wpkt = wtr->packet + pkt->receiver - 1;
 
-	if(time_from_now(&pkt->expire) < wtr->timeout) {
+	if(time_from_now(&pkt->expire) < wtr->timeout * 2) {
 		if(ccpacket_equals(pkt, wpkt, wtr->encode_speed))
 			return 0;
 	}

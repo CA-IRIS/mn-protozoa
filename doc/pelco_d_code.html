@@ -20,6 +20,12 @@
 	speed, which can be selected with a value of 64.
 </p>
 <p>
+	Commands sent to a camera remain active until another command is
+	received. For example, a pan will not stop until a command is sent
+	with pan speed of zero. There is a timeout function, but it is well
+	over 30 seconds.
+</p>
+<p>
 	The checksum is obtained by summing the values of bytes 1 - 5, using
 	only the low 8 bits of that sum.
 </p>
@@ -589,7 +595,7 @@
 </table>
 
 <p class="stamp">
-	2006 Jun 20
+	2008 Jan 28
 </p>
 </body>
 </html>
