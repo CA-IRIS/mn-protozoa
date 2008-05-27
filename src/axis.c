@@ -33,7 +33,7 @@ static const char *axis_ending = "\r\n\r\n";
  * msg: char string to add to the buffer
  */
 static void axis_add_to_buffer(struct ccwriter *wtr, const char *msg) {
-	char *mess = buffer_append(&wtr->chn->txbuf, strlen(msg));
+	char *mess = ccwriter_append(wtr, strlen(msg));
 	if(mess)
 		memcpy(mess, msg, strlen(msg));
 }
