@@ -14,7 +14,6 @@
  */
 #include <stdbool.h>
 #include <stdint.h>	/* for uint8_t */
-#include <string.h>	/* for memset */
 #include "ccreader.h"
 #include "pelco_d.h"
 #include "bitarray.h"
@@ -326,7 +325,6 @@ static inline void encode_checksum(uint8_t *mess) {
 static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		memset(mess, 0, SIZE_MSG);
 		encode_receiver(mess, p->receiver);
 		encode_pan(mess, p);
 		encode_tilt(mess, p);
@@ -339,7 +337,6 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		memset(mess, 0, SIZE_MSG);
 		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_EXTENDED);
 		if(p->command & CC_RECALL)
@@ -356,7 +353,6 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 static void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
-		memset(mess, 0, SIZE_MSG);
 		encode_receiver(mess, p->receiver);
 		bit_set(mess, BIT_EXTENDED);
 		if(p->aux & AUX_CLEAR)

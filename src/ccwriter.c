@@ -138,9 +138,10 @@ fail:
  */
 void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 	void *mess = buffer_append(&wtr->chn->txbuf, n_bytes);
-	if(mess)
+	if(mess) {
+		memset(mess, 0, n_bytes);
 		return mess;
-	else {
+	} else {
 		log_println(wtr->chn->log,
 			"ccwriter_append: output buffer full");
 		return NULL;
