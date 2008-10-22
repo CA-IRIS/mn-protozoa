@@ -69,7 +69,7 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	} else if(strcasecmp(protocol, "axis") == 0) {
 		wtr->encode_speed = axis_encode_speed;
 		wtr->do_write = axis_do_write;
-		wtr->chn->response_required = true;
+		wtr->chn->flags |= FLAG_RESP_REQUIRED;
 		ccwriter_set_timeout(wtr, AXIS_TIMEOUT);
 		return ccwriter_set_receivers(wtr, AXIS_MAX_ADDRESS);
 	} else {

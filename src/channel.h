@@ -19,8 +19,6 @@ struct channel {
 	int		fd;			/* file descriptor */
 	int		extra;			/* extra parameter */
 	enum ch_flag_t	flags;			/* channel flags */
-	bool		response_required;	/* flag response required */
-	bool		needs_response;		/* flag needs response */
 
 	struct buffer	rxbuf;			/* receive buffer */
 	struct buffer	txbuf;			/* transmit buffer */
