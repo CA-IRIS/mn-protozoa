@@ -291,6 +291,15 @@ static int channel_open_tcp(struct channel *chn) {
 }
 
 /*
+ * channel_should_listen	Test if the I/O channel should listen.
+ *
+ * return: true if the channel should listen; otherwise false
+ */
+static bool channel_should_listen(struct channel *chn) {
+	return chn->listen && channel_is_localhost(chn);
+}
+
+/*
  * channel_open		Open the I/O channel.
  *
  * return: 0 on success; -1 on error
@@ -298,14 +307,14 @@ static int channel_open_tcp(struct channel *chn) {
 int channel_open(struct channel *chn) {
 	assert(chn->fd == 0);
 	chn->needs_response = false;
-	if(chn->listen)
+	if(channel_should_listen(chn))
 		channel_log(chn, "listening");
 	else
 		channel_log(chn, "opening");
 	if(channel_is_sport(chn))
 		return channel_open_sport(chn);
 	else {
-		if(chn->listen && channel_is_localhost(chn))
+		if(channel_should_listen(chn))
 			return channel_open_listener(chn);
 		else
 			return channel_open_tcp(chn);
