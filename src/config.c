@@ -128,17 +128,33 @@ static inline size_t find_colon(const char *name) {
 }
 
 /*
+ * copy_name		Copy a port/host name.
+ */
+static void copy_name(const char *name, char *pname, const int plen) {
+	size_t len = find_colon(name);
+	if(len > plen)
+		len = plen;
+	strncpy(pname, name, len);
+	pname[len] = '\0';
+}
+
+/*
  * parse_name		Parse the channel name.
  *
  * name: channel name (port:baud or host:port pair)
  * pname: parsed value of the channel name.
  */
-static enum ch_flag_t parse_name(const char *name, char *pname) {
-	// FIXME: parse udp:// and tcp:// prefixes
-	size_t len = find_colon(name);
-	strncpy(pname, name, len);
-	pname[len] = '\0';
-	return 0;
+static enum ch_flag_t parse_name(const char *name, char *pname, const int plen){
+	enum ch_flag_t flags = 0;
+	if(strstr(name, "udp://") == name) {
+		copy_name(name + 6, pname, plen);
+		flags |= FLAG_UDP;
+	} else if(strstr(name, "tcp://") == name) {
+		copy_name(name + 6, pname, plen);
+		flags |= FLAG_TCP;
+	} else
+		copy_name(name, pname, plen);
+	return flags;
 }
 
 /*
@@ -172,7 +188,7 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
 	char pname[32];
 	int extra = parse_extra(name);
 
-	flags |= parse_name(name, pname);
+	flags |= parse_name(name, pname, 32);
 
 	return _config_get_channel(cfg, pname, extra, flags);
 }
