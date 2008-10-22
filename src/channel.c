@@ -25,93 +25,6 @@
 #define BUFFER_SIZE 256
 
 /*
- * channel_fill_sockaddr	Fill a sockaddr structure
- *
- * return: NULL on error; pointer to struct sockaddr on success
- */
-static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
-	struct sockaddr_in *sa)
-{
-	struct hostent *host = gethostbyname(chn->name);
-	if(host == NULL)
-		return NULL;
-	sa->sin_family = AF_INET;
-	memcpy(&sa->sin_addr.s_addr, host->h_addr, host->h_length);
-	/* tcp port stored in chn->extra parameter */
-	sa->sin_port = htons(chn->extra);
-	return sa;
-}
-
-/*
- * channel_set_tcp_keepalive	Set keepalive option on a socket. This is
- *				needed because some sockets never write data,
- *				so they will never notice a connection is lost
- *				without using keepalive probes.
- *
- * return: fd of socket on success; -1 on error
- */
-static int channel_set_tcp_keepalive(int fd) {
-	static int on = 1;		/* turn "on" values for setsockopt */
-	static int kcnt = 4;		/* 4 keepalive probes */
-	static int kidle = 30;		/* 30 second keepalive idle time */
-	static int kintvl = 10;		/* 10 second keepalive interval time */
-	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)) < 0)
-		return -1;
-	if(setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &kcnt, sizeof(kcnt)) < 0)
-		return -1;
-	if(setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &kidle, sizeof(kidle)) < 0)
-		return -1;
-	if(setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &kintvl, sizeof(kintvl)) < 0)
-		return -1;
-	return fd;
-}
-
-/*
- * channel_open_socket	Open a TCP socket for the I/O channel.
- *
- * return: fd of socket on success; -1 on error
- */
-static int channel_open_socket() {
-	int on = 1;	/* turn "on" values for setsockopt */
-	int fd = socket(PF_INET, SOCK_STREAM, 0);
-	if(fd < 0)
-		return -1;
-	if(fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
-		goto fail;
-	if(channel_set_tcp_keepalive(fd) < 0)
-		goto fail;
-	if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
-		goto fail;
-	if(setsockopt(fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
-		goto fail;
-	return fd;
-fail:
-	close(fd);
-	return -1;
-}
-
-/*
- * channel_is_sport	Test if the channel is a serial port.
- *
- * return: true if channel is a serial port; otherwise false
- */
-static inline bool channel_is_sport(const struct channel *chn) {
-	return chn->name[0] == '/';
-}
-
-/*
- * channel_flags	Get significant flags for the channel.
- *
- * return: mask of significant flags for the channel.
- */
-static enum ch_flag_t channel_flags(const struct channel *chn) {
-	if(channel_is_sport(chn))
-		return FLAG_UDP | FLAG_TCP;
-	else
-		return FLAG_UDP | FLAG_TCP | FLAG_LISTEN;
-}
-
-/*
  * channel_init		Initialize a new I/O channel.
  *
  * name: channel name
@@ -152,6 +65,27 @@ void channel_destroy(struct channel *chn) {
 	buffer_destroy(&chn->txbuf);
 	free(chn->name);
 	memset(chn, 0, sizeof(struct channel));
+}
+
+/*
+ * channel_is_sport	Test if the channel is a serial port.
+ *
+ * return: true if channel is a serial port; otherwise false
+ */
+static inline bool channel_is_sport(const struct channel *chn) {
+	return chn->name[0] == '/';
+}
+
+/*
+ * channel_flags	Get significant flags for the channel.
+ *
+ * return: mask of significant flags for the channel.
+ */
+static enum ch_flag_t channel_flags(const struct channel *chn) {
+	if(channel_is_sport(chn))
+		return FLAG_UDP | FLAG_TCP;
+	else
+		return FLAG_UDP | FLAG_TCP | FLAG_LISTEN;
 }
 
 /*
@@ -238,6 +172,72 @@ static int channel_open_sport(struct channel *chn) {
 		return channel_configure_sport(chn);
 	else
 		return 0;
+}
+
+/*
+ * channel_set_tcp_keepalive	Set keepalive option on a socket. This is
+ *				needed because some sockets never write data,
+ *				so they will never notice a connection is lost
+ *				without using keepalive probes.
+ *
+ * return: fd of socket on success; -1 on error
+ */
+static int channel_set_tcp_keepalive(int fd) {
+	static int on = 1;		/* turn "on" values for setsockopt */
+	static int kcnt = 4;		/* 4 keepalive probes */
+	static int kidle = 30;		/* 30 second keepalive idle time */
+	static int kintvl = 10;		/* 10 second keepalive interval time */
+	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)) < 0)
+		return -1;
+	if(setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &kcnt, sizeof(kcnt)) < 0)
+		return -1;
+	if(setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &kidle, sizeof(kidle)) < 0)
+		return -1;
+	if(setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &kintvl, sizeof(kintvl)) < 0)
+		return -1;
+	return fd;
+}
+
+/*
+ * channel_open_socket	Open a TCP socket for the I/O channel.
+ *
+ * return: fd of socket on success; -1 on error
+ */
+static int channel_open_socket() {
+	int on = 1;	/* turn "on" values for setsockopt */
+	int fd = socket(PF_INET, SOCK_STREAM, 0);
+	if(fd < 0)
+		return -1;
+	if(fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+		goto fail;
+	if(channel_set_tcp_keepalive(fd) < 0)
+		goto fail;
+	if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
+		goto fail;
+	if(setsockopt(fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
+		goto fail;
+	return fd;
+fail:
+	close(fd);
+	return -1;
+}
+
+/*
+ * channel_fill_sockaddr	Fill a sockaddr structure
+ *
+ * return: NULL on error; pointer to struct sockaddr on success
+ */
+static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
+	struct sockaddr_in *sa)
+{
+	struct hostent *host = gethostbyname(chn->name);
+	if(host == NULL)
+		return NULL;
+	sa->sin_family = AF_INET;
+	memcpy(&sa->sin_addr.s_addr, host->h_addr, host->h_length);
+	/* tcp port stored in chn->extra parameter */
+	sa->sin_port = htons(chn->extra);
+	return sa;
 }
 
 /*
