@@ -43,6 +43,30 @@ static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
 }
 
 /*
+ * channel_set_tcp_keepalive	Set keepalive option on a socket. This is
+ *				needed because some sockets never write data,
+ *				so they will never notice a connection is lost
+ *				without using keepalive probes.
+ *
+ * return: fd of socket on success; -1 on error
+ */
+static int channel_set_tcp_keepalive(int fd) {
+	static int on = 1;		/* turn "on" values for setsockopt */
+	static int kcnt = 4;		/* 4 keepalive probes */
+	static int kidle = 30;		/* 30 second keepalive idle time */
+	static int kintvl = 10;		/* 10 second keepalive interval time */
+	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)) < 0)
+		return -1;
+	if(setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &kcnt, sizeof(kcnt)) < 0)
+		return -1;
+	if(setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &kidle, sizeof(kidle)) < 0)
+		return -1;
+	if(setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &kintvl, sizeof(kintvl)) < 0)
+		return -1;
+	return fd;
+}
+
+/*
  * channel_open_socket	Open a TCP socket for the I/O channel.
  *
  * return: fd of socket on success; -1 on error
@@ -53,6 +77,8 @@ static int channel_open_socket() {
 	if(fd < 0)
 		return -1;
 	if(fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+		goto fail;
+	if(channel_set_tcp_keepalive(fd) < 0)
 		goto fail;
 	if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
 		goto fail;
