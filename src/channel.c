@@ -106,9 +106,9 @@ static inline bool channel_is_sport(const struct channel *chn) {
  */
 static enum ch_flag_t channel_flags(const struct channel *chn) {
 	if(channel_is_sport(chn))
-		return FLAG_UDP | FLAG_TCP | FLAG_RESP_REQUIRED;
+		return FLAG_UDP | FLAG_TCP;
 	else
-		return FLAG_UDP | FLAG_TCP | FLAG_LISTEN | FLAG_RESP_REQUIRED;
+		return FLAG_UDP | FLAG_TCP | FLAG_LISTEN;
 }
 
 /*
