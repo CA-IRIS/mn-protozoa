@@ -142,15 +142,6 @@ static enum ch_flag_t parse_name(const char *name, char *pname) {
 }
 
 /*
- * name_is_tcp		Test if a channel name is for a tcp address.
- *
- * return: true if channel is a serial port; otherwise false
- */
-static inline bool name_is_tcp(const char *name) {
-	return name[0] != '/';
-}
-
-/*
  * _config_get_channel	Find an existing channel or create a new one.
  *
  * name: name of the channel (device node or hostname)
@@ -182,10 +173,6 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
 	int extra = parse_extra(name);
 
 	flags |= parse_name(name, pname);
-
-	// Clear FLAG_LISTEN if name is a serial port
-	if(!name_is_tcp(pname))
-		flags ^= flags & FLAG_LISTEN;
 
 	return _config_get_channel(cfg, pname, extra, flags);
 }

@@ -91,6 +91,27 @@ fail:
 }
 
 /*
+ * channel_is_sport	Test if the channel is a serial port.
+ *
+ * return: true if channel is a serial port; otherwise false
+ */
+static inline bool channel_is_sport(const struct channel *chn) {
+	return chn->name[0] == '/';
+}
+
+/*
+ * channel_flags	Get significant flags for the channel.
+ *
+ * return: mask of significant flags for the channel.
+ */
+static enum ch_flag_t channel_flags(const struct channel *chn) {
+	if(channel_is_sport(chn))
+		return FLAG_UDP | FLAG_TCP | FLAG_RESP_REQUIRED;
+	else
+		return FLAG_UDP | FLAG_TCP | FLAG_LISTEN | FLAG_RESP_REQUIRED;
+}
+
+/*
  * channel_init		Initialize a new I/O channel.
  *
  * name: channel name
@@ -139,19 +160,12 @@ void channel_destroy(struct channel *chn) {
 bool channel_matches(struct channel *chn, const char *name, int extra,
 	enum ch_flag_t flags)
 {
-	if(strcmp(chn->name, name) == 0)
-		return (chn->extra == extra) && (chn->flags == flags);
-	else
+	if(strcmp(chn->name, name) == 0) {
+		enum ch_flag_t f = channel_flags(chn) & chn->flags;
+		enum ch_flag_t fo = channel_flags(chn) & flags;
+		return (chn->extra == extra) && (f == fo);
+	} else
 		return false;
-}
-
-/*
- * channel_is_sport	Test if the channel is a serial port.
- *
- * return: true if channel is a serial port; otherwise false
- */
-static inline bool channel_is_sport(const struct channel *chn) {
-	return chn->name[0] == '/';
 }
 
 /*
