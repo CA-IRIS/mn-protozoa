@@ -206,6 +206,7 @@ static int channel_open_sport(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 static int channel_open_listener(struct channel *chn) {
+	static int on = 1;	/* turn "on" values for setsockopt */
 	struct sockaddr_in sa;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
@@ -214,6 +215,8 @@ static int channel_open_listener(struct channel *chn) {
 		chn->fd = 0;
 		return -1;
 	}
+	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+		return -1;
 	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
 		return -1;
 	if(listen(chn->fd, 1) < 0)
