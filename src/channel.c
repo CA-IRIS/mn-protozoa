@@ -291,11 +291,24 @@ static int channel_open_tcp(struct channel *chn) {
 }
 
 /*
+ * channel_is_localhost	Test if the I/O channel is a localhost address.
+ *
+ * return: true if channel is defined to be a localhost address
+ */
+static bool channel_is_localhost(const struct channel *chn) {
+	if(strstr(chn->name, "localhost") == chn->name)
+		return true;
+	if(strstr(chn->name, "0.0.0.0") == chn->name)
+		return true;
+	return false;
+}
+
+/*
  * channel_should_listen	Test if the I/O channel should listen.
  *
  * return: true if the channel should listen; otherwise false
  */
-static bool channel_should_listen(struct channel *chn) {
+static bool channel_should_listen(const struct channel *chn) {
 	return chn->listen && channel_is_localhost(chn);
 }
 
@@ -345,19 +358,6 @@ int channel_close(struct channel *chn) {
  */
 bool channel_is_open(const struct channel *chn) {
 	return (bool)(chn->fd);
-}
-
-/*
- * channel_is_localhost	Test if the I/O channel is a localhost address.
- *
- * return: true if channel is defined to be a localhost address
- */
-bool channel_is_localhost(const struct channel *chn) {
-	if(strstr(chn->name, "localhost") == chn->name)
-		return true;
-	if(strstr(chn->name, "0.0.0.0") == chn->name)
-		return true;
-	return false;
 }
 
 /*

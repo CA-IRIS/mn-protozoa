@@ -30,7 +30,6 @@ bool channel_matches(struct channel *chn, const char *name, int extra,
 int channel_open(struct channel *chn);
 int channel_close(struct channel *chn);
 bool channel_is_open(const struct channel *chn);
-bool channel_is_localhost(const struct channel *chn);
 bool channel_has_reader(const struct channel *chn);
 bool channel_needs_reading(const struct channel *chn);
 bool channel_needs_writing(const struct channel *chn);
