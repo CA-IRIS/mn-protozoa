@@ -62,15 +62,15 @@ void config_destroy(struct config *cfg) {
  *
  * name: name of channel to find
  * extra: extra channel parameter
- * listen: flag to indicate tcp listening channel
+ * flags: flags to for special channel options
  * return: pointer to channel; or NULL if not found
  */
 static struct channel *config_find_channel(struct config *cfg,
-	const char *name, int extra, bool listen)
+	const char *name, int extra, enum ch_flag_t flags)
 {
 	struct channel *chn = cfg->chns;
 	while(chn) {
-		if(channel_matches(chn, name, extra, listen))
+		if(channel_matches(chn, name, extra, flags))
 			return chn;
 		chn = chn->next;
 	}
@@ -82,16 +82,16 @@ static struct channel *config_find_channel(struct config *cfg,
  *
  * name: name of the channel
  * extra: extra channel parameter (baud rate or tcp port)
- * listen: flag to indicate whether the channel is a listen channel
+ * flags: flags to for special channel options
  * return: pointer to channel; or NULL on error
  */
 static struct channel *config_new_channel(struct config *cfg, const char *name,
-	int extra, bool listen)
+	int extra, enum ch_flag_t flags)
 {
 	struct channel *chn = malloc(sizeof(struct channel));
 	if(chn == NULL)
 		goto fail;
-	if(channel_init(chn, name, extra, listen, cfg->log) == NULL)
+	if(channel_init(chn, name, extra, flags, cfg->log) == NULL)
 		goto fail;
 	chn->next = cfg->chns;
 	cfg->chns = chn;
@@ -133,10 +133,12 @@ static inline size_t find_colon(const char *name) {
  * name: channel name (port:baud or host:port pair)
  * pname: parsed value of the channel name.
  */
-static void parse_name(const char *name, char *pname) {
+static enum ch_flag_t parse_name(const char *name, char *pname) {
+	// FIXME: parse udp:// and tcp:// prefixes
 	size_t len = find_colon(name);
 	strncpy(pname, name, len);
 	pname[len] = '\0';
+	return 0;
 }
 
 /*
@@ -153,38 +155,39 @@ static inline bool name_is_tcp(const char *name) {
  *
  * name: name of the channel (device node or hostname)
  * extra: extra parameter (baud rate or tcp port)
- * listen: flag to indicate a tcp listening channel
+ * flags: flags for special channel options
  * return: pointer to channel; or NULL on error
  */
 static struct channel *_config_get_channel(struct config *cfg, const char *name,
-	int extra, bool listen)
+	int extra, enum ch_flag_t flags)
 {
-	struct channel *chn = config_find_channel(cfg, name, extra, listen);
+	struct channel *chn = config_find_channel(cfg, name, extra, flags);
 	if(chn)
 		return chn;
 	else
-		return config_new_channel(cfg, name, extra, listen);
+		return config_new_channel(cfg, name, extra, flags);
 }
 
 /*
  * config_get_channel	Find an existing channel or create a new one.
  *
  * name: name of the channel (device node or hostname)
- * listen: flag to incidate tcp listening channels
+ * flags: flags for special channel options
  * return: pointer to channel; or NULL on error
  */
 static struct channel *config_get_channel(struct config *cfg, const char *name,
-	bool listen)
+	enum ch_flag_t flags)
 {
 	char pname[32];
 	int extra = parse_extra(name);
 
-	parse_name(name, pname);
+	flags |= parse_name(name, pname);
 
-	if(name_is_tcp(pname))
-		return _config_get_channel(cfg, pname, extra, listen);
-	else
-		return _config_get_channel(cfg, pname, extra, false);
+	// Clear FLAG_LISTEN if name is a serial port
+	if(!name_is_tcp(pname))
+		flags ^= flags & FLAG_LISTEN;
+
+	return _config_get_channel(cfg, pname, extra, flags);
 }
 
 /*
@@ -208,7 +211,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 
 	log_println(cfg->log, "config: %s %s %s -> %s %s %s", protocol_in,
 		port_in, range, protocol_out, port_out, shift);
-	chn_in = config_get_channel(cfg, port_in, true);
+	chn_in = config_get_channel(cfg, port_in, FLAG_LISTEN);
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
@@ -219,7 +222,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 		/* FIXME: check for redefined protocol */
 		reader = chn_in->reader;
 	}
-	chn_out = config_get_channel(cfg, port_out, false);
+	chn_out = config_get_channel(cfg, port_out, 0);
 	if(chn_out == NULL)
 		goto fail;
 	writer = ccwriter_new(chn_out, protocol_out, auth_out);

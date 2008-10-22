@@ -95,16 +95,16 @@ fail:
  *
  * name: channel name
  * extra: extra data to initialize the channel
- * listen: flag to indicate tcp listen channel
+ * flags: flags for special channel options
  * log: message logger
  * return: struct channel or NULL on error
  */
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	bool listen, struct log *log)
+	enum ch_flag_t flags, struct log *log)
 {
 	memset(chn, 0, sizeof(struct channel));
 	chn->extra = extra;
-	chn->listen = listen;
+	chn->flags = flags;
 	chn->log = log;
 	chn->name = malloc(strlen(name) + 1);
 	if(chn->name == NULL)
@@ -137,10 +137,10 @@ void channel_destroy(struct channel *chn) {
  * channel_matches	Test if a channel matches the given parameters.
  */
 bool channel_matches(struct channel *chn, const char *name, int extra,
-	bool listen)
+	enum ch_flag_t flags)
 {
 	if(strcmp(chn->name, name) == 0)
-		return (chn->extra == extra) && (chn->listen == listen);
+		return (chn->extra == extra) && (chn->flags == flags);
 	else
 		return false;
 }
@@ -309,7 +309,7 @@ static bool channel_is_localhost(const struct channel *chn) {
  * return: true if the channel should listen; otherwise false
  */
 static bool channel_should_listen(const struct channel *chn) {
-	return chn->listen && channel_is_localhost(chn);
+	return (chn->flags & FLAG_LISTEN) && channel_is_localhost(chn);
 }
 
 /*

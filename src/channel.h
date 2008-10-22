@@ -5,12 +5,20 @@
 #include "buffer.h"
 #include "ccreader.h"
 
+enum ch_flag_t {
+	FLAG_UDP = 1 << 0,		/* flag for UDP datagram protocol */
+	FLAG_TCP = 1 << 1,		/* flag for TCP stream protocol */
+	FLAG_LISTEN = 1 << 2,		/* flag for TCP listen channel */
+	FLAG_RESP_REQUIRED = 1 << 3,	/* flag for response required */
+	FLAG_NEEDS_RESP = 1 << 4,	/* flag for needs response */
+};
+
 struct channel {
 	char		*name;			/* channel name */
 	int		sfd;			/* server file descriptor */
 	int		fd;			/* file descriptor */
 	int		extra;			/* extra parameter */
-	bool		listen;			/* tcp listen flag */
+	enum ch_flag_t	flags;			/* channel flags */
 	bool		response_required;	/* flag response required */
 	bool		needs_response;		/* flag needs response */
 
@@ -23,10 +31,10 @@ struct channel {
 };
 
 struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	bool listen, struct log *log);
+	enum ch_flag_t flags, struct log *log);
 void channel_destroy(struct channel *chn);
 bool channel_matches(struct channel *chn, const char *name, int extra,
-	bool listen);
+	enum ch_flag_t flags);
 int channel_open(struct channel *chn);
 int channel_close(struct channel *chn);
 bool channel_is_open(const struct channel *chn);
