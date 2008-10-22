@@ -216,13 +216,16 @@ static int channel_open_listener(struct channel *chn) {
 		return -1;
 	}
 	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
-		return -1;
+		goto fail;
 	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
-		return -1;
+		goto fail;
 	if(listen(chn->fd, 1) < 0)
-		return -1;
+		goto fail;
 	chn->sfd = chn->fd;
 	return 0;
+fail:
+	close(chn->fd);
+	return -1;
 }
 
 /*
