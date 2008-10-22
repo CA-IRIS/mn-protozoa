@@ -1,2 +1,3 @@
+*	Add support for UDP socket communication.
 *	Perform some sort of check for wrong protocol.
 *	Add protocol driver for NTCIP camera control.
