@@ -6,14 +6,15 @@
 <head>
 	<meta name="Author" content="Douglas Lau"/>
 	<link href="protozoa.css" rel="stylesheet" type="text/css"/>
-	<title>Protozoa Camera Control Mixer</title>
+	<title>Protozoa Camera Control Transceiver</title>
 </head>
 
 <body>
-<h2>Protozoa Camera Control Mixer</h2>
+<h2>Protozoa Camera Control Transceiver</h2>
 <p>
 	Protozoa is a program to integrate CCTV camera control systems from
 	multiple vendors.
+	It is designed to run as a daemon on a Linux system.
 	It can combine control codes from different sources to facilitate
 	sharing control between systems.
 	It can also transcode camera control commands between vendor protocols,
@@ -22,62 +23,164 @@
 	<a href="pelco_d_code.html">Pelco (D)</a>.
 	It works by converting each input command to a protocol-neutral packet
 	and then converting that packet to an output command.
-</p>
-<p>
-	Most camera control systems use RS-422, which allows for much longer
-	cable runs than the more common RS-232.
-	Simple RS-422 to RS-232 converters are available, and are required to
-	allow a computer with standard RS-232 ports to recognise the signals.
+	Commands can be received and sent from serial ports, UDP sockets or TCP
+	sockets.
 </p>
 <h3>Configuration File</h3>
 <p>
-	The configuration file, /etc/protozoa.conf, contains a series of
-	serial data control directives.
-	Each directive describes an input and output serial port and protocol
-	parameters.
-	First, the input protocol, port, baud rate and address range are
-	specified.
-	Then comes the output protocol, port, baud rate and address shift.
+	The configuration file <code>/etc/protozoa.conf</code> contains a
+	series of data control directives, one per line.
+	A directive describes the command flow from an input source to an
+	output sink.
+	For each directive, there are five (or more) parameters, which must be
+	separated by whitespace.
+	These are <em>input protocol</em>, <em>input source</em>,
+	<em>address range</em>, <em>output protocol</em> and <em>output
+	sink</em>.
+	There are also two optional parameters: <em>address shift</em> and
+	<em>authentication token</em>.
 </p>
-<pre>
-	manchester /dev/ttyS1:4800 1-255	vicon /dev/ttyS0:9600 0
-</pre>
+<h4>Input Protocol</h4>
 <p>
-	The above configuration reads camera control commands on /dev/ttyS1
+	The input protocol defines which camera control protocol will be
+	received from the input source.
+	This must be one of the following:
+</p>
+<dl>
+	<dt>joystick</dt>
+	<dd>Linux joystick device (USB / input)</dd>
+	<dt>manchester</dt>
+	<dd>Manchester protocol (American Dynamics)</dd>
+	<dt>pelco_d</dt>
+	<dd>Pelco D camera control protocol</dd>
+	<dt>vicon</dt>
+	<dd>Vicon camera control protocol</dd>
+</dl>
+<h4>Input Source</h4>
+<p>
+	The input source is either a URI or a device name in the Linux
+	filesystem.
+	For TCP socket communication, the URI should be in the form of
+	<code>tcp://<em>hostname</em>:<em>port</em></code>.
+	For UDP, it should be
+	<code>udp://<em>hostname</em>:<em>port</em></code>.
+	The hostname can be either a DNS name or an IP address.
+	To accept connections from remote hosts, use <code>0.0.0.0</code> as
+	the host name.
+	For serial communications, use the device node name of the serial port,
+	such as <code>/dev/ttyS0</code>.
+	To specify the baud rate, append <code>:<em>baud</em></code> to the
+	port name.
+	For a USB joystick, use the input device node, such as
+	<code>/dev/input/js0</code>.
+</p>
+<h4>Address Range</h4>
+<p>
+	The address range can be used to filter which receiver addresses are
+	affected by a directive.
+	It should be in the form of <code><em>first</em>-<em>last</em></code>.
+	For a single receiver address, the <code>-<em>last</em></code> can be
+	omitted.
+	For all addresses, just use <code>-</code>.
+</p>
+<h4>Output Protocol</h4>
+<p>
+	The output protocol defines which camera control protocol will be
+	sent to the output sink.
+	This must be one of the following:
+</p>
+<dl>
+	<dt>manchester</dt>
+	<dd>Manchester protocol (American Dynamics)</dd>
+	<dt>pelco_d</dt>
+	<dd>Pelco D camera control protocol</dd>
+	<dt>vicon</dt>
+	<dd>Vicon camera control protocol</dd>
+	<dt>axis</dt>
+	<dd>Axis camera control (http-based)</dd>
+</dl>
+<h4>Output Sink</h4>
+<p>
+	The output sink is specified in the same manner as the input source.
+	It can be a UDP or TCP socket or a serial port.
+</p>
+<h4>Address Shift</h4>
+<p>
+	The address shift causes the receiver address to be adjusted for every
+	packet processed by the directive.
+	For example, if the shift was 5 and a packet was received from the
+	input source for address 1, then that packet would be sent to the
+	output sink with the address set to 6.
+	This is an optional parameter (the default value is 0).
+</p>
+<h4>Authentication Token</h4>
+<p>
+	This is a special value used only by the axis protocol for
+	authenticated requests.
+	It should be set to the authentication string needed in the http
+	header.
+</p>
+<h3>Example Configuration Directives</h3>
+<p>
+	The following configuration reads camera control commands on /dev/ttyS1
 	at 4800 baud, decodes using the manchester protocol, then encodes to
 	the vicon protocol and sends them out on /dev/ttyS0 at 9600 baud.
 </p>
 <pre>
+	manchester /dev/ttyS1:4800 1-255	vicon /dev/ttyS0:9600 0
+</pre>
+<hr/>
+<p>
+	This next configuration interleaves commands from /dev/ttyS1 and
+	/dev/ttyS2, sending them out on /dev/ttyS0.
+</p>
+<pre>
 	manchester /dev/ttyS1:9600 -	pelco_d /dev/ttyS0:9600
 	vicon /dev/ttyS2:4800 -		pelco_d /dev/ttyS0:9600
-	manchester /dev/ttyS4:9600 -	vicon /dev/ttyS3:9600
-	vicon /dev/ttyS5:9600 -		vicon /dev/ttyS3:9600
 </pre>
+<hr/>
 <p>
-	This configuration interleaves commands from /dev/ttyS1 and /dev/ttyS2,
-	sending them out on /dev/ttyS0.
-	Also, commands from /dev/ttyS4 and /dev/ttyS5 are interleaved onto
-	/dev/ttyS3.
+	This configuration combines three vicon lines into one manchester line,
+	including receiver address translation.
 </p>
 <pre>
 	vicon /dev/ttyS1:9600 1-255	manchester /dev/ttyS0:9600 0
 	vicon /dev/ttyS2:9600 1-255	manchester /dev/ttyS0:9600 256
 	vicon /dev/ttyS3:9600 1-255	manchester /dev/ttyS0:9600 512
 </pre>
+<hr/>
 <p>
-	This configuration combines three vicon lines into one manchester line,
-	including receiver address translation.
+	It is possible to use a loopback plug on one port, and send / receive
+	data to / from that port.
+	This is a good method of testing the protocol handlers.
 </p>
 <pre>
 	vicon /dev/ttya01:9600 -	manchester /dev/ttya03:9600
 	manchester /dev/ttya03:9600 -	pelco_d /dev/ttya02:9600
 </pre>
+<hr/>
 <p>
-	It is possible to use a loopback plug on one port, and send / receive
-	data to / from that port.
-	This is a good method of testing the protocol handlers. The
-	configuration above is one example of this.
+	This directive takes input from a USB joystick and sends commands to
+	a remote UDP host.
 </p>
+<pre>
+	joystick /dev/input/js0	-	pelco_d udp://example.com:8001
+</pre>
+<hr/>
+<p>
+	To connect to a serial-to-ethernet server over TCP, do something
+	like this:
+</p>
+<pre>
+	manchester tcp://example.com:8001 - axis tcp://axis.example.com:80
+</pre>
+<hr/>
+<p>
+	To listen for TCP connections, do this sort of thing:
+</p>
+<pre>
+	vicon	tcp://0.0.0.0:8001 -	pelco_d udp://example.com:8001
+</pre>
 <p class="stamp">
 	2008 Oct 23
 </p>
