@@ -175,6 +175,103 @@ static int channel_open_sport(struct channel *chn) {
 }
 
 /*
+ * channel_fill_sockaddr	Fill a sockaddr structure
+ *
+ * return: NULL on error; pointer to struct sockaddr on success
+ */
+static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
+	struct sockaddr_in *sa)
+{
+	struct hostent *host = gethostbyname(chn->name);
+	if(host == NULL)
+		return NULL;
+	sa->sin_family = AF_INET;
+	memcpy(&sa->sin_addr.s_addr, host->h_addr, host->h_length);
+	/* tcp port stored in chn->extra parameter */
+	sa->sin_port = htons(chn->extra);
+	return sa;
+}
+
+/*
+ * channel_udp_socket	Open a UDP socket for the I/O channel.
+ *
+ * return: fd of socket on success; -1 on error
+ */
+static int channel_udp_socket() {
+	int on = 1;	/* turn "on" values for setsockopt */
+	int fd = socket(PF_INET, SOCK_DGRAM, 0);
+	if(fd < 0)
+		return -1;
+	if(fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+		goto fail;
+	if(setsockopt(fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
+		goto fail;
+	return fd;
+fail:
+	close(fd);
+	return -1;
+}
+
+/*
+ * channel_bind_udp	Bind a udp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_bind_udp(struct channel *chn) {
+	static int on = 1;		/* turn "on" values for setsockopt */
+	struct sockaddr_in sa;
+	if(channel_fill_sockaddr(chn, &sa) == NULL)
+		return -1;
+	chn->fd = channel_udp_socket();
+	if(chn->fd < 0) {
+		chn->fd = 0;
+		return -1;
+	}
+	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+		goto fail;
+	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
+		goto fail;
+	return 0;
+fail:
+	close(chn->fd);
+	return -1;
+}
+
+/*
+ * channel_connect_udp	Connect a udp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_connect_udp(struct channel *chn) {
+	struct sockaddr_in sa;
+	int r;
+	if(channel_fill_sockaddr(chn, &sa) == NULL)
+		return -1;
+	chn->fd = channel_udp_socket();
+	if(chn->fd < 0) {
+		chn->fd = 0;
+		return -1;
+	}
+	r = connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa));
+	if(r < 0 && errno == EINPROGRESS)
+		return 0;
+	else
+		return r;
+}
+
+/*
+ * channel_open_udp	Open a udp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_open_udp(struct channel *chn) {
+	if(chn->flags & FLAG_LISTEN)
+		return channel_bind_udp(chn);
+	else
+		return channel_connect_udp(chn);
+}
+
+/*
  * channel_set_tcp_keepalive	Set keepalive option on a socket. This is
  *				needed because some sockets never write data,
  *				so they will never notice a connection is lost
@@ -199,11 +296,11 @@ static int channel_set_tcp_keepalive(int fd) {
 }
 
 /*
- * channel_open_socket	Open a TCP socket for the I/O channel.
+ * channel_tcp_socket	Open a TCP socket for the I/O channel.
  *
  * return: fd of socket on success; -1 on error
  */
-static int channel_open_socket() {
+static int channel_tcp_socket() {
 	int on = 1;	/* turn "on" values for setsockopt */
 	int fd = socket(PF_INET, SOCK_STREAM, 0);
 	if(fd < 0)
@@ -223,34 +320,16 @@ fail:
 }
 
 /*
- * channel_fill_sockaddr	Fill a sockaddr structure
- *
- * return: NULL on error; pointer to struct sockaddr on success
- */
-static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
-	struct sockaddr_in *sa)
-{
-	struct hostent *host = gethostbyname(chn->name);
-	if(host == NULL)
-		return NULL;
-	sa->sin_family = AF_INET;
-	memcpy(&sa->sin_addr.s_addr, host->h_addr, host->h_length);
-	/* tcp port stored in chn->extra parameter */
-	sa->sin_port = htons(chn->extra);
-	return sa;
-}
-
-/*
- * channel_open_listener	Open a tcp port for listening.
+ * channel_listen_tcp	Open a tcp port for listening.
  *
  * return: 0 on success; -1 on error
  */
-static int channel_open_listener(struct channel *chn) {
+static int channel_listen_tcp(struct channel *chn) {
 	static int on = 1;	/* turn "on" values for setsockopt */
 	struct sockaddr_in sa;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
-	chn->fd = channel_open_socket();
+	chn->fd = channel_tcp_socket();
 	if(chn->fd < 0) {
 		chn->fd = 0;
 		return -1;
@@ -283,16 +362,16 @@ static int channel_accept(struct channel *chn) {
 }
 
 /*
- * channel_open_tcp	Open a tcp port for the I/O channel.
+ * channel_connect_tcp	Connect a tcp port for the I/O channel.
  *
  * return: 0 on success; -1 on error
  */
-static int channel_open_tcp(struct channel *chn) {
+static int channel_connect_tcp(struct channel *chn) {
 	struct sockaddr_in sa;
 	int r;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
-	chn->fd = channel_open_socket();
+	chn->fd = channel_tcp_socket();
 	if(chn->fd < 0) {
 		chn->fd = 0;
 		return -1;
@@ -327,6 +406,18 @@ static bool channel_should_listen(const struct channel *chn) {
 }
 
 /*
+ * channel_open_tcp	Open a tcp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_open_tcp(struct channel *chn) {
+	if(channel_should_listen(chn))
+		return channel_listen_tcp(chn);
+	else
+		return channel_connect_tcp(chn);
+}
+
+/*
  * channel_clear_response	Clear the NEEDS_RESPONSE flag
  */
 static inline void channel_clear_response(struct channel *chn) {
@@ -347,12 +438,10 @@ int channel_open(struct channel *chn) {
 		channel_log(chn, "opening");
 	if(channel_is_sport(chn))
 		return channel_open_sport(chn);
-	else {
-		if(channel_should_listen(chn))
-			return channel_open_listener(chn);
-		else
-			return channel_open_tcp(chn);
-	}
+	else if(chn->flags & FLAG_UDP)
+		return channel_open_udp(chn);
+	else
+		return channel_open_tcp(chn);
 }
 
 /*
