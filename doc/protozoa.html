@@ -13,28 +13,31 @@
 <h2>Protozoa Camera Control Mixer</h2>
 <p>
 	Protozoa is a program to integrate CCTV camera control systems from
-	multiple vendors. It can combine control codes from different sources
-	to facilitate sharing control between systems. It can also transcode
-	camera control commands between vendor protocols, including
-	<a href="manchester_code.html">American Dynamics (manchester)</a>,
-	<a href="vicon_code.html">Vicon</a> and
-	<a href="pelco_d_code.html">Pelco (D)</a>. It works by converting each
-	input command to a protocol-neutral packet and then converting that
-	packet to an output command.
+	multiple vendors.
+	It can combine control codes from different sources to facilitate
+	sharing control between systems.
+	It can also transcode camera control commands between vendor protocols,
+	including <a href="manchester_code.html">American Dynamics
+	(manchester)</a>, <a href="vicon_code.html">Vicon</a> and
+	<a href="pelco_d_code.html">Pelco (D)</a>.
+	It works by converting each input command to a protocol-neutral packet
+	and then converting that packet to an output command.
 </p>
 <p>
 	Most camera control systems use RS-422, which allows for much longer
-	cable runs than the more common RS-232. Simple RS-422 to RS-232
-	converters are available, and are required to allow a computer with
-	standard RS-232 ports to recognise the signals.
+	cable runs than the more common RS-232.
+	Simple RS-422 to RS-232 converters are available, and are required to
+	allow a computer with standard RS-232 ports to recognise the signals.
 </p>
 <h3>Configuration File</h3>
 <p>
 	The configuration file, /etc/protozoa.conf, contains a series of
-	serial data control directives. Each directive describes an input and
-	output serial port and protocol parameters. First, the input protocol,
-	port, baud rate and address range are specified. Then comes the output
-	protocol, port, baud rate and address shift.
+	serial data control directives.
+	Each directive describes an input and output serial port and protocol
+	parameters.
+	First, the input protocol, port, baud rate and address range are
+	specified.
+	Then comes the output protocol, port, baud rate and address shift.
 </p>
 <pre>
 	manchester /dev/ttyS1:4800 1-255	vicon /dev/ttyS0:9600 0
@@ -52,8 +55,9 @@
 </pre>
 <p>
 	This configuration interleaves commands from /dev/ttyS1 and /dev/ttyS2,
-	sending them out on /dev/ttyS0. Also, commands from /dev/ttyS4 and
-	/dev/ttyS5 are interleaved onto /dev/ttyS3.
+	sending them out on /dev/ttyS0.
+	Also, commands from /dev/ttyS4 and /dev/ttyS5 are interleaved onto
+	/dev/ttyS3.
 </p>
 <pre>
 	vicon /dev/ttyS1:9600 1-255	manchester /dev/ttyS0:9600 0
@@ -70,11 +74,12 @@
 </pre>
 <p>
 	It is possible to use a loopback plug on one port, and send / receive
-	data to / from that port. This is a good method of testing the
-	protocol handlers. The configuration above is one example of this.
+	data to / from that port.
+	This is a good method of testing the protocol handlers. The
+	configuration above is one example of this.
 </p>
 <p class="stamp">
-	2007 Oct 15
+	2008 Oct 23
 </p>
 </body>
 </html>
