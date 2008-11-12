@@ -155,11 +155,14 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	unsigned int c;
 	struct ccpacket *wpkt = wtr->packet + pkt->receiver - 1;
 
+	/* If the current packet will expire soon, don't send it again */
 	if(time_from_now(&pkt->expire) < wtr->timeout * 2) {
 		if(ccpacket_equals(pkt, wpkt, wtr->encode_speed))
 			return 0;
 	}
 	c = wtr->do_write(wtr, pkt);
+	/* If the packet expires after the protocol timeout, defer it to
+	 * be sent again after the "defer" interval passes. */
 	if(c > 0 && pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv) {
 		if(wpkt != pkt)
 			ccpacket_copy(wpkt, pkt);
