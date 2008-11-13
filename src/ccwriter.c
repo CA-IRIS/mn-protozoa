@@ -23,13 +23,6 @@
 #include "vicon.h"
 
 /*
- * ccwriter_set_timeout		Set the timeout for the writer's protocol.
- */
-static void ccwriter_set_timeout(struct ccwriter *wtr, unsigned int timeout) {
-	wtr->timeout = timeout;
-}
-
-/*
  * ccwriter_set_receivers	Set the number of receivers for the writer.
  */
 static int ccwriter_set_receivers(struct ccwriter *wtr, const int n_rcv) {
@@ -62,23 +55,23 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0) {
 		wtr->encode_speed = manchester_encode_speed;
 		wtr->do_write = manchester_do_write;
-		ccwriter_set_timeout(wtr, MANCHESTER_TIMEOUT);
+		wtr->timeout = MANCHESTER_TIMEOUT;
 		return ccwriter_set_receivers(wtr, MANCHESTER_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		wtr->encode_speed = pelco_d_encode_speed;
 		wtr->do_write = pelco_d_do_write;
-		ccwriter_set_timeout(wtr, PELCO_D_TIMEOUT);
+		wtr->timeout = PELCO_D_TIMEOUT;
 		return ccwriter_set_receivers(wtr, PELCO_D_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "vicon") == 0) {
 		wtr->encode_speed = vicon_encode_speed;
 		wtr->do_write = vicon_do_write;
-		ccwriter_set_timeout(wtr, VICON_TIMEOUT);
+		wtr->timeout = VICON_TIMEOUT;
 		return ccwriter_set_receivers(wtr, VICON_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "axis") == 0) {
 		wtr->encode_speed = axis_encode_speed;
 		wtr->do_write = axis_do_write;
 		wtr->chn->flags |= FLAG_RESP_REQUIRED;
-		ccwriter_set_timeout(wtr, AXIS_TIMEOUT);
+		wtr->timeout = AXIS_TIMEOUT;
 		return ccwriter_set_receivers(wtr, AXIS_MAX_ADDRESS);
 	} else {
 		log_println(wtr->chn->log, "Unknown protocol: %s", protocol);
