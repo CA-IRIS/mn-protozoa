@@ -12,6 +12,7 @@ struct deferred_pkt {
 	struct timeval		tv;		/* time to send packet */
 	struct timeval		sent;		/* last sent time */
 	struct ccpacket		packet;		/* packet to be deferred */
+	unsigned int		n_cnt;		/* number of times deferred */
 };
 
 struct defer {

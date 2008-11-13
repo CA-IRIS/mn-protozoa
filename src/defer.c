@@ -69,25 +69,19 @@ int defer_packet(struct defer *dfr, struct deferred_pkt *dpkt,
 }
 
 /*
- * deferred_pkt_again		Check if a packet should be deferred again.
- */
-static bool deferred_pkt_again(struct deferred_pkt *dpkt) {
-	return time_elapsed(&dpkt->tv, &dpkt->packet.expire) >=
-	       dpkt->writer->timeout;
-}
-
-/*
  * defer_packet_now		Send a deferred packet right now.
  */
 static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
-	int ms = dpkt->writer->timeout;
-
 	cl_rbtree_remove(&dfr->tree, dpkt);
-	ccwriter_do_write(dpkt->writer, &dpkt->packet);
 	timeval_set_now(&dpkt->tv);
-	timeval_adjust(&dpkt->tv, ms);
-	if(deferred_pkt_again(dpkt))
-		cl_rbtree_add(&dfr->tree, dpkt);
+	timeval_adjust(&dpkt->tv, dpkt->writer->timeout);
+	ccwriter_do_write(dpkt->writer, &dpkt->packet);
+	if(ccpacket_is_stop(&dpkt->packet)) {
+		if(dpkt->n_cnt < 1)
+			defer_packet(dfr, dpkt, &dpkt->packet, 100);
+		dpkt->n_cnt++;
+	} else
+		dpkt->n_cnt = 0;
 }
 
 /*

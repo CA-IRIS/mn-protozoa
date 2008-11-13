@@ -46,6 +46,7 @@ static int ccwriter_set_receivers(struct ccwriter *wtr, const int n_rcv) {
 		timeval_set_now(&dpkt->sent);
 		ccpacket_init(&dpkt->packet);
 		dpkt->writer = wtr;
+		dpkt->n_cnt = 0;
 	}
 	wtr->n_rcv = n_rcv;
 	return 0;
@@ -155,7 +156,7 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 	}
 }
 
-#define MINIMUM_PACKET_MS 250
+#define MINIMUM_PACKET_MS 80
 
 /*
  * ccwriter_too_soon	Test if the current packet is too soon after the

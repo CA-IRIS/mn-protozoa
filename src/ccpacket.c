@@ -142,6 +142,20 @@ void ccpacket_clear(struct ccpacket *pkt) {
 }
 
 /*
+ * ccpacket_is_stop	Test if the packet is a stop command.
+ */
+bool ccpacket_is_stop(struct ccpacket *pkt) {
+	return (pkt->command | CC_PAN_TILT) == CC_PAN_TILT &&
+	       pkt->pan == 0 &&
+	       pkt->tilt == 0 &&
+	       pkt->zoom == ZOOM_NONE &&
+	       pkt->focus == FOCUS_NONE &&
+	       pkt->iris == IRIS_NONE &&
+	       pkt->aux == 0 &&
+	       pkt->status == STATUS_NONE;
+}
+
+/*
  * ccpacket_has_preset	Test if the packet has a preset command.
  */
 bool ccpacket_has_preset(struct ccpacket *pkt) {
