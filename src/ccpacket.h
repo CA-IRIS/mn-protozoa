@@ -114,7 +114,5 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name);
 void ccpacket_count(struct ccpacket *pkt);
 void ccpacket_drop(struct ccpacket *pkt);
 void ccpacket_copy(struct ccpacket *dest, struct ccpacket *src);
-bool ccpacket_equals(const struct ccpacket *p0, const struct ccpacket *p1,
-	SPEED_CALLBACK *encode_speed);
 
 #endif
