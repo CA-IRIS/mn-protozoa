@@ -1,15 +1,15 @@
 #ifndef __CCWRITER_H__
 #define __CCWRITER_H__
 
+#include <assert.h>	/* for assert */
 #include "ccpacket.h"	/* for struct ccpacket */
 #include "channel.h"	/* for struct channel */
-
-struct defer;	/* avoid circular dependancy */
+#include "defer.h"	/* for struct deferred_pkt, defer */
 
 struct ccwriter {
 	unsigned int (*do_write) (struct ccwriter *wtr, struct ccpacket *pkt);
 	struct channel		*chn;		/* channel to write */
-	struct ccpacket		*packet;	/* previous command packets */
+	struct deferred_pkt	*deferred;	/* deferred packets */
 	unsigned int		n_rcv;		/* number of receivers */
 	unsigned int		timeout;	/* time command is held (ms) */
 	char			*auth;		/* authentication token */

@@ -15,6 +15,7 @@
 #include "timer.h"	/* for timer_init */
 #include "timeval.h"
 #include "defer.h"
+#include "ccwriter.h"
 
 /*
  * compare_pkts		Compare two packets for sorting them by time.
@@ -30,17 +31,13 @@ static cl_compare_t compare_pkts(const void *value0, const void *value1) {
  * defer_init		Initialize the deferred packet engine.
  */
 struct defer *defer_init(struct defer *dfr) {
-	if(cl_pool_init(&dfr->pool, sizeof(struct deferred_pkt)) == NULL)
-		return NULL;
 	if(cl_rbtree_init(&dfr->tree, CL_DUP_ALLOW, compare_pkts) == NULL)
-		goto fail;
+		return NULL;
 	if(timer_init() == NULL)
-		goto fail2;
+		goto fail;
 	return dfr;
-fail2:
-	cl_rbtree_clear(&dfr->tree, NULL, NULL);
 fail:
-	cl_pool_destroy(&dfr->pool);
+	cl_rbtree_clear(&dfr->tree, NULL, NULL);
 	return NULL;
 }
 
@@ -58,18 +55,16 @@ static int defer_rearm(struct defer *dfr) {
 /*
  * defer_packet		Defer one packet to be sent at a later time.
  */
-int defer_packet(struct defer *dfr, struct ccpacket *pkt,
-	struct ccwriter *wtr)
+int defer_packet(struct defer *dfr, struct deferred_pkt *dpkt,
+	struct ccpacket *pkt, unsigned int ms)
 {
-	struct deferred_pkt *dpkt = cl_pool_alloc(&dfr->pool);
-
-	if(dpkt == NULL)
-		return -1;
-	timeval_set_timeout(&dpkt->tv, wtr->timeout);
-	dpkt->packet = pkt;
-	dpkt->writer = wtr;
+	cl_rbtree_remove(&dfr->tree, dpkt);
+	timeval_set_now(&dpkt->tv);
+	timeval_adjust(&dpkt->tv, ms);
+	ccpacket_copy(&dpkt->packet, pkt);
 	if(cl_rbtree_add(&dfr->tree, dpkt) == NULL)
 		return -1;
+
 	return defer_rearm(dfr);
 }
 
@@ -77,28 +72,22 @@ int defer_packet(struct defer *dfr, struct ccpacket *pkt,
  * deferred_pkt_again		Check if a packet should be deferred again.
  */
 static bool deferred_pkt_again(struct deferred_pkt *dpkt) {
-	int timeout = dpkt->writer->timeout;
-
-	return (time_elapsed(&dpkt->packet->sent, &dpkt->tv) >= timeout) &&
-		(time_elapsed(&dpkt->tv, &dpkt->packet->expire) >= timeout);
+	return time_elapsed(&dpkt->tv, &dpkt->packet.expire) >=
+	       dpkt->writer->timeout;
 }
 
 /*
  * defer_packet_now		Send a deferred packet right now.
  */
 static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
-	int timeout = dpkt->writer->timeout;
+	int ms = dpkt->writer->timeout;
 
 	cl_rbtree_remove(&dfr->tree, dpkt);
-	if(deferred_pkt_again(dpkt)) {
-		ccwriter_do_write(dpkt->writer, dpkt->packet);
-		gettimeofday(&dpkt->packet->sent, NULL);
-		timeval_set_timeout(&dpkt->tv, timeout);
-	}
+	ccwriter_do_write(dpkt->writer, &dpkt->packet);
+	timeval_set_now(&dpkt->tv);
+	timeval_adjust(&dpkt->tv, ms);
 	if(deferred_pkt_again(dpkt))
 		cl_rbtree_add(&dfr->tree, dpkt);
-	else
-		cl_pool_release(&dfr->pool, dpkt);
 }
 
 /*
