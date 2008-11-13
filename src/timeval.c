@@ -16,11 +16,17 @@
 #include "timeval.h"
 
 /*
- * timeval_set_timeout	Set a timeval to current time plus a timeout (ms).
+ * timeval_set_now	Set a timeval to current time.
  */
-void timeval_set_timeout(struct timeval *tv, unsigned int timeout) {
+void timeval_set_now(struct timeval *tv) {
 	gettimeofday(tv, NULL);
-	tv->tv_usec += timeout * 1000;
+}
+
+/*
+ * timeval_adjust	Adjust a timeval by the given number of ms
+ */
+void timeval_adjust(struct timeval *tv, unsigned int ms) {
+	tv->tv_usec += ms * 1000;
 	while(tv->tv_usec >= 1000000) {
 		tv->tv_sec++;
 		tv->tv_usec -= 1000000;
@@ -30,7 +36,7 @@ void timeval_set_timeout(struct timeval *tv, unsigned int timeout) {
 /*
  * time_elapsed		Calculate the time elapsed between two timevals
  */
-int time_elapsed(const struct timeval *start, const struct timeval *end) {
+long time_elapsed(const struct timeval *start, const struct timeval *end) {
 	return (end->tv_sec - start->tv_sec) * 1000 +
 		(end->tv_usec - start->tv_usec) / 1000;
 }
@@ -38,13 +44,29 @@ int time_elapsed(const struct timeval *start, const struct timeval *end) {
 /*
  * time_from_now	Determine milliseconds a timeval is in the future.
  */
-int time_from_now(const struct timeval *tv) {
+long time_from_now(const struct timeval *tv) {
 	struct timeval now;
-	int ms;
+	long ms;
 
 	gettimeofday(&now, NULL);
 
 	ms = time_elapsed(&now, tv);
+	if(ms < 0)
+		return 0;
+	else
+		return ms;
+}
+
+/*
+ * time_since		Determine milliseconds a timeval is in the past.
+ */
+long time_since(const struct timeval *tv) {
+	struct timeval now;
+	long ms;
+
+	gettimeofday(&now, NULL);
+
+	ms = time_elapsed(tv, &now);
 	if(ms < 0)
 		return 0;
 	else
