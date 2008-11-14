@@ -69,7 +69,7 @@ enum extended_t {
 };
 
 /*
- * Calculate the checksum for a pelco_d packet
+ * calculate_checksum	Calculate the checksum for a pelco_d packet.
  */
 static uint8_t calculate_checksum(uint8_t *mess) {
 	int i;
@@ -80,14 +80,14 @@ static uint8_t calculate_checksum(uint8_t *mess) {
 }
 
 /*
- * Decode the receiver address from a pelco_d packet
+ * decode_receiver	Decode the receiver address from a pelco_d packet.
  */
 static inline int decode_receiver(uint8_t *mess) {
 	return mess[1];
 }
 
 /*
- * Decode a pan or tilt speed
+ * decode_speed		Decode pan or tilt speed.
  */
 static inline int decode_speed(uint8_t val) {
 	int speed = val << 5;
@@ -98,7 +98,7 @@ static inline int decode_speed(uint8_t val) {
 }
 
 /*
- * Decode the pan speed (and command)
+ * decode_pan		Decode the pan speed (and command).
  */
 static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 	int pan = decode_speed(mess[4]);
@@ -115,7 +115,7 @@ static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 }
 
 /*
- * Decode the tilt speed (and command)
+ * decode_tilt		Decode the tilt speed (and command).
  */
 static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
 	int tilt = decode_speed(mess[5]);
@@ -132,7 +132,7 @@ static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
 }
 
 /*
- * Decode a lens command
+ * decode_lens		Decode a lens command.
  */
 static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_IRIS_OPEN))
@@ -150,7 +150,7 @@ static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
 }
 
 /*
- * Decode a sense command
+ * decode_sense		Decode a sense command.
  */
 static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_SENSE)) {
@@ -167,7 +167,7 @@ static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 }
 
 /*
- * Decode a pelco_d command
+ * pelco_decode_command	Decode a pelco_d command.
  */
 static inline enum decode_t pelco_decode_command(struct ccreader *r,
 	uint8_t *mess)
@@ -182,7 +182,7 @@ static inline enum decode_t pelco_decode_command(struct ccreader *r,
 }
 
 /*
- * Decode an auxiliary command
+ * decode_aux		Decode an auxiliary command.
  */
 static enum aux_t decode_aux(int a) {
 	switch(a) {
@@ -207,7 +207,7 @@ static enum aux_t decode_aux(int a) {
 }
 
 /*
- * Decode an extended command
+ * decode_extended	Decode an extended command.
  */
 static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 	int p0, int p1)
@@ -238,7 +238,7 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 }
 
 /*
- * Decode an extended message
+ * pelco_decode_extended	Decode an extended message.
  */
 static inline enum decode_t pelco_decode_extended(struct ccreader *r,
 	uint8_t *mess)
@@ -253,14 +253,14 @@ static inline enum decode_t pelco_decode_extended(struct ccreader *r,
 }
 
 /*
- * Test if a message checksum is invalid
+ * checksum_invalid	Test if a message checksum is invalid.
  */
 static inline bool checksum_invalid(uint8_t *mess) {
 	return calculate_checksum(mess) != mess[6];
 }
 
 /*
- * Decode a pelco_d message
+ * pelco_decode_message	Decode a pelco_d message.
  */
 static inline enum decode_t pelco_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
@@ -283,7 +283,7 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 }
 
 /*
- * Read messages in pelco_d protocol
+ * pelco_d_do_read	Read messages in pelco_d protocol.
  */
 void pelco_d_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
@@ -293,7 +293,7 @@ void pelco_d_do_read(struct ccreader *r, struct buffer *rxbuf) {
 }
 
 /*
- * Encode the receiver address
+ * encode_receiver	Encode the receiver address.
  */
 static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[0] = FLAG;
@@ -301,7 +301,7 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 }
 
 /*
- * Encode pan or tilt speed
+ * pelco_d_encode_speed	Encode pan or tilt speed.
  */
 static int pelco_d_encode_speed(int speed) {
 	int s = speed >> 5;
@@ -315,7 +315,7 @@ static int pelco_d_encode_speed(int speed) {
 }
 
 /*
- * Encode the pan speed and command
+ * encode_pan		Encode the pan speed and command.
  */
 static void encode_pan(uint8_t *mess, struct ccpacket *pkt) {
 	int pan = pelco_d_encode_speed(pkt->pan);
@@ -333,7 +333,7 @@ static void encode_pan(uint8_t *mess, struct ccpacket *pkt) {
 }
 
 /*
- * Encode the tilt speed and command
+ * encode_tilt		Encode the tilt speed and command.
  */
 static void encode_tilt(uint8_t *mess, struct ccpacket *pkt) {
 	int tilt = pelco_d_encode_speed(pkt->tilt);
@@ -349,7 +349,7 @@ static void encode_tilt(uint8_t *mess, struct ccpacket *pkt) {
 }
 
 /*
- * Encode the lens commands
+ * encode_lens		Encode the lens commands.
  */
 static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
 	if(pkt->iris == IRIS_OPEN)
@@ -367,7 +367,7 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
 }
 
 /*
- * Encode a sense command
+ * encode_sense		Encode a sense command.
  */
 static inline void encode_sense(uint8_t *mess, struct ccpacket *pkt) {
 	if(pkt->command & (CC_CAMERA_ON | CC_AUTO_PAN)) {
@@ -385,14 +385,14 @@ static inline void encode_sense(uint8_t *mess, struct ccpacket *pkt) {
 }
 
 /*
- * Encode the message checksum
+ * encode_checksum	Encode the message checksum.
  */
 static inline void encode_checksum(uint8_t *mess) {
 	mess[6] = calculate_checksum(mess);
 }
 
 /*
- * Encode a command message
+ * encode_command	Encode a command message.
  */
 static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
@@ -407,7 +407,7 @@ static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
 }
 
 /*
- * Encode a preset message
+ * encode_preset	Encode a preset message.
  */
 static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
@@ -426,7 +426,7 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 }
 
 /*
- * Encode an auxiliary command
+ * encode_aux		Encode an auxiliary command.
  */
 static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
@@ -459,7 +459,7 @@ static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
 }
 
 /*
- * Write a packet in the pelco_d protocol
+ * pelco_d_do_write	Write a packet in the pelco_d protocol.
  */
 unsigned int pelco_d_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->receiver < 1 || pkt->receiver > PELCO_D_MAX_ADDRESS)
