@@ -22,6 +22,9 @@
 #define SIZE_MSG (7)
 #define TURBO_SPEED (1 << 6)
 
+/*
+ * Packet bit positions for PTZ functions.
+ */
 enum pelco_bit_t {
 	BIT_FOCUS_NEAR = 16,
 	BIT_IRIS_OPEN = 17,
@@ -39,103 +42,17 @@ enum pelco_bit_t {
 	BIT_FOCUS_FAR = 31,
 };
 
-static inline int decode_receiver(uint8_t *mess) {
-	return mess[1];
-}
-
-static uint8_t calculate_checksum(uint8_t *mess) {
-	int i;
-	int checksum = 0;
-	for(i = 1; i < 6; i++)
-		checksum += mess[i];
-	return checksum;
-}
-
-static inline bool is_extended(uint8_t *mess) {
-	return bit_is_set(mess, BIT_EXTENDED);
-}
-
-static inline void decode_pan(struct ccpacket *p, uint8_t *mess) {
-	int pan = mess[4] << 5;
-	if(pan > SPEED_MAX)
-		pan = SPEED_MAX;
-	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
-		p->command |= CC_PAN_RIGHT;
-		p->pan = pan;
-	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
-		p->command |= CC_PAN_LEFT;
-		p->pan = pan;
-	} else {
-		p->command |= CC_PAN_LEFT;
-		p->pan = 0;
-	}
-}
-
-static inline void decode_tilt(struct ccpacket *p, uint8_t *mess) {
-	int tilt = mess[5] << 5;
-	if(tilt > SPEED_MAX)
-		tilt = SPEED_MAX;
-	if(bit_is_set(mess, BIT_TILT_UP)) {
-		p->command |= CC_TILT_UP;
-		p->tilt = tilt;
-	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
-		p->command |= CC_TILT_DOWN;
-		p->tilt = tilt;
-	} else {
-		p->command |= CC_TILT_DOWN;
-		p->tilt = 0;
-	}
-}
-
-static inline void decode_lens(struct ccpacket *p, uint8_t *mess) {
-	if(bit_is_set(mess, BIT_IRIS_OPEN))
-		p->iris = IRIS_OPEN;
-	else if(bit_is_set(mess, BIT_IRIS_CLOSE))
-		p->iris = IRIS_CLOSE;
-	if(bit_is_set(mess, BIT_FOCUS_NEAR))
-		p->focus = FOCUS_NEAR;
-	else if(bit_is_set(mess, BIT_FOCUS_FAR))
-		p->focus = FOCUS_FAR;
-	if(bit_is_set(mess, BIT_ZOOM_IN))
-		p->zoom = ZOOM_IN;
-	else if(bit_is_set(mess, BIT_ZOOM_OUT))
-		p->zoom = ZOOM_OUT;
-}
-
-static inline void decode_sense(struct ccpacket *p, uint8_t *mess) {
-	if(bit_is_set(mess, BIT_SENSE)) {
-		if(bit_is_set(mess, BIT_CAMERA_ON_OFF))
-			p->command |= CC_CAMERA_ON;
-		if(bit_is_set(mess, BIT_AUTO_PAN))
-			p->command |= CC_AUTO_PAN;
-	} else {
-		if(bit_is_set(mess, BIT_CAMERA_ON_OFF))
-			p->command |= CC_CAMERA_OFF;
-		if(bit_is_set(mess, BIT_AUTO_PAN))
-			p->command |= CC_MANUAL_PAN;
-	}
-}
-
-static inline enum decode_t pelco_decode_command(struct ccreader *r,
-	uint8_t *mess)
-{
-	r->packet.receiver = decode_receiver(mess);
-	decode_pan(&r->packet, mess);
-	decode_tilt(&r->packet, mess);
-	decode_lens(&r->packet, mess);
-	decode_sense(&r->packet, mess);
-	ccreader_process_packet(r);
-	return DECODE_MORE;
-}
-
+/*
+ * Extended pelco_d functions
+ */
 enum extended_t {
-	EX_NONE,		/* 00000 */
+	EX_NONE,		/* 00000 no function */
 	EX_STORE,		/* 00001 store preset */
 	EX_CLEAR,		/* 00010 clear preset */
 	EX_RECALL,		/* 00011 recall preset */
 	EX_AUX_SET,		/* 00100 set auxilliary */
 	EX_AUX_CLEAR,		/* 00101 clear auxilliary */
-	EX_RESERVED,		/* 00110 */
+	EX_RESERVED,		/* 00110 reserved */
 	EX_RESET,		/* 00111 remote reset */
 	EX_ZONE_START,		/* 01000 set zone start */
 	EX_ZONE_END,		/* 01001 set zone end */
@@ -151,6 +68,161 @@ enum extended_t {
 	EX_FOCUS_SPEED,		/* 10011 set focus speed */
 };
 
+/*
+ * Test if the packet is an extended function
+ */
+static inline bool is_extended(uint8_t *mess) {
+	return bit_is_set(mess, BIT_EXTENDED);
+}
+
+/*
+ * Test if the packet has a sense function
+ */
+static inline bool has_sense(struct ccpacket *p) {
+	if(p->command & (CC_AUTO_PAN | CC_MANUAL_PAN))
+		return true;
+	if(p->command & (CC_CAMERA_ON | CC_CAMERA_OFF))
+		return true;
+	return false;
+}
+
+/*
+ * Test if the packet has a command function
+ */
+static inline bool has_command(struct ccpacket *p) {
+	if(p->command & CC_PAN_TILT)
+		return true;
+	if(p->zoom || p->focus || p->iris)
+		return true;
+	return has_sense(p);
+}
+
+/*
+ * Test if the packet has an auxiliary function
+ */
+static inline bool has_aux(struct ccpacket *p) {
+	if(p->aux)
+		return true;
+	else
+		return false;
+}
+
+/*
+ * Calculate the checksum for a pelco_d packet
+ */
+static uint8_t calculate_checksum(uint8_t *mess) {
+	int i;
+	int checksum = 0;
+	for(i = 1; i < 6; i++)
+		checksum += mess[i];
+	return checksum;
+}
+
+/*
+ * Decode the receiver address from a pelco_d packet
+ */
+static inline int decode_receiver(uint8_t *mess) {
+	return mess[1];
+}
+
+/*
+ * Decode a pan or tilt speed
+ */
+static inline int decode_speed(uint8_t val) {
+	int speed = val << 5;
+	if(speed > SPEED_MAX)
+		return SPEED_MAX;
+	else
+		return speed;
+}
+
+/*
+ * Decode the pan speed (and command)
+ */
+static inline void decode_pan(struct ccpacket *p, uint8_t *mess) {
+	int pan = decode_speed(mess[4]);
+	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
+		p->command |= CC_PAN_RIGHT;
+		p->pan = pan;
+	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
+		p->command |= CC_PAN_LEFT;
+		p->pan = pan;
+	} else {
+		p->command |= CC_PAN_LEFT;
+		p->pan = 0;
+	}
+}
+
+/*
+ * Decode the tilt speed (and command)
+ */
+static inline void decode_tilt(struct ccpacket *p, uint8_t *mess) {
+	int tilt = decode_speed(mess[5]);
+	if(bit_is_set(mess, BIT_TILT_UP)) {
+		p->command |= CC_TILT_UP;
+		p->tilt = tilt;
+	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
+		p->command |= CC_TILT_DOWN;
+		p->tilt = tilt;
+	} else {
+		p->command |= CC_TILT_DOWN;
+		p->tilt = 0;
+	}
+}
+
+/*
+ * Decode a lens command
+ */
+static inline void decode_lens(struct ccpacket *p, uint8_t *mess) {
+	if(bit_is_set(mess, BIT_IRIS_OPEN))
+		p->iris = IRIS_OPEN;
+	else if(bit_is_set(mess, BIT_IRIS_CLOSE))
+		p->iris = IRIS_CLOSE;
+	if(bit_is_set(mess, BIT_FOCUS_NEAR))
+		p->focus = FOCUS_NEAR;
+	else if(bit_is_set(mess, BIT_FOCUS_FAR))
+		p->focus = FOCUS_FAR;
+	if(bit_is_set(mess, BIT_ZOOM_IN))
+		p->zoom = ZOOM_IN;
+	else if(bit_is_set(mess, BIT_ZOOM_OUT))
+		p->zoom = ZOOM_OUT;
+}
+
+/*
+ * Decode a sense command
+ */
+static inline void decode_sense(struct ccpacket *p, uint8_t *mess) {
+	if(bit_is_set(mess, BIT_SENSE)) {
+		if(bit_is_set(mess, BIT_CAMERA_ON_OFF))
+			p->command |= CC_CAMERA_ON;
+		if(bit_is_set(mess, BIT_AUTO_PAN))
+			p->command |= CC_AUTO_PAN;
+	} else {
+		if(bit_is_set(mess, BIT_CAMERA_ON_OFF))
+			p->command |= CC_CAMERA_OFF;
+		if(bit_is_set(mess, BIT_AUTO_PAN))
+			p->command |= CC_MANUAL_PAN;
+	}
+}
+
+/*
+ * Decode a pelco_d command
+ */
+static inline enum decode_t pelco_decode_command(struct ccreader *r,
+	uint8_t *mess)
+{
+	r->packet.receiver = decode_receiver(mess);
+	decode_pan(&r->packet, mess);
+	decode_tilt(&r->packet, mess);
+	decode_lens(&r->packet, mess);
+	decode_sense(&r->packet, mess);
+	ccreader_process_packet(r);
+	return DECODE_MORE;
+}
+
+/*
+ * Decode an auxiliary command
+ */
 static enum aux_t decode_aux(int a) {
 	switch(a) {
 		case 1:
@@ -173,6 +245,9 @@ static enum aux_t decode_aux(int a) {
 	return AUX_NONE;
 }
 
+/*
+ * Decode an extended command
+ */
 static inline void decode_extended(struct ccpacket *p, enum extended_t ex,
 	int p0, int p1)
 {
@@ -201,6 +276,9 @@ static inline void decode_extended(struct ccpacket *p, enum extended_t ex,
 	}
 }
 
+/*
+ * Decode an extended message
+ */
 static inline enum decode_t pelco_decode_extended(struct ccreader *r,
 	uint8_t *mess)
 {
@@ -213,10 +291,16 @@ static inline enum decode_t pelco_decode_extended(struct ccreader *r,
 	return DECODE_MORE;
 }
 
+/*
+ * Test if a message checksum is invalid
+ */
 static inline bool checksum_invalid(uint8_t *mess) {
 	return calculate_checksum(mess) != mess[6];
 }
 
+/*
+ * Decode a pelco_d message
+ */
 static inline enum decode_t pelco_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
@@ -237,6 +321,9 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 		return pelco_decode_command(r, mess);
 }
 
+/*
+ * Read messages in pelco_d protocol
+ */
 void pelco_d_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
 		if(pelco_decode_message(r, rxbuf) == DECODE_DONE)
@@ -244,11 +331,17 @@ void pelco_d_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	}
 }
 
+/*
+ * Encode the receiver address
+ */
 static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[0] = FLAG;
 	mess[1] = receiver;
 }
 
+/*
+ * Encode pan or tilt speed
+ */
 static int pelco_d_encode_speed(int speed) {
 	int s = speed >> 5;
 	/* round up to the next speed level */
@@ -260,6 +353,9 @@ static int pelco_d_encode_speed(int speed) {
 		return TURBO_SPEED - 1;
 }
 
+/*
+ * Encode the pan speed and command
+ */
 static void encode_pan(uint8_t *mess, struct ccpacket *p) {
 	int pan = pelco_d_encode_speed(p->pan);
 	if(p->pan > SPEED_MAX - 8)
@@ -275,6 +371,9 @@ static void encode_pan(uint8_t *mess, struct ccpacket *p) {
 	}
 }
 
+/*
+ * Encode the tilt speed and command
+ */
 static void encode_tilt(uint8_t *mess, struct ccpacket *p) {
 	int tilt = pelco_d_encode_speed(p->tilt);
 	mess[5] = tilt;
@@ -288,6 +387,9 @@ static void encode_tilt(uint8_t *mess, struct ccpacket *p) {
 	}
 }
 
+/*
+ * Encode the lens commands
+ */
 static void encode_lens(uint8_t *mess, struct ccpacket *p) {
 	if(p->iris == IRIS_OPEN)
 		bit_set(mess, BIT_IRIS_OPEN);
@@ -303,6 +405,9 @@ static void encode_lens(uint8_t *mess, struct ccpacket *p) {
 		bit_set(mess, BIT_ZOOM_OUT);
 }
 
+/*
+ * Encode a sense command
+ */
 static inline void encode_sense(uint8_t *mess, struct ccpacket *p) {
 	if(p->command & (CC_CAMERA_ON | CC_AUTO_PAN)) {
 		bit_set(mess, BIT_SENSE);
@@ -318,10 +423,16 @@ static inline void encode_sense(uint8_t *mess, struct ccpacket *p) {
 	}
 }
 
+/*
+ * Encode the message checksum
+ */
 static inline void encode_checksum(uint8_t *mess) {
 	mess[6] = calculate_checksum(mess);
 }
 
+/*
+ * Encode a command message
+ */
 static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
@@ -334,6 +445,9 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * Encode a preset message
+ */
 static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
@@ -350,6 +464,9 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * Encode an auxiliary command
+ */
 static void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
 	if(mess) {
@@ -380,29 +497,9 @@ static void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
-static inline bool has_sense(struct ccpacket *p) {
-	if(p->command & (CC_AUTO_PAN | CC_MANUAL_PAN))
-		return true;
-	if(p->command & (CC_CAMERA_ON | CC_CAMERA_OFF))
-		return true;
-	return false;
-}
-
-static inline bool has_command(struct ccpacket *p) {
-	if(p->command & CC_PAN_TILT)
-		return true;
-	if(p->zoom || p->focus || p->iris)
-		return true;
-	return has_sense(p);
-}
-
-static inline bool has_aux(struct ccpacket *p) {
-	if(p->aux)
-		return true;
-	else
-		return false;
-}
-
+/*
+ * Write a packet in the pelco_d protocol
+ */
 unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(p->receiver < 1 || p->receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
