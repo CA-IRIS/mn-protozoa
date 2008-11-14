@@ -51,23 +51,38 @@
 #define JBUTTON_PREVIOUS	(10)
 #define JBUTTON_NEXT		(11)
 
+/*
+ * decode_speed		Decode a pan/tilt speed.
+ */
 static inline int decode_speed(uint8_t *mess) {
 	return *(short *)(mess + 4);
 }
 
+/*
+ * decode_pressed	Decode a button pressed code.
+ */
 static inline bool decode_pressed(uint8_t *mess) {
 	return *(short *)(mess + 4) != 0;
 }
 
+/*
+ * remap_int		Remap an integer from input -> output range.
+ */
 static inline int remap_int(int value, int irange, int orange) {
 	int v = abs(value) * orange;
 	return v / irange;
 }
 
+/*
+ * remap_speed		Remap pan/tilt speed value.
+ */
 static inline int remap_speed(int value) {
 	return remap_int(value, JSPEED_MAX, SPEED_MAX);
 }
 
+/*
+ * decode_pan_tilt_zoom		Decode a pan/tilt/zoom event.
+ */
 static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 	uint8_t number = mess[7];
 	short speed = decode_speed(mess);
@@ -102,10 +117,17 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 	return true;
 }
 
+/*
+ * moved_since_pressed	Test if the joystick has moved since a preset button
+ *			was pressed.
+ */
 static bool moved_since_pressed(struct ccpacket *pkt) {
 	return (pkt->command & CC_RECALL) == 0;
 }
 
+/*
+ * decode_button	Decode a button pressed event.
+ */
 static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 	struct ccpacket *pkt = &rdr->packet;
 	uint8_t number = mess[7];
@@ -204,6 +226,9 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 	return false;
 }
 
+/*
+ * joystick_decode_event	Decode a joystick event.
+ */
 static inline bool joystick_decode_event(struct ccreader *rdr, uint8_t *mess) {
 	uint8_t ev_type = mess[6];
 
@@ -215,6 +240,9 @@ static inline bool joystick_decode_event(struct ccreader *rdr, uint8_t *mess) {
 		return false;
 }
 
+/*
+ * joystick_read_message	Read a joystick event message.
+ */
 static inline bool joystick_read_message(struct ccreader *rdr,
 	struct buffer *rxbuf)
 {
@@ -224,6 +252,9 @@ static inline bool joystick_read_message(struct ccreader *rdr,
 	return m;
 }
 
+/*
+ * joystick_do_read		Read joystick events.
+ */
 void joystick_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 	int c = 0;
 	while(buffer_available(rxbuf) >= JEVENT_OCTETS)
