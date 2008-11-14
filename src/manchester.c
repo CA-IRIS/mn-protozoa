@@ -56,16 +56,6 @@ static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
-static int manchester_encode_speed(int speed) {
-	int s;
-	for(s = 0; s < SPEED_FULL; s++) {
-		/* round up to the next higher speed level */
-		if(SPEED[s] >= speed)
-			return s;
-	}
-	return SPEED_FULL;
-}
-
 enum pt_command_t {
 	TILT_DOWN,	/* 00 */
 	TILT_UP,	/* 01 */
@@ -280,6 +270,16 @@ static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
 		encode_receiver(mess, p->receiver);
 		mess[1] |= (aux << 1) | (EX_AUX << 4);
 	}
+}
+
+static int manchester_encode_speed(int speed) {
+	int s;
+	for(s = 0; s < SPEED_FULL; s++) {
+		/* round up to the next higher speed level */
+		if(SPEED[s] >= speed)
+			return s;
+	}
+	return SPEED_FULL;
 }
 
 static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
