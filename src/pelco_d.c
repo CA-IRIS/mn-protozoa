@@ -98,16 +98,6 @@ static inline bool has_command(struct ccpacket *p) {
 }
 
 /*
- * Test if the packet has an auxiliary function
- */
-static inline bool has_aux(struct ccpacket *p) {
-	if(p->aux)
-		return true;
-	else
-		return false;
-}
-
-/*
  * Calculate the checksum for a pelco_d packet
  */
 static uint8_t calculate_checksum(uint8_t *mess) {
@@ -507,7 +497,7 @@ unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
 		encode_command(w, p);
 	if(ccpacket_has_preset(p))
 		encode_preset(w, p);
-	if(has_aux(p))
+	if(ccpacket_has_aux(p))
 		encode_aux(w, p);
 	return 1;
 }

@@ -156,6 +156,16 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 }
 
 /*
+ * ccpacket_has_aux	Test if the packet has an auxiliary function.
+ */
+bool ccpacket_has_aux(struct ccpacket *pkt) {
+	if(pkt->aux)
+		return true;
+	else
+		return false;
+}
+
+/*
  * ccpacket_has_preset	Test if the packet has a preset command.
  */
 bool ccpacket_has_preset(struct ccpacket *pkt) {
