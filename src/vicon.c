@@ -213,91 +213,91 @@ static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
 /*
  * vicon_decode_extended	Decode an extended packet.
  */
-static inline enum decode_t vicon_decode_extended(struct ccreader *r,
+static inline enum decode_t vicon_decode_extended(struct ccreader *rdr,
 	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_EXTENDED)
 		return DECODE_DONE;
-	r->packet.receiver = decode_receiver(mess);
-	decode_pan(&r->packet, mess);
-	decode_tilt(&r->packet, mess);
-	decode_lens(&r->packet, mess);
-	decode_toggles(&r->packet, mess);
-	decode_aux(&r->packet, mess);
-	decode_preset(&r->packet, mess);
+	rdr->packet.receiver = decode_receiver(mess);
+	decode_pan(&rdr->packet, mess);
+	decode_tilt(&rdr->packet, mess);
+	decode_lens(&rdr->packet, mess);
+	decode_toggles(&rdr->packet, mess);
+	decode_aux(&rdr->packet, mess);
+	decode_preset(&rdr->packet, mess);
 	if(bit_is_set(mess, BIT_EX_REQUEST)) {
 		if(bit_is_set(mess, BIT_EX_STATUS))
-			decode_ex_status(&r->packet, mess);
+			decode_ex_status(&rdr->packet, mess);
 		else
-			decode_ex_preset(&r->packet, mess);
+			decode_ex_preset(&rdr->packet, mess);
 	} else
-		decode_ex_speed(&r->packet, mess);
+		decode_ex_speed(&rdr->packet, mess);
 	buffer_consume(rxbuf, SIZE_EXTENDED);
-	ccreader_process_packet(r);
+	ccreader_process_packet(rdr);
 	return DECODE_MORE;
 }
 
 /*
  * vicon_decode_command		Decode a command packet.
  */
-static inline enum decode_t vicon_decode_command(struct ccreader *r,
+static inline enum decode_t vicon_decode_command(struct ccreader *rdr,
 	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_COMMAND)
 		return DECODE_DONE;
-	r->packet.receiver = decode_receiver(mess);
-	decode_pan(&r->packet, mess);
-	decode_tilt(&r->packet, mess);
-	decode_lens(&r->packet, mess);
-	decode_toggles(&r->packet, mess);
-	decode_aux(&r->packet, mess);
-	decode_preset(&r->packet, mess);
+	rdr->packet.receiver = decode_receiver(mess);
+	decode_pan(&rdr->packet, mess);
+	decode_tilt(&rdr->packet, mess);
+	decode_lens(&rdr->packet, mess);
+	decode_toggles(&rdr->packet, mess);
+	decode_aux(&rdr->packet, mess);
+	decode_preset(&rdr->packet, mess);
 	buffer_consume(rxbuf, SIZE_COMMAND);
-	ccreader_process_packet(r);
+	ccreader_process_packet(rdr);
 	return DECODE_MORE;
 }
 
 /*
  * vicon_decode_status	Decode a status packet.
  */
-static inline enum decode_t vicon_decode_status(struct ccreader *r,
+static inline enum decode_t vicon_decode_status(struct ccreader *rdr,
 	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_STATUS)
 		return DECODE_DONE;
-	r->packet.receiver = decode_receiver(mess);
-	r->packet.status = STATUS_REQUEST;
+	rdr->packet.receiver = decode_receiver(mess);
+	rdr->packet.status = STATUS_REQUEST;
 	buffer_consume(rxbuf, SIZE_STATUS);
-	ccreader_process_packet(r);
+	ccreader_process_packet(rdr);
 	return DECODE_MORE;
 }
 
 /*
  * vicon_decode_message		Decode a vicon message.
  */
-static inline enum decode_t vicon_decode_message(struct ccreader *r,
+static inline enum decode_t vicon_decode_message(struct ccreader *rdr,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_output(rxbuf);
 	if((mess[0] & FLAG) == 0) {
-		log_println(r->log, "Vicon: unexpected byte %02X", mess[0]);
+		log_println(rdr->log, "Vicon: unexpected byte %02X", mess[0]);
 		buffer_consume(rxbuf, 1);
 		return DECODE_MORE;
 	}
 	if(is_extended_command(mess))
-		return vicon_decode_extended(r, mess, rxbuf);
+		return vicon_decode_extended(rdr, mess, rxbuf);
 	else if(is_command(mess))
-		return vicon_decode_command(r, mess, rxbuf);
+		return vicon_decode_command(rdr, mess, rxbuf);
 	else
-		return vicon_decode_status(r, mess, rxbuf);
+		return vicon_decode_status(rdr, mess, rxbuf);
 }
 
 /*
  * vicon_do_read	Read messages in vicon protocol format.
  */
-void vicon_do_read(struct ccreader *r, struct buffer *rxbuf) {
+void vicon_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_STATUS) {
-		if(vicon_decode_message(r, rxbuf) == DECODE_DONE)
+		if(vicon_decode_message(rdr, rxbuf) == DECODE_DONE)
 			break;
 	}
 }

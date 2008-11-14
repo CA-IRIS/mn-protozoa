@@ -106,8 +106,8 @@ static bool moved_since_pressed(struct ccpacket *p) {
 	return (p->command & CC_RECALL) == 0;
 }
 
-static inline bool decode_button(struct ccreader *r, uint8_t *mess) {
-	struct ccpacket *p = &r->packet;
+static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
+	struct ccpacket *p = &rdr->packet;
 	uint8_t number = mess[7];
 	bool pressed = decode_pressed(mess);
 	bool moved = moved_since_pressed(p);
@@ -193,42 +193,42 @@ static inline bool decode_button(struct ccreader *r, uint8_t *mess) {
 			return true;
 		case JBUTTON_PREVIOUS:
 			if(pressed)
-				ccreader_previous_camera(r);
+				ccreader_previous_camera(rdr);
 			break;
 		case JBUTTON_NEXT:
 			if(pressed)
-				ccreader_next_camera(r);
+				ccreader_next_camera(rdr);
 			break;
 	}
 	p->preset = 0;
 	return false;
 }
 
-static inline bool joystick_decode_event(struct ccreader *r, uint8_t *mess) {
+static inline bool joystick_decode_event(struct ccreader *rdr, uint8_t *mess) {
 	uint8_t ev_type = mess[6];
 
 	if(ev_type & JEVENT_AXIS)
-		return decode_pan_tilt_zoom(&r->packet, mess);
+		return decode_pan_tilt_zoom(&rdr->packet, mess);
 	else if((ev_type & JEVENT_BUTTON) && !(ev_type & JEVENT_INITIAL))
-		return decode_button(r, mess);
+		return decode_button(rdr, mess);
 	else
 		return false;
 }
 
-static inline bool joystick_read_message(struct ccreader *r,
+static inline bool joystick_read_message(struct ccreader *rdr,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_output(rxbuf);
-	bool m = joystick_decode_event(r, mess);
+	bool m = joystick_decode_event(rdr, mess);
 	buffer_consume(rxbuf, JEVENT_OCTETS);
 	return m;
 }
 
-void joystick_do_read(struct ccreader *r, struct buffer *rxbuf) {
+void joystick_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 	int c = 0;
 	while(buffer_available(rxbuf) >= JEVENT_OCTETS)
-		c += joystick_read_message(r, rxbuf);
+		c += joystick_read_message(rdr, rxbuf);
 	if(c)
-		ccreader_process_packet_no_clear(r);
-	r->packet.preset = 0;
+		ccreader_process_packet_no_clear(rdr);
+	rdr->packet.preset = 0;
 }

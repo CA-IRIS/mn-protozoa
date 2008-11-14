@@ -5,6 +5,6 @@
 
 #define JOYSTICK_TIMEOUT (30000)
 
-void joystick_do_read(struct ccreader *r, struct buffer *rxbuf);
+void joystick_do_read(struct ccreader *rdr, struct buffer *rxbuf);
 
 #endif

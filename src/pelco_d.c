@@ -169,15 +169,15 @@ static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 /*
  * pelco_decode_command	Decode a pelco_d command.
  */
-static inline enum decode_t pelco_decode_command(struct ccreader *r,
+static inline enum decode_t pelco_decode_command(struct ccreader *rdr,
 	uint8_t *mess)
 {
-	r->packet.receiver = decode_receiver(mess);
-	decode_pan(&r->packet, mess);
-	decode_tilt(&r->packet, mess);
-	decode_lens(&r->packet, mess);
-	decode_sense(&r->packet, mess);
-	ccreader_process_packet(r);
+	rdr->packet.receiver = decode_receiver(mess);
+	decode_pan(&rdr->packet, mess);
+	decode_tilt(&rdr->packet, mess);
+	decode_lens(&rdr->packet, mess);
+	decode_sense(&rdr->packet, mess);
+	ccreader_process_packet(rdr);
 	return DECODE_MORE;
 }
 
@@ -240,15 +240,15 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 /*
  * pelco_decode_extended	Decode an extended message.
  */
-static inline enum decode_t pelco_decode_extended(struct ccreader *r,
+static inline enum decode_t pelco_decode_extended(struct ccreader *rdr,
 	uint8_t *mess)
 {
-	r->packet.receiver = decode_receiver(mess);
+	rdr->packet.receiver = decode_receiver(mess);
 	int ex = mess[3] >> 1 & 0x1f;
 	int p0 = mess[5];
 	int p1 = mess[4];
-	decode_extended(&r->packet, ex, p0, p1);
-	ccreader_process_packet(r);
+	decode_extended(&rdr->packet, ex, p0, p1);
+	ccreader_process_packet(rdr);
 	return DECODE_MORE;
 }
 
@@ -262,32 +262,33 @@ static inline bool checksum_is_valid(uint8_t *mess) {
 /*
  * pelco_decode_message	Decode a pelco_d message.
  */
-static inline enum decode_t pelco_decode_message(struct ccreader *r,
+static inline enum decode_t pelco_decode_message(struct ccreader *rdr,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_output(rxbuf);
 	if(mess[0] != FLAG) {
-		log_println(r->log, "Pelco(D): unexpected byte %02X", mess[0]);
+		log_println(rdr->log, "Pelco(D): unexpected byte %02X",
+			mess[0]);
 		buffer_consume(rxbuf, 1);
 		return DECODE_MORE;
 	}
 	buffer_consume(rxbuf, SIZE_MSG);
 	if(!checksum_is_valid(mess)) {
-		log_println(r->log, "Pelco(D): invalid checksum");
+		log_println(rdr->log, "Pelco(D): invalid checksum");
 		return DECODE_MORE;
 	}
 	if(bit_is_set(mess, BIT_EXTENDED))
-		return pelco_decode_extended(r, mess);
+		return pelco_decode_extended(rdr, mess);
 	else
-		return pelco_decode_command(r, mess);
+		return pelco_decode_command(rdr, mess);
 }
 
 /*
  * pelco_d_do_read	Read messages in pelco_d protocol.
  */
-void pelco_d_do_read(struct ccreader *r, struct buffer *rxbuf) {
+void pelco_d_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
-		if(pelco_decode_message(r, rxbuf) == DECODE_DONE)
+		if(pelco_decode_message(rdr, rxbuf) == DECODE_DONE)
 			break;
 	}
 }

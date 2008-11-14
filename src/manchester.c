@@ -253,28 +253,28 @@ static inline void decode_packet(struct ccpacket *pkt, uint8_t *mess) {
 /*
  * manchester_decode_packet	Decode a manchester packet.
  */
-static inline void manchester_decode_packet(struct ccreader *r, uint8_t *mess) {
+static void manchester_decode_packet(struct ccreader *rdr, uint8_t *mess) {
 	int receiver = decode_receiver(mess);
-	if(r->packet.receiver != receiver)
-		ccreader_process_packet(r);
-	r->packet.receiver = receiver;
-	decode_packet(&r->packet, mess);
+	if(rdr->packet.receiver != receiver)
+		ccreader_process_packet(rdr);
+	rdr->packet.receiver = receiver;
+	decode_packet(&rdr->packet, mess);
 }
 
 /*
  * manchester_read_message	Read one manchester packet.
  */
-static inline enum decode_t manchester_read_message(struct ccreader *r,
+static inline enum decode_t manchester_read_message(struct ccreader *rdr,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_output(rxbuf);
 	if((mess[0] & FLAG) == 0) {
-		log_println(r->log, "Manchester: unexpected byte %02X",
+		log_println(rdr->log, "Manchester: unexpected byte %02X",
 			mess[0]);
 		buffer_consume(rxbuf, 1);
 		return DECODE_MORE;
 	}
-	manchester_decode_packet(r, mess);
+	manchester_decode_packet(rdr, mess);
 	buffer_consume(rxbuf, SIZE_MSG);
 	return DECODE_MORE;
 }
@@ -282,24 +282,24 @@ static inline enum decode_t manchester_read_message(struct ccreader *r,
 /*
  * manchester_do_read		Read packets in manchester protocol.
  */
-void manchester_do_read(struct ccreader *r, struct buffer *rxbuf) {
+void manchester_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
-		if(manchester_read_message(r, rxbuf) == DECODE_DONE)
+		if(manchester_read_message(rdr, rxbuf) == DECODE_DONE)
 			break;
 	}
 	/* If there's a partial packet in the buffer, don't process yet */
 	if(!buffer_available(rxbuf))
-		ccreader_process_packet(r);
+		ccreader_process_packet(rdr);
 }
 
 /*
  * encode_receiver		Encode the receiver address.
  */
 static inline void encode_receiver(uint8_t *mess, int receiver) {
-	int r = receiver - 1;
-	mess[0] = FLAG | ((r >> 6) & 0x0f);
-	mess[1] = (r >> 5) & 0x01;
-	mess[2] = (r & 0x1f) << 2;
+	int rdr = receiver - 1;
+	mess[0] = FLAG | ((rdr >> 6) & 0x0f);
+	mess[1] = (rdr >> 5) & 0x01;
+	mess[2] = (rdr & 0x1f) << 2;
 }
 
 /*
