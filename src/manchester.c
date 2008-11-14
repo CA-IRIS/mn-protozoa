@@ -20,6 +20,72 @@
 #define FLAG (0x80)
 #define PT_COMMAND (0x02)
 #define SIZE_MSG (3)
+#define SPEED_FULL (0x07)
+
+/* Lookup table for pan/tilt speeds 0 - 6 (or 7) */
+static const int SPEED[] = {
+	1 << 8,
+	2 << 8,
+	3 << 8,
+	4 << 8,
+	5 << 8,
+	6 << 8,
+	7 << 8,
+	SPEED_MAX,
+};
+
+/* Pan/tilt command values */
+enum pt_command_t {
+	TILT_DOWN,	/* 00 */
+	TILT_UP,	/* 01 */
+	PAN_LEFT,	/* 10 */
+	PAN_RIGHT	/* 11 */
+};
+
+/* Extended function values */
+enum ex_function_t {
+	EX_LENS,	/* 00 */
+	EX_AUX,		/* 01 */
+	EX_RECALL,	/* 10 */
+	EX_STORE,	/* 11 */
+};
+
+/* Lens command values */
+enum lens_t {
+	XL_TILT_DOWN,	/* 000 (not really a lens function) */
+	XL_IRIS_OPEN,	/* 001 */
+	XL_FOCUS_FAR,	/* 010 */
+	XL_ZOOM_IN,	/* 011 */
+	XL_IRIS_CLOSE,	/* 100 */
+	XL_FOCUS_NEAR,	/* 101 */
+	XL_ZOOM_OUT,	/* 110 */
+	XL_PAN_LEFT,	/* 111 (not really a lens function) */
+};
+
+#define EX_AUX_FULL_UP (0)
+#define EX_AUX_FULL_RIGHT (1)
+
+/* Auxiliary command lookup table */
+static const enum aux_t AUX_LUT[] = {
+	AUX_NONE,	/* 000 (full tilt up) */
+	AUX_NONE,	/* 001 (full pan right) */
+	AUX_1,		/* 010 */
+	AUX_4,		/* 011 */
+	AUX_2,		/* 100 */
+	AUX_5,		/* 101 */
+	AUX_3,		/* 110 */
+	AUX_6		/* 111 */
+};
+
+/* Masks for each aux function */
+static const enum aux_t AUX_MASK[] = {
+	AUX_1, AUX_2, AUX_3, AUX_4, AUX_5, AUX_6
+};
+
+/* Reverse AUX function lookup table */
+static const int LUT_AUX[] = {
+	2, 4, 6, 3, 5, 7
+};
 
 static inline bool is_pan_tilt_command(uint8_t *mess) {
 	return (mess[2] & PT_COMMAND) != 0;
@@ -38,30 +104,9 @@ static inline int pt_extra(uint8_t *mess) {
 	return (mess[1] >> 1) & 0x07;
 }
 
-/* Lookup table for pan/tilt speeds 0 - 6 (or 7) */
-static const int SPEED[] = {
-	1 << 8,
-	2 << 8,
-	3 << 8,
-	4 << 8,
-	5 << 8,
-	6 << 8,
-	7 << 8,
-	SPEED_MAX,
-};
-
-#define SPEED_FULL (0x07)
-
 static inline int decode_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
-
-enum pt_command_t {
-	TILT_DOWN,	/* 00 */
-	TILT_UP,	/* 01 */
-	PAN_LEFT,	/* 10 */
-	PAN_RIGHT	/* 11 */
-};
 
 static inline void decode_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 	int speed)
@@ -85,17 +130,6 @@ static inline void decode_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 			break;
 	}
 }
-
-enum lens_t {
-	XL_TILT_DOWN,	/* 000 (not really a lens function) */
-	XL_IRIS_OPEN,	/* 001 */
-	XL_FOCUS_FAR,	/* 010 */
-	XL_ZOOM_IN,	/* 011 */
-	XL_IRIS_CLOSE,	/* 100 */
-	XL_FOCUS_NEAR,	/* 101 */
-	XL_ZOOM_OUT,	/* 110 */
-	XL_PAN_LEFT,	/* 111 (not really a lens function) */
-};
 
 static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 	switch(extra) {
@@ -130,20 +164,6 @@ static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 	}
 }
 
-static const enum aux_t AUX_LUT[] = {
-	AUX_NONE,	/* 000 (full tilt up) */
-	AUX_NONE,	/* 001 (full pan right) */
-	AUX_1,		/* 010 */
-	AUX_4,		/* 011 */
-	AUX_2,		/* 100 */
-	AUX_5,		/* 101 */
-	AUX_3,		/* 110 */
-	AUX_6		/* 111 */
-};
-
-#define EX_AUX_FULL_UP 0
-#define EX_AUX_FULL_RIGHT 1
-
 static inline void decode_aux(struct ccpacket *p, int extra) {
 	if(extra == EX_AUX_FULL_UP) {
 		/* Weird special case for full up */
@@ -166,13 +186,6 @@ static inline void decode_store(struct ccpacket *p, int extra) {
 	p->command |= CC_STORE;
 	p->preset = extra + 1;
 }
-
-enum ex_function_t {
-	EX_LENS,	/* 00 */
-	EX_AUX,		/* 01 */
-	EX_RECALL,	/* 10 */
-	EX_STORE,	/* 11 */
-};
 
 static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
 	int extra)
@@ -332,16 +345,6 @@ static inline void encode_iris(struct ccwriter *w, struct ccpacket *p) {
 	else if(p->iris > 0)
 		encode_lens_function(w, p, XL_IRIS_OPEN);
 }
-
-/* Masks for each aux function */
-static const enum aux_t AUX_MASK[] = {
-	AUX_1, AUX_2, AUX_3, AUX_4, AUX_5, AUX_6
-};
-
-/* Reverse AUX function lookup table */
-static const int LUT_AUX[] = {
-	2, 4, 6, 3, 5, 7
-};
 
 static inline void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	int i;
