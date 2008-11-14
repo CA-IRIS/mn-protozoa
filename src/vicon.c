@@ -23,6 +23,9 @@
 #define SIZE_COMMAND (6)
 #define SIZE_EXTENDED (10)
 
+/*
+ * Packet bit positions for PTZ functions.
+ */
 enum vicon_bit_t {
 	BIT_COMMAND = 12,
 	BIT_ACK_ALARM = 13,
@@ -57,18 +60,30 @@ enum vicon_bit_t {
 	BIT_STAT_AUX_SET_2 = 58,
 };
 
+/*
+ * decode_receiver	Decode the receiver address.
+ */
 static inline int decode_receiver(uint8_t *mess) {
 	return ((mess[0] & 0x0f) << 4) | (mess[1] & 0x0f);
 }
 
+/*
+ * is_command		Test if the message is a command.
+ */
 static inline bool is_command(uint8_t *mess) {
 	return bit_is_set(mess, BIT_COMMAND);
 }
 
+/*
+ * is_extended_command	Test if the message is an extend command.
+ */
 static inline bool is_extended_command(uint8_t *mess) {
 	return bit_is_set(mess, BIT_COMMAND) && bit_is_set(mess, BIT_EXTENDED);
 }
 
+/*
+ * decode_pan		Decode the pan speed (and command).
+ */
 static inline void decode_pan(struct ccpacket *p, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
 		p->command |= CC_PAN_RIGHT;
@@ -82,6 +97,9 @@ static inline void decode_pan(struct ccpacket *p, uint8_t *mess) {
 	}
 }
 
+/*
+ * decode_tilt		Decode the tilt speed (and command).
+ */
 static inline void decode_tilt(struct ccpacket *p, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_TILT_UP)) {
 		p->command |= CC_TILT_UP;
@@ -95,6 +113,9 @@ static inline void decode_tilt(struct ccpacket *p, uint8_t *mess) {
 	}
 }
 
+/*
+ * decode_lens		Decode any lens commands.
+ */
 static inline void decode_lens(struct ccpacket *p, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_IRIS_OPEN))
 		p->iris = IRIS_OPEN;
@@ -110,6 +131,9 @@ static inline void decode_lens(struct ccpacket *p, uint8_t *mess) {
 		p->zoom = ZOOM_OUT;
 }
 
+/*
+ * decode_toggles	Decode toggle functions.
+ */
 static inline void decode_toggles(struct ccpacket *p, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_ACK_ALARM))
 		p->command |= CC_ACK_ALARM;
@@ -121,6 +145,9 @@ static inline void decode_toggles(struct ccpacket *p, uint8_t *mess) {
 		p->command |= CC_LENS_SPEED;
 }
 
+/*
+ * decode_aux		Decode auxiliary functions.
+ */
 static inline void decode_aux(struct ccpacket *p, uint8_t *mess) {
 	p->aux = 0;
 	if(bit_is_set(mess, BIT_AUX_1))
@@ -137,6 +164,9 @@ static inline void decode_aux(struct ccpacket *p, uint8_t *mess) {
 		p->aux |= AUX_6;
 }
 
+/*
+ * decode_preset	Decode preset functions.
+ */
 static inline void decode_preset(struct ccpacket *p, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_RECALL))
 		p->command = CC_RECALL;
@@ -145,11 +175,17 @@ static inline void decode_preset(struct ccpacket *p, uint8_t *mess) {
 	p->preset = mess[5] & 0x0f;
 }
 
+/*
+ * decode_ex_speed	Decode extended speed functions.
+ */
 static inline void decode_ex_speed(struct ccpacket *p, uint8_t *mess) {
 	p->pan = ((mess[6] & 0x0f) << 7) | (mess[7] & 0x7f);
 	p->tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x7f);
 }
 
+/*
+ * decode_ex_status	Decode extended status functions.
+ */
 static inline void decode_ex_status(struct ccpacket *p, uint8_t *mess) {
 	p->status = STATUS_REQUEST;
 	if(bit_is_set(mess, BIT_STAT_SECTOR))
@@ -161,6 +197,9 @@ static inline void decode_ex_status(struct ccpacket *p, uint8_t *mess) {
 		p->status |= STATUS_AUX_SET_2;
 }
 
+/*
+ * decode_ex_preset	Decode extended preset functions.
+ */
 static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_EX_STORE))
 		p->command = CC_STORE;
@@ -171,6 +210,9 @@ static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
 	p->tilt = mess[9] & 0x7f;
 }
 
+/*
+ * vicon_decode_extended	Decode an extended packet.
+ */
 static inline enum decode_t vicon_decode_extended(struct ccreader *r,
 	uint8_t *mess, struct buffer *rxbuf)
 {
@@ -195,6 +237,9 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *r,
 	return DECODE_MORE;
 }
 
+/*
+ * vicon_decode_command		Decode a command packet.
+ */
 static inline enum decode_t vicon_decode_command(struct ccreader *r,
 	uint8_t *mess, struct buffer *rxbuf)
 {
@@ -212,6 +257,9 @@ static inline enum decode_t vicon_decode_command(struct ccreader *r,
 	return DECODE_MORE;
 }
 
+/*
+ * vicon_decode_status	Decode a status packet.
+ */
 static inline enum decode_t vicon_decode_status(struct ccreader *r,
 	uint8_t *mess, struct buffer *rxbuf)
 {
@@ -224,6 +272,9 @@ static inline enum decode_t vicon_decode_status(struct ccreader *r,
 	return DECODE_MORE;
 }
 
+/*
+ * vicon_decode_message		Decode a vicon message.
+ */
 static inline enum decode_t vicon_decode_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
@@ -241,6 +292,9 @@ static inline enum decode_t vicon_decode_message(struct ccreader *r,
 		return vicon_decode_status(r, mess, rxbuf);
 }
 
+/*
+ * vicon_do_read	Read messages in vicon protocol format.
+ */
 void vicon_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_STATUS) {
 		if(vicon_decode_message(r, rxbuf) == DECODE_DONE)
@@ -248,11 +302,17 @@ void vicon_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	}
 }
 
+/*
+ * encode_receiver	Encode the receiver address.
+ */
 static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[0] = FLAG | ((receiver >> 4) & 0x0f);
 	mess[1] = receiver & 0x0f;
 }
 
+/*
+ * encode_pan_tilt	Encode a pan/tilt command.
+ */
 static void encode_pan_tilt(uint8_t *mess, struct ccpacket *p) {
 	if(p->pan) {
 		if(p->command & CC_PAN_LEFT)
@@ -268,6 +328,9 @@ static void encode_pan_tilt(uint8_t *mess, struct ccpacket *p) {
 	}
 }
 
+/*
+ * encode_lens		Encode a lens command.
+ */
 static void encode_lens(uint8_t *mess, struct ccpacket *p) {
 	if(p->iris == IRIS_OPEN)
 		bit_set(mess, BIT_IRIS_OPEN);
@@ -283,6 +346,9 @@ static void encode_lens(uint8_t *mess, struct ccpacket *p) {
 		bit_set(mess, BIT_ZOOM_OUT);
 }
 
+/*
+ * encode_toggles	Encode toggle functions.
+ */
 static void encode_toggles(uint8_t *mess, struct ccpacket *p) {
 	if(p->command == CC_ACK_ALARM)
 		bit_set(mess, BIT_ACK_ALARM);
@@ -294,6 +360,9 @@ static void encode_toggles(uint8_t *mess, struct ccpacket *p) {
 		bit_set(mess, BIT_LENS_SPEED);
 }
 
+/*
+ * encode_aux		Encode auxiliary functions.
+ */
 static void encode_aux(uint8_t *mess, struct ccpacket *p) {
 	if(p->aux & AUX_CLEAR)
 		return;
@@ -311,6 +380,9 @@ static void encode_aux(uint8_t *mess, struct ccpacket *p) {
 		bit_set(mess, BIT_AUX_6);
 }
 
+/*
+ * encode_preset	Encode preset functions.
+ */
 static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 	if(p->command & CC_RECALL)
 		bit_set(mess, BIT_RECALL);
@@ -319,6 +391,9 @@ static void encode_preset(uint8_t *mess, struct ccpacket *p) {
 	mess[5] |= p->preset & 0x0f;
 }
 
+/*
+ * encode_command	Encode command functions.
+ */
 static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_COMMAND);
 	if(mess) {
@@ -332,10 +407,16 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * vicon_encode_speed	Encode pan/tilt speed.
+ */
 static int vicon_encode_speed(int speed) {
 	return speed & 0x7ff;
 }
 
+/*
+ * encode_speeds	Encode the pan and tilt speeds.
+ */
 static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 	int pan = vicon_encode_speed(p->pan);
 	int tilt = vicon_encode_speed(p->tilt);
@@ -346,6 +427,9 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 	mess[9] = tilt & 0x7f;
 }
 
+/*
+ * encode_extended_speed	Encode extended speed message.
+ */
 static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
@@ -361,6 +445,9 @@ static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * encode_extended_preset	Encode extended preset functions.
+ */
 static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p) {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
@@ -379,6 +466,9 @@ static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * encode_simple_status		Encode simple status message.
+ */
 static inline void encode_simple_status(struct ccwriter *w, struct ccpacket *p)
 {
 	uint8_t *mess = ccwriter_append(w, SIZE_STATUS);
@@ -386,6 +476,9 @@ static inline void encode_simple_status(struct ccwriter *w, struct ccpacket *p)
 		encode_receiver(mess, p->receiver);
 }
 
+/*
+ * encode_extended_status	Encode extended status message.
+ */
 static inline void encode_extended_status(struct ccwriter *w,
 	struct ccpacket *p)
 {
@@ -407,6 +500,9 @@ static inline void encode_extended_status(struct ccwriter *w,
 	}
 }
 
+/*
+ * encode_status	Encode a status message.
+ */
 static void encode_status(struct ccwriter *w, struct ccpacket *p) {
 	if(p->status & STATUS_EXTENDED)
 		encode_extended_status(w, p);
@@ -414,6 +510,9 @@ static void encode_status(struct ccwriter *w, struct ccpacket *p) {
 		encode_simple_status(w, p);
 }
 
+/*
+ * is_extended_preset	Test if a command is an extended preset.
+ */
 static inline bool is_extended_preset(struct ccpacket *p) {
 	if(p->command & (CC_RECALL | CC_STORE))
 		return (p->preset > 15) || p->pan || p->tilt;
@@ -421,6 +520,9 @@ static inline bool is_extended_preset(struct ccpacket *p) {
 		return false;
 }
 
+/*
+ * vicon_do_write	Write a packet in vicon protocol.
+ */
 unsigned int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(p->receiver < 1 || p->receiver > VICON_MAX_ADDRESS)
 		return 0;
