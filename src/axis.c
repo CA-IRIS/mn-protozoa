@@ -68,14 +68,14 @@ static int axis_encode_speed(int speed) {
 /*
  * encode_pan		Encode the pan speed.
  *
- * p: Packet to encode pan speed from
+ * pkt: Packet to encode pan speed from
  * mess: string to append to
  */
-static void encode_pan(struct ccpacket *p, char *mess) {
+static void encode_pan(struct ccpacket *pkt, char *mess) {
 	char speed_str[8];
 
-	int speed = axis_encode_speed(p->pan);
-	if(p->command & CC_PAN_LEFT)
+	int speed = axis_encode_speed(pkt->pan);
+	if(pkt->command & CC_PAN_LEFT)
 		speed = -speed;
 	if(snprintf(speed_str, 8, "%d,", speed) > 0)
 		strcat(mess, speed_str);
@@ -86,14 +86,14 @@ static void encode_pan(struct ccpacket *p, char *mess) {
 /*
  * encode_tilt		Encode the tilt speed.
  *
- * p: Packet to encode tilt speed from
+ * pkt: Packet to encode tilt speed from
  * mess: string to append to
  */
-static void encode_tilt(struct ccpacket *p, char *mess) {
+static void encode_tilt(struct ccpacket *pkt, char *mess) {
 	char speed_str[8];
 
-	int speed = axis_encode_speed(p->tilt);
-	if(p->command & CC_TILT_DOWN)
+	int speed = axis_encode_speed(pkt->tilt);
+	if(pkt->command & CC_TILT_DOWN)
 		speed = -speed;
 	if(snprintf(speed_str, 8, "%d,", speed) > 0)
 		strcat(mess, speed_str);
@@ -104,24 +104,24 @@ static void encode_tilt(struct ccpacket *p, char *mess) {
 /*
  * encode_pan_tilt	Encode an axis pan/tilt request.
  *
- * p: Packet with pan/tilt values to encode.
+ * pkt: Packet with pan/tilt values to encode.
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *p,
+static int encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *pkt,
 	int somein)
 {
 	char mess[64];
 	mess[0] = '\0';
-	if(p->command & CC_PAN_TILT) {
+	if(pkt->command & CC_PAN_TILT) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "continuouspantiltmove=");
-		if(p->pan)
-			encode_pan(p, mess);
+		if(pkt->pan)
+			encode_pan(pkt, mess);
 		else
 			strcat(mess, "0,");
-		if(p->tilt)
-			encode_tilt(p, mess);
+		if(pkt->tilt)
+			encode_tilt(pkt, mess);
 		else
 			strcat(mess, "0");
 		axis_add_to_buffer(wtr, mess);
@@ -132,17 +132,19 @@ static int encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *p,
 /*
  * encode_focus		Encode an axis focus request.
  *
- * p: Packet with focus value to encode.
+ * pkt: Packet with focus value to encode.
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_focus(struct ccwriter *wtr, struct ccpacket *p, int somein) {
+static int encode_focus(struct ccwriter *wtr, struct ccpacket *pkt,
+	int somein)
+{
 	char mess[32];
 	strcpy(mess, "continuousfocusmove=");
-	if(p->focus == FOCUS_NEAR) {
+	if(pkt->focus == FOCUS_NEAR) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, default_speed);
-	} else if(p->focus == FOCUS_FAR) {
+	} else if(pkt->focus == FOCUS_FAR) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);
@@ -157,17 +159,17 @@ static int encode_focus(struct ccwriter *wtr, struct ccpacket *p, int somein) {
 /*
  * encode_zoom		Encode an axis zoom request.
  *
- * p: Packet with zoom value to encode.
+ * pkt: Packet with zoom value to encode.
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_zoom(struct ccwriter *wtr, struct ccpacket *p, int somein) {
+static int encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt, int somein) {
 	char mess[32];
 	strcpy(mess, "continuouszoommove=");
-	if(p->zoom == ZOOM_IN) {
+	if(pkt->zoom == ZOOM_IN) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, default_speed);
-	} else if(p->zoom == ZOOM_OUT) {
+	} else if(pkt->zoom == ZOOM_OUT) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);
@@ -182,41 +184,43 @@ static int encode_zoom(struct ccwriter *wtr, struct ccpacket *p, int somein) {
 /*
  * encode_command	Encode an axis pan/tilt/zoom or focus request.
  *
- * p: Packet with zoom value to encode.
+ * pkt: Packet with zoom value to encode.
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_command(struct ccwriter *wtr, struct ccpacket *p,
+static int encode_command(struct ccwriter *wtr, struct ccpacket *pkt,
 	int somein)
 {
-	somein = encode_pan_tilt(wtr, p, somein);
-	somein = encode_focus(wtr, p, somein);
-	return encode_zoom(wtr, p, somein);
+	somein = encode_pan_tilt(wtr, pkt, somein);
+	somein = encode_focus(wtr, pkt, somein);
+	return encode_zoom(wtr, pkt, somein);
 }
 
 /*
  * encode_preset	Encode an axis preset request.
  *
- * p: Packet with preset value to encode.
+ * pkt: Packet with preset value to encode.
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_preset(struct ccwriter *wtr, struct ccpacket *p, int somein) {
+static int encode_preset(struct ccwriter *wtr, struct ccpacket *pkt,
+	int somein)
+{
 	char num[16];
 	char mess[32];
 
-	if(p->command & CC_RECALL) {
+	if(pkt->command & CC_RECALL) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcpy(mess, "goto");
-	} else if(p->command & CC_STORE) {
+	} else if(pkt->command & CC_STORE) {
 		somein = axis_prepare_buffer(wtr, somein, true);
 		strcpy(mess, "set");
-	} else if(p->command & CC_CLEAR) {
+	} else if(pkt->command & CC_CLEAR) {
 		somein = axis_prepare_buffer(wtr, somein, true);
 		strcpy(mess, "remove");
 	}
 	strcat(mess, "serverpresetname=");
-	sprintf(num, "Pos%d", p->preset);
+	sprintf(num, "Pos%d", pkt->preset);
 	strcat(mess, num);
 	axis_add_to_buffer(wtr, mess);
 	return somein;
@@ -225,19 +229,19 @@ static int encode_preset(struct ccwriter *wtr, struct ccpacket *p, int somein) {
 /*
  * axis_do_write	Encode a packet to the axis protocol.
  *
- * p: Packet to encode.
+ * pkt: Packet to encode.
  * return: count of encoded packets
  */
-unsigned int axis_do_write(struct ccwriter *wtr, struct ccpacket *p) {
+unsigned int axis_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int somein = 0;
 	if(!buffer_is_empty(&wtr->chn->txbuf)) {
 		log_println(wtr->chn->log, "axis: dropping packet(s)");
 		buffer_clear(&wtr->chn->txbuf);
 	}
-	if(ccpacket_has_preset(p))
-		somein = encode_preset(wtr, p, somein);
-	else if(ccpacket_has_command(p))
-		somein = encode_command(wtr, p, somein);
+	if(ccpacket_has_preset(pkt))
+		somein = encode_preset(wtr, pkt, somein);
+	else if(ccpacket_has_command(pkt))
+		somein = encode_command(wtr, pkt, somein);
 	if(somein) {
 		axis_add_to_buffer(wtr, axis_trailer);
 		if(somein == 2) {
