@@ -160,8 +160,7 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 static bool ccwriter_too_soon(struct ccwriter *wtr,
 	const struct deferred_pkt *dpkt)
 {
-	long since = time_since(&dpkt->sent);
-	return since < wtr->gaptime;
+	return time_since(&dpkt->sent) < wtr->gaptime;
 }
 
 /*
