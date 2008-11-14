@@ -45,14 +45,14 @@ static void axis_add_to_buffer(struct ccwriter *wtr, const char *msg) {
  * auth: Flag to incidate an authenticated request
  * return: new value of somein
  */
-static int axis_prepare_buffer(struct ccwriter *w, int somein, bool auth) {
+static int axis_prepare_buffer(struct ccwriter *wtr, int somein, bool auth) {
 	if(somein)
-		axis_add_to_buffer(w, "&");
+		axis_add_to_buffer(wtr, "&");
 	else {
 		if(auth)
-			axis_add_to_buffer(w, axis_header_auth);
+			axis_add_to_buffer(wtr, axis_header_auth);
 		else
-			axis_add_to_buffer(w, axis_header);
+			axis_add_to_buffer(wtr, axis_header);
 		somein = 1 + auth;
 	}
 	return somein;
@@ -108,11 +108,13 @@ static void encode_tilt(struct ccpacket *p, char *mess) {
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_pan_tilt(struct ccwriter *w, struct ccpacket *p, int somein) {
+static int encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *p,
+	int somein)
+{
 	char mess[64];
 	mess[0] = '\0';
 	if(p->command & CC_PAN_TILT) {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "continuouspantiltmove=");
 		if(p->pan)
 			encode_pan(p, mess);
@@ -122,7 +124,7 @@ static int encode_pan_tilt(struct ccwriter *w, struct ccpacket *p, int somein) {
 			encode_tilt(p, mess);
 		else
 			strcat(mess, "0");
-		axis_add_to_buffer(w, mess);
+		axis_add_to_buffer(wtr, mess);
 	}
 	return somein;
 }
@@ -134,21 +136,21 @@ static int encode_pan_tilt(struct ccwriter *w, struct ccpacket *p, int somein) {
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_focus(struct ccwriter *w, struct ccpacket *p, int somein) {
+static int encode_focus(struct ccwriter *wtr, struct ccpacket *p, int somein) {
 	char mess[32];
 	strcpy(mess, "continuousfocusmove=");
 	if(p->focus == FOCUS_NEAR) {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, default_speed);
 	} else if(p->focus == FOCUS_FAR) {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);
 	} else {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "0");
 	}
-	axis_add_to_buffer(w, mess);
+	axis_add_to_buffer(wtr, mess);
 	return somein;
 }
 
@@ -159,21 +161,21 @@ static int encode_focus(struct ccwriter *w, struct ccpacket *p, int somein) {
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_zoom(struct ccwriter *w, struct ccpacket *p, int somein) {
+static int encode_zoom(struct ccwriter *wtr, struct ccpacket *p, int somein) {
 	char mess[32];
 	strcpy(mess, "continuouszoommove=");
 	if(p->zoom == ZOOM_IN) {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, default_speed);
 	} else if(p->zoom == ZOOM_OUT) {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);
 	} else {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "0");
 	}
-	axis_add_to_buffer(w, mess);
+	axis_add_to_buffer(wtr, mess);
 	return somein;
 }
 
@@ -184,10 +186,12 @@ static int encode_zoom(struct ccwriter *w, struct ccpacket *p, int somein) {
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_command(struct ccwriter *w, struct ccpacket *p, int somein) {
-	somein = encode_pan_tilt(w, p, somein);
-	somein = encode_focus(w, p, somein);
-	return encode_zoom(w, p, somein);
+static int encode_command(struct ccwriter *wtr, struct ccpacket *p,
+	int somein)
+{
+	somein = encode_pan_tilt(wtr, p, somein);
+	somein = encode_focus(wtr, p, somein);
+	return encode_zoom(wtr, p, somein);
 }
 
 /*
@@ -197,24 +201,24 @@ static int encode_command(struct ccwriter *w, struct ccpacket *p, int somein) {
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_preset(struct ccwriter *w, struct ccpacket *p, int somein) {
+static int encode_preset(struct ccwriter *wtr, struct ccpacket *p, int somein) {
 	char num[16];
 	char mess[32];
 
 	if(p->command & CC_RECALL) {
-		somein = axis_prepare_buffer(w, somein, false);
+		somein = axis_prepare_buffer(wtr, somein, false);
 		strcpy(mess, "goto");
 	} else if(p->command & CC_STORE) {
-		somein = axis_prepare_buffer(w, somein, true);
+		somein = axis_prepare_buffer(wtr, somein, true);
 		strcpy(mess, "set");
 	} else if(p->command & CC_CLEAR) {
-		somein = axis_prepare_buffer(w, somein, true);
+		somein = axis_prepare_buffer(wtr, somein, true);
 		strcpy(mess, "remove");
 	}
 	strcat(mess, "serverpresetname=");
 	sprintf(num, "Pos%d", p->preset);
 	strcat(mess, num);
-	axis_add_to_buffer(w, mess);
+	axis_add_to_buffer(wtr, mess);
 	return somein;
 }
 
@@ -224,23 +228,23 @@ static int encode_preset(struct ccwriter *w, struct ccpacket *p, int somein) {
  * p: Packet to encode.
  * return: count of encoded packets
  */
-unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
+unsigned int axis_do_write(struct ccwriter *wtr, struct ccpacket *p) {
 	int somein = 0;
-	if(!buffer_is_empty(&w->chn->txbuf)) {
-		log_println(w->chn->log, "axis: dropping packet(s)");
-		buffer_clear(&w->chn->txbuf);
+	if(!buffer_is_empty(&wtr->chn->txbuf)) {
+		log_println(wtr->chn->log, "axis: dropping packet(s)");
+		buffer_clear(&wtr->chn->txbuf);
 	}
 	if(ccpacket_has_preset(p))
-		somein = encode_preset(w, p, somein);
+		somein = encode_preset(wtr, p, somein);
 	else if(ccpacket_has_command(p))
-		somein = encode_command(w, p, somein);
+		somein = encode_command(wtr, p, somein);
 	if(somein) {
-		axis_add_to_buffer(w, axis_trailer);
+		axis_add_to_buffer(wtr, axis_trailer);
 		if(somein == 2) {
-			axis_add_to_buffer(w, axis_auth);
-			axis_add_to_buffer(w, w->auth);
+			axis_add_to_buffer(wtr, axis_auth);
+			axis_add_to_buffer(wtr, wtr->auth);
 		}
-		axis_add_to_buffer(w, axis_ending);
+		axis_add_to_buffer(wtr, axis_ending);
 		return 1;
 	} else
 		return 0;
