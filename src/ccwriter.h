@@ -11,6 +11,7 @@ struct ccwriter {
 	struct channel		*chn;		/* channel to write */
 	struct deferred_pkt	*deferred;	/* deferred packets */
 	unsigned int		n_rcv;		/* number of receivers */
+	unsigned int		gaptime;	/* packet gap time (ms) */
 	unsigned int		timeout;	/* time command is held (ms) */
 	char			*auth;		/* authentication token */
 	struct defer		*defer;		/* deferred packet handler */

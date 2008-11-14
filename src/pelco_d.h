@@ -3,6 +3,7 @@
 
 #include "ccwriter.h"
 
+#define PELCO_D_GAPTIME (80)
 #define PELCO_D_TIMEOUT (30000)
 #define PELCO_D_MAX_ADDRESS (254)
 

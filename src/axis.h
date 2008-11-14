@@ -3,6 +3,7 @@
 
 #include "ccwriter.h"
 
+#define AXIS_GAPTIME (100)
 #define AXIS_TIMEOUT (30000)
 #define AXIS_MAX_ADDRESS (1)
 

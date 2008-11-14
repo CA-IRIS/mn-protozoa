@@ -55,22 +55,26 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 	if(strcasecmp(protocol, "manchester") == 0) {
 		wtr->encode_speed = manchester_encode_speed;
 		wtr->do_write = manchester_do_write;
+		wtr->gaptime = MANCHESTER_GAPTIME;
 		wtr->timeout = MANCHESTER_TIMEOUT;
 		return ccwriter_set_receivers(wtr, MANCHESTER_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		wtr->encode_speed = pelco_d_encode_speed;
 		wtr->do_write = pelco_d_do_write;
+		wtr->gaptime = PELCO_D_GAPTIME;
 		wtr->timeout = PELCO_D_TIMEOUT;
 		return ccwriter_set_receivers(wtr, PELCO_D_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "vicon") == 0) {
 		wtr->encode_speed = vicon_encode_speed;
 		wtr->do_write = vicon_do_write;
+		wtr->gaptime = VICON_GAPTIME;
 		wtr->timeout = VICON_TIMEOUT;
 		return ccwriter_set_receivers(wtr, VICON_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "axis") == 0) {
 		wtr->encode_speed = axis_encode_speed;
 		wtr->do_write = axis_do_write;
 		wtr->chn->flags |= FLAG_RESP_REQUIRED;
+		wtr->gaptime = AXIS_GAPTIME;
 		wtr->timeout = AXIS_TIMEOUT;
 		return ccwriter_set_receivers(wtr, AXIS_MAX_ADDRESS);
 	} else {
@@ -149,8 +153,6 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 	}
 }
 
-#define MINIMUM_PACKET_MS 80
-
 /*
  * ccwriter_too_soon	Test if the current packet is too soon after the
  * 			previous packet.
@@ -159,7 +161,7 @@ static bool ccwriter_too_soon(struct ccwriter *wtr,
 	const struct deferred_pkt *dpkt)
 {
 	long since = time_since(&dpkt->sent);
-	return since < MINIMUM_PACKET_MS;
+	return since < wtr->gaptime;
 }
 
 /*
@@ -173,7 +175,7 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 
 	/* If it is too soon after the previous packet, defer until later */
 	if(ccwriter_too_soon(wtr, dpkt)) {
-		defer_packet(wtr->defer, dpkt, pkt, MINIMUM_PACKET_MS);
+		defer_packet(wtr->defer, dpkt, pkt, wtr->gaptime);
 		return 0;
 	}
 	c = wtr->do_write(wtr, pkt);
