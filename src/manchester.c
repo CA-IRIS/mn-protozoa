@@ -305,10 +305,10 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 /*
  * encode_pan_tilt_command	Encode a pan/tilt command.
  */
-static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *pkt,
+static void encode_pan_tilt_command(struct ccwriter *wtr, struct ccpacket *pkt,
 	enum pt_command_t cmnd, int speed)
 {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		mess[1] |= (cmnd << 4) | (speed << 1);
@@ -319,10 +319,10 @@ static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *pkt,
 /*
  * encode_lens_function		Encode a lens function.
  */
-static void encode_lens_function(struct ccwriter *w, struct ccpacket *pkt,
+static void encode_lens_function(struct ccwriter *wtr, struct ccpacket *pkt,
 	enum lens_t func)
 {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		mess[1] |= (func << 1) | (EX_LENS << 4);
@@ -332,10 +332,10 @@ static void encode_lens_function(struct ccwriter *w, struct ccpacket *pkt,
 /*
  * encode_aux_function		Encode an auxiliary function.
  */
-static void encode_aux_function(struct ccwriter *w, struct ccpacket *pkt,
+static void encode_aux_function(struct ccwriter *wtr, struct ccpacket *pkt,
 	int aux)
 {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		mess[1] |= (aux << 1) | (EX_AUX << 4);
@@ -358,89 +358,89 @@ static int manchester_encode_speed(int speed) {
 /*
  * encode_pan		Encode a pan command.
  */
-static void encode_pan(struct ccwriter *w, struct ccpacket *pkt) {
+static void encode_pan(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int speed = manchester_encode_speed(pkt->pan);
 	if(pkt->command & CC_PAN_LEFT) {
 		if(speed == SPEED_FULL)
-			encode_lens_function(w, pkt, XL_PAN_LEFT);
+			encode_lens_function(wtr, pkt, XL_PAN_LEFT);
 		else
-			encode_pan_tilt_command(w, pkt, PAN_LEFT, speed);
+			encode_pan_tilt_command(wtr, pkt, PAN_LEFT, speed);
 	} else if(pkt->command & CC_PAN_RIGHT) {
 		if(speed == SPEED_FULL)
-			encode_aux_function(w, pkt, EX_AUX_FULL_RIGHT);
+			encode_aux_function(wtr, pkt, EX_AUX_FULL_RIGHT);
 		else
-			encode_pan_tilt_command(w, pkt, PAN_RIGHT, speed);
+			encode_pan_tilt_command(wtr, pkt, PAN_RIGHT, speed);
 	}
 }
 
 /*
  * encode_tilt		Encode a tilt command.
  */
-static void encode_tilt(struct ccwriter *w, struct ccpacket *pkt) {
+static void encode_tilt(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int speed = manchester_encode_speed(pkt->tilt);
 	if(pkt->command & CC_TILT_DOWN) {
 		if(speed == SPEED_FULL)
-			encode_lens_function(w, pkt, XL_TILT_DOWN);
+			encode_lens_function(wtr, pkt, XL_TILT_DOWN);
 		else
-			encode_pan_tilt_command(w, pkt, TILT_DOWN, speed);
+			encode_pan_tilt_command(wtr, pkt, TILT_DOWN, speed);
 	} else if(pkt->command & CC_TILT_UP) {
 		if(speed == SPEED_FULL)
-			encode_aux_function(w, pkt, EX_AUX_FULL_UP);
+			encode_aux_function(wtr, pkt, EX_AUX_FULL_UP);
 		else
-			encode_pan_tilt_command(w, pkt, TILT_UP, speed);
+			encode_pan_tilt_command(wtr, pkt, TILT_UP, speed);
 	}
 }
 
 /*
  * encode_zoom		Encode a zoom command.
  */
-static inline void encode_zoom(struct ccwriter *w, struct ccpacket *pkt) {
+static inline void encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->zoom < 0)
-		encode_lens_function(w, pkt, XL_ZOOM_OUT);
+		encode_lens_function(wtr, pkt, XL_ZOOM_OUT);
 	else if(pkt->zoom > 0)
-		encode_lens_function(w, pkt, XL_ZOOM_IN);
+		encode_lens_function(wtr, pkt, XL_ZOOM_IN);
 }
 
 /*
  * encode_focus		Encode a focus command.
  */
-static inline void encode_focus(struct ccwriter *w, struct ccpacket *pkt) {
+static inline void encode_focus(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->focus < 0)
-		encode_lens_function(w, pkt, XL_FOCUS_NEAR);
+		encode_lens_function(wtr, pkt, XL_FOCUS_NEAR);
 	else if(pkt->focus > 0)
-		encode_lens_function(w, pkt, XL_FOCUS_FAR);
+		encode_lens_function(wtr, pkt, XL_FOCUS_FAR);
 }
 
 /*
  * encode_iris		Encode an iris command.
  */
-static inline void encode_iris(struct ccwriter *w, struct ccpacket *pkt) {
+static inline void encode_iris(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->iris < 0)
-		encode_lens_function(w, pkt, XL_IRIS_CLOSE);
+		encode_lens_function(wtr, pkt, XL_IRIS_CLOSE);
 	else if(pkt->iris > 0)
-		encode_lens_function(w, pkt, XL_IRIS_OPEN);
+		encode_lens_function(wtr, pkt, XL_IRIS_OPEN);
 }
 
 /*
  * encode_aux		Encode an auxiliary command.
  */
-static inline void encode_aux(struct ccwriter *w, struct ccpacket *pkt) {
+static inline void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int i;
 	if(pkt->aux & AUX_CLEAR)
 		return;
 	for(i = 0; i < 6; i++) {
 		if(pkt->aux & AUX_MASK[i])
-			encode_aux_function(w, pkt, LUT_AUX[i]);
+			encode_aux_function(wtr, pkt, LUT_AUX[i]);
 	}
 }
 
 /*
  * encode_recall_function	Encode a recall preset function.
  */
-static void encode_recall_function(struct ccwriter *w, struct ccpacket *pkt,
+static void encode_recall_function(struct ccwriter *wtr, struct ccpacket *pkt,
 	int preset)
 {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		mess[1] |= (preset << 1) | (EX_RECALL << 4);
@@ -450,10 +450,10 @@ static void encode_recall_function(struct ccwriter *w, struct ccpacket *pkt,
 /*
  * encode_store_function	Encode a store preset function.
  */
-static void encode_store_function(struct ccwriter *w, struct ccpacket *pkt,
+static void encode_store_function(struct ccwriter *wtr, struct ccpacket *pkt,
 	int preset)
 {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		mess[1] |= (preset << 1) | (EX_STORE << 4);
@@ -463,30 +463,30 @@ static void encode_store_function(struct ccwriter *w, struct ccpacket *pkt,
 /*
  * encode_preset	Encode a preset command.
  */
-static void encode_preset(struct ccwriter *w, struct ccpacket *pkt) {
+static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int preset = pkt->preset;
 	if(preset < 1 || preset > 8)
 		return;
 	if(pkt->command & CC_RECALL)
-		encode_recall_function(w, pkt, preset - 1);
+		encode_recall_function(wtr, pkt, preset - 1);
 	else if(pkt->command & CC_STORE)
-		encode_store_function(w, pkt, preset - 1);
+		encode_store_function(wtr, pkt, preset - 1);
 }
 
 /*
  * manchester_do_write	Write a packet in manchester protocol.
  */
-unsigned int manchester_do_write(struct ccwriter *w, struct ccpacket *pkt) {
+unsigned int manchester_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->receiver < 1 || pkt->receiver > MANCHESTER_MAX_ADDRESS)
 		return 0;
 	if(pkt->pan)
-		encode_pan(w, pkt);
+		encode_pan(wtr, pkt);
 	if(pkt->tilt)
-		encode_tilt(w, pkt);
-	encode_zoom(w, pkt);
-	encode_focus(w, pkt);
-	encode_iris(w, pkt);
-	encode_aux(w, pkt);
-	encode_preset(w, pkt);
+		encode_tilt(wtr, pkt);
+	encode_zoom(wtr, pkt);
+	encode_focus(wtr, pkt);
+	encode_iris(wtr, pkt);
+	encode_aux(wtr, pkt);
+	encode_preset(wtr, pkt);
 	return 1;
 }
