@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#include <stdbool.h>
+#include <stdbool.h>	/* for bool */
 #include <stdint.h>	/* for uint8_t */
 #include "ccreader.h"
 #include "pelco_d.h"
@@ -67,13 +67,6 @@ enum extended_t {
 	EX_ZOOM_SPEED,		/* 10010 set zoom speed */
 	EX_FOCUS_SPEED,		/* 10011 set focus speed */
 };
-
-/*
- * Test if the packet is an extended function
- */
-static inline bool is_extended(uint8_t *mess) {
-	return bit_is_set(mess, BIT_EXTENDED);
-}
 
 /*
  * Calculate the checksum for a pelco_d packet
@@ -283,7 +276,7 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 		log_println(r->log, "Pelco(D): invalid checksum");
 		return DECODE_MORE;
 	}
-	if(is_extended(mess))
+	if(bit_is_set(mess, BIT_EXTENDED))
 		return pelco_decode_extended(r, mess);
 	else
 		return pelco_decode_command(r, mess);
