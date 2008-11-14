@@ -185,6 +185,8 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 		 * be sent again after the "defer" interval passes. */
 		if(time_from_now(&pkt->expire) > wtr->timeout)
 			defer_packet(wtr->defer, dpkt, pkt, wtr->timeout);
+		else
+			defer_packet(wtr->defer, dpkt, NULL, 0);
 	}
 	return c;
 }

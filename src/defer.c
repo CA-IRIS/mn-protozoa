@@ -59,12 +59,13 @@ int defer_packet(struct defer *dfr, struct deferred_pkt *dpkt,
 	struct ccpacket *pkt, unsigned int ms)
 {
 	cl_rbtree_remove(&dfr->tree, dpkt);
-	timeval_set_now(&dpkt->tv);
-	timeval_adjust(&dpkt->tv, ms);
-	ccpacket_copy(&dpkt->packet, pkt);
-	if(cl_rbtree_add(&dfr->tree, dpkt) == NULL)
-		return -1;
-
+	if(pkt) {
+		timeval_set_now(&dpkt->tv);
+		timeval_adjust(&dpkt->tv, ms);
+		ccpacket_copy(&dpkt->packet, pkt);
+		if(cl_rbtree_add(&dfr->tree, dpkt) == NULL)
+			return -1;
+	}
 	return defer_rearm(dfr);
 }
 
