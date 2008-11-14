@@ -3,7 +3,7 @@
 
 #include "ccwriter.h"
 
-#define MANCHESTER_GAPTIME (10)
+#define MANCHESTER_GAPTIME (0)
 #define MANCHESTER_TIMEOUT (80)
 #define MANCHESTER_MAX_ADDRESS (1024)
 
