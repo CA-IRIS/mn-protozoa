@@ -253,10 +253,10 @@ static inline enum decode_t pelco_decode_extended(struct ccreader *r,
 }
 
 /*
- * checksum_invalid	Test if a message checksum is invalid.
+ * checksum_is_valid	Test if a message checksum is valid.
  */
-static inline bool checksum_invalid(uint8_t *mess) {
-	return calculate_checksum(mess) != mess[6];
+static inline bool checksum_is_valid(uint8_t *mess) {
+	return calculate_checksum(mess) == mess[6];
 }
 
 /*
@@ -272,7 +272,7 @@ static inline enum decode_t pelco_decode_message(struct ccreader *r,
 		return DECODE_MORE;
 	}
 	buffer_consume(rxbuf, SIZE_MSG);
-	if(checksum_invalid(mess)) {
+	if(!checksum_is_valid(mess)) {
 		log_println(r->log, "Pelco(D): invalid checksum");
 		return DECODE_MORE;
 	}
