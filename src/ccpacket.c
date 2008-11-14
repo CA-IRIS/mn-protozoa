@@ -156,6 +156,20 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 }
 
 /*
+ * ccpacket_has_command	Test if a packet has a command to encode.
+ *
+ * pkt: Packet to check for command
+ * return: True is command is present; false otherwise
+ */
+bool ccpacket_has_command(const struct ccpacket *pkt) {
+	if(pkt->command & CC_PAN_TILT)
+		return true;
+	if(pkt->zoom || pkt->focus || pkt->iris)
+		return true;
+	return false;
+}
+
+/*
  * ccpacket_has_aux	Test if the packet has an auxiliary function.
  */
 bool ccpacket_has_aux(struct ccpacket *pkt) {

@@ -191,20 +191,6 @@ static int encode_command(struct ccwriter *w, struct ccpacket *p, int somein) {
 }
 
 /*
- * has_command		Test if a packet has a command to encode.
- *
- * p: Packet to check for command
- * return: True is command is present; false otherwise
- */
-static inline bool has_command(struct ccpacket *p) {
-	if(p->command & CC_PAN_TILT)
-		return true;
-	if(p->zoom || p->focus || p->iris)
-		return true;
-	return false;
-}
-
-/*
  * encode_preset	Encode an axis preset request.
  *
  * p: Packet with preset value to encode.
@@ -246,7 +232,7 @@ unsigned int axis_do_write(struct ccwriter *w, struct ccpacket *p) {
 	}
 	if(ccpacket_has_preset(p))
 		somein = encode_preset(w, p, somein);
-	else if(has_command(p))
+	else if(ccpacket_has_command(p))
 		somein = encode_command(w, p, somein);
 	if(somein) {
 		axis_add_to_buffer(w, axis_trailer);
