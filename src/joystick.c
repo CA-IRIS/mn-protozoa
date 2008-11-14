@@ -68,126 +68,126 @@ static inline int remap_speed(int value) {
 	return remap_int(value, JSPEED_MAX, SPEED_MAX);
 }
 
-static inline bool decode_pan_tilt_zoom(struct ccpacket *p, uint8_t *mess) {
+static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 	uint8_t number = mess[7];
 	short speed = decode_speed(mess);
 
 	switch(number) {
 		case JAXIS_PAN:
-			p->command ^= p->command & CC_PAN;
+			pkt->command ^= pkt->command & CC_PAN;
 			if(speed <= 0)
-				p->command |= CC_PAN_LEFT;
+				pkt->command |= CC_PAN_LEFT;
 			if(speed > 0)
-				p->command |= CC_PAN_RIGHT;
-			p->pan = remap_speed(speed);
+				pkt->command |= CC_PAN_RIGHT;
+			pkt->pan = remap_speed(speed);
 			break;
 		case JAXIS_TILT:
-			p->command ^= p->command & CC_TILT;
+			pkt->command ^= pkt->command & CC_TILT;
 			if(speed < 0)
-				p->command |= CC_TILT_UP;
+				pkt->command |= CC_TILT_UP;
 			if(speed >= 0)
-				p->command |= CC_TILT_DOWN;
-			p->tilt = remap_speed(speed);
+				pkt->command |= CC_TILT_DOWN;
+			pkt->tilt = remap_speed(speed);
 			break;
 		case JAXIS_ZOOM:
 			if(speed < 0)
-				p->zoom = ZOOM_OUT;
+				pkt->zoom = ZOOM_OUT;
 			else if(speed > 0)
-				p->zoom = ZOOM_IN;
+				pkt->zoom = ZOOM_IN;
 			else
-				p->zoom = ZOOM_NONE;
+				pkt->zoom = ZOOM_NONE;
 			break;
 	}
-	p->command ^= p->command & CC_PRESET;
+	pkt->command ^= pkt->command & CC_PRESET;
 	return true;
 }
 
-static bool moved_since_pressed(struct ccpacket *p) {
-	return (p->command & CC_RECALL) == 0;
+static bool moved_since_pressed(struct ccpacket *pkt) {
+	return (pkt->command & CC_RECALL) == 0;
 }
 
 static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
-	struct ccpacket *p = &rdr->packet;
+	struct ccpacket *pkt = &rdr->packet;
 	uint8_t number = mess[7];
 	bool pressed = decode_pressed(mess);
-	bool moved = moved_since_pressed(p);
+	bool moved = moved_since_pressed(pkt);
 
-	p->command ^= p->command & CC_PAN_TILT;
+	pkt->command ^= pkt->command & CC_PAN_TILT;
 
 	switch(number) {
 		case JBUTTON_FOCUS_NEAR:
 			if(pressed)
-				p->focus = FOCUS_NEAR;
+				pkt->focus = FOCUS_NEAR;
 			else
-				p->focus = FOCUS_NONE;
+				pkt->focus = FOCUS_NONE;
 			return true;
 		case JBUTTON_FOCUS_FAR:
 			if(pressed)
-				p->focus = FOCUS_FAR;
+				pkt->focus = FOCUS_FAR;
 			else
-				p->focus = FOCUS_NONE;
+				pkt->focus = FOCUS_NONE;
 			return true;
 		case JBUTTON_IRIS_CLOSE:
 			if(pressed)
-				p->iris = IRIS_CLOSE;
+				pkt->iris = IRIS_CLOSE;
 			else
-				p->iris = IRIS_NONE;
+				pkt->iris = IRIS_NONE;
 			return true;
 		case JBUTTON_IRIS_OPEN:
 			if(pressed)
-				p->iris = IRIS_OPEN;
+				pkt->iris = IRIS_OPEN;
 			else
-				p->iris = IRIS_NONE;
+				pkt->iris = IRIS_NONE;
 			return true;
 		case JBUTTON_AUX_1:
 			if(pressed)
-				p->aux = AUX_1;
+				pkt->aux = AUX_1;
 			else
-				p->aux = AUX_NONE;
+				pkt->aux = AUX_NONE;
 			return true;
 		case JBUTTON_AUX_2:
 			if(pressed)
-				p->aux = AUX_2;
+				pkt->aux = AUX_2;
 			else
-				p->aux = AUX_NONE;
+				pkt->aux = AUX_NONE;
 			return true;
 		case JBUTTON_PRESET_1:
-			p->command ^= p->command & CC_PRESET;
-			p->preset = 1;
+			pkt->command ^= pkt->command & CC_PRESET;
+			pkt->preset = 1;
 			if(pressed)
-				p->command |= CC_RECALL;
+				pkt->command |= CC_RECALL;
 			else if(moved)
-				p->command |= CC_STORE;
+				pkt->command |= CC_STORE;
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_2:
-			p->command ^= p->command & CC_PRESET;
-			p->preset = 2;
+			pkt->command ^= pkt->command & CC_PRESET;
+			pkt->preset = 2;
 			if(pressed)
-				p->command |= CC_RECALL;
+				pkt->command |= CC_RECALL;
 			else if(moved)
-				p->command |= CC_STORE;
+				pkt->command |= CC_STORE;
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_3:
-			p->command ^= p->command & CC_PRESET;
-			p->preset = 3;
+			pkt->command ^= pkt->command & CC_PRESET;
+			pkt->preset = 3;
 			if(pressed)
-				p->command |= CC_RECALL;
+				pkt->command |= CC_RECALL;
 			else if(moved)
-				p->command |= CC_STORE;
+				pkt->command |= CC_STORE;
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_4:
-			p->command ^= p->command & CC_PRESET;
-			p->preset = 4;
+			pkt->command ^= pkt->command & CC_PRESET;
+			pkt->preset = 4;
 			if(pressed)
-				p->command |= CC_RECALL;
+				pkt->command |= CC_RECALL;
 			else if(moved)
-				p->command |= CC_STORE;
+				pkt->command |= CC_STORE;
 			else
 				break;
 			return true;
@@ -200,7 +200,7 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 				ccreader_next_camera(rdr);
 			break;
 	}
-	p->preset = 0;
+	pkt->preset = 0;
 	return false;
 }
 
