@@ -4,7 +4,7 @@
 #include "ccwriter.h"
 
 #define VICON_GAPTIME (80)
-#define VICON_TIMEOUT (30000)
+#define VICON_TIMEOUT (15000)
 #define VICON_MAX_ADDRESS (255)
 
 void vicon_do_read(struct ccreader *r, struct buffer *rxbuf);
