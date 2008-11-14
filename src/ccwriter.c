@@ -165,6 +165,29 @@ static bool ccwriter_too_soon(struct ccwriter *wtr,
 }
 
 /*
+ * ccwriter_check_deferred	Check if a packet should be deferred for later.
+ */
+static void ccwriter_check_deferred(struct ccwriter *wtr, struct ccpacket *pkt,
+	struct deferred_pkt *dpkt)
+{
+	timeval_set_now(&dpkt->sent);
+	/* If the packet expires after the protocol timeout, defer it to
+	 * be sent again after the "defer" interval passes. */
+	if(ccpacket_is_stop(pkt)) {
+		if(dpkt->n_cnt < 1) {
+			defer_packet(wtr->defer, dpkt, pkt, wtr->gaptime);
+			dpkt->n_cnt++;
+			return;
+		} else
+			dpkt->n_cnt = 0;
+	} else if(time_from_now(&pkt->expire) > wtr->timeout) {
+		defer_packet(wtr->defer, dpkt, pkt, wtr->timeout);
+		return;
+	}
+	defer_packet(wtr->defer, dpkt, NULL, 0);
+}
+
+/*
  * ccwriter_do_write	Process one packet for the writer.
  */
 int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
@@ -179,14 +202,7 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 		return 0;
 	}
 	c = wtr->do_write(wtr, pkt);
-	if(c > 0) {
-		timeval_set_now(&dpkt->sent);
-		/* If the packet expires after the protocol timeout, defer it to
-		 * be sent again after the "defer" interval passes. */
-		if(time_from_now(&pkt->expire) > wtr->timeout)
-			defer_packet(wtr->defer, dpkt, pkt, wtr->timeout);
-		else
-			defer_packet(wtr->defer, dpkt, NULL, 0);
-	}
+	if(c > 0)
+		ccwriter_check_deferred(wtr, pkt, dpkt);
 	return c;
 }

@@ -77,14 +77,6 @@ static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
 	timeval_set_now(&dpkt->tv);
 	timeval_adjust(&dpkt->tv, dpkt->writer->timeout);
 	ccwriter_do_write(dpkt->writer, &dpkt->packet);
-	if(ccpacket_is_stop(&dpkt->packet)) {
-		if(dpkt->n_cnt < 1) {
-			defer_packet(dfr, dpkt, &dpkt->packet,
-				dpkt->writer->gaptime);
-		}
-		dpkt->n_cnt++;
-	} else
-		dpkt->n_cnt = 0;
 }
 
 /*
