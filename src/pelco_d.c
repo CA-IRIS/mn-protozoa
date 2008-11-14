@@ -249,7 +249,7 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[1] = receiver;
 }
 
-int pelco_d_encode_speed(int speed) {
+static int pelco_d_encode_speed(int speed) {
 	int s = speed >> 5;
 	/* round up to the next speed level */
 	if(speed % 32)

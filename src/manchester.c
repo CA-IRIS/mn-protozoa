@@ -56,7 +56,7 @@ static inline int pt_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
-int manchester_encode_speed(int speed) {
+static int manchester_encode_speed(int speed) {
 	int s;
 	for(s = 0; s < SPEED_FULL; s++) {
 		/* round up to the next higher speed level */

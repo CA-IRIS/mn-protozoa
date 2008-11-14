@@ -332,15 +332,18 @@ static void encode_command(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
-int vicon_encode_speed(int speed) {
+static int vicon_encode_speed(int speed) {
 	return speed & 0x7ff;
 }
 
 static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
-	mess[6] = (p->pan >> 7) & 0x0f;
-	mess[7] = p->pan & 0x7f;
-	mess[8] = (p->tilt >> 7) & 0x0f;
-	mess[9] = p->tilt & 0x7f;
+	int pan = vicon_encode_speed(p->pan);
+	int tilt = vicon_encode_speed(p->tilt);
+
+	mess[6] = (pan >> 7) & 0x0f;
+	mess[7] = pan & 0x7f;
+	mess[8] = (tilt >> 7) & 0x0f;
+	mess[9] = tilt & 0x7f;
 }
 
 static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {

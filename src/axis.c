@@ -61,7 +61,7 @@ static int axis_prepare_buffer(struct ccwriter *w, int somein, bool auth) {
 /*
  * axis_encode_speed	Encode pan/tilt speed.
  */
-int axis_encode_speed(int speed) {
+static int axis_encode_speed(int speed) {
 	return ((speed * AXIS_MAX_SPEED) / (SPEED_MAX + 1)) + 1;
 }
 

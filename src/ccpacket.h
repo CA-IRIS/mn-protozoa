@@ -104,8 +104,6 @@ struct ccpacket {
 	struct packet_counter *counter;	/* packet counter */
 };
 
-typedef int (SPEED_CALLBACK) (int speed);
-
 void ccpacket_init(struct ccpacket *pkt);
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
 void ccpacket_clear(struct ccpacket *pkt);
