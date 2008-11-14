@@ -84,130 +84,130 @@ static inline bool is_extended_command(uint8_t *mess) {
 /*
  * decode_pan		Decode the pan speed (and command).
  */
-static inline void decode_pan(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
-		p->command |= CC_PAN_RIGHT;
-		p->pan = SPEED_MAX;
+		pkt->command |= CC_PAN_RIGHT;
+		pkt->pan = SPEED_MAX;
 	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
-		p->command |= CC_PAN_LEFT;
-		p->pan = SPEED_MAX;
+		pkt->command |= CC_PAN_LEFT;
+		pkt->pan = SPEED_MAX;
 	} else {
-		p->command |= CC_PAN_LEFT;
-		p->pan = 0;
+		pkt->command |= CC_PAN_LEFT;
+		pkt->pan = 0;
 	}
 }
 
 /*
  * decode_tilt		Decode the tilt speed (and command).
  */
-static inline void decode_tilt(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_TILT_UP)) {
-		p->command |= CC_TILT_UP;
-		p->tilt = SPEED_MAX;
+		pkt->command |= CC_TILT_UP;
+		pkt->tilt = SPEED_MAX;
 	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
-		p->command |= CC_TILT_DOWN;
-		p->tilt = SPEED_MAX;
+		pkt->command |= CC_TILT_DOWN;
+		pkt->tilt = SPEED_MAX;
 	} else {
-		p->command |= CC_TILT_DOWN;
-		p->tilt = 0;
+		pkt->command |= CC_TILT_DOWN;
+		pkt->tilt = 0;
 	}
 }
 
 /*
  * decode_lens		Decode any lens commands.
  */
-static inline void decode_lens(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_IRIS_OPEN))
-		p->iris = IRIS_OPEN;
+		pkt->iris = IRIS_OPEN;
 	else if(bit_is_set(mess, BIT_IRIS_CLOSE))
-		p->iris = IRIS_CLOSE;
+		pkt->iris = IRIS_CLOSE;
 	if(bit_is_set(mess, BIT_FOCUS_NEAR))
-		p->focus = FOCUS_NEAR;
+		pkt->focus = FOCUS_NEAR;
 	else if(bit_is_set(mess, BIT_FOCUS_FAR))
-		p->focus = FOCUS_FAR;
+		pkt->focus = FOCUS_FAR;
 	if(bit_is_set(mess, BIT_ZOOM_IN))
-		p->zoom = ZOOM_IN;
+		pkt->zoom = ZOOM_IN;
 	else if(bit_is_set(mess, BIT_ZOOM_OUT))
-		p->zoom = ZOOM_OUT;
+		pkt->zoom = ZOOM_OUT;
 }
 
 /*
  * decode_toggles	Decode toggle functions.
  */
-static inline void decode_toggles(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_toggles(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_ACK_ALARM))
-		p->command |= CC_ACK_ALARM;
+		pkt->command |= CC_ACK_ALARM;
 	if(bit_is_set(mess, BIT_AUTO_IRIS))
-		p->command |= CC_AUTO_IRIS;
+		pkt->command |= CC_AUTO_IRIS;
 	if(bit_is_set(mess, BIT_AUTO_PAN))
-		p->command |= CC_AUTO_PAN;
+		pkt->command |= CC_AUTO_PAN;
 	if(bit_is_set(mess, BIT_LENS_SPEED))
-		p->command |= CC_LENS_SPEED;
+		pkt->command |= CC_LENS_SPEED;
 }
 
 /*
  * decode_aux		Decode auxiliary functions.
  */
-static inline void decode_aux(struct ccpacket *p, uint8_t *mess) {
-	p->aux = 0;
+static inline void decode_aux(struct ccpacket *pkt, uint8_t *mess) {
+	pkt->aux = 0;
 	if(bit_is_set(mess, BIT_AUX_1))
-		p->aux |= AUX_1;
+		pkt->aux |= AUX_1;
 	if(bit_is_set(mess, BIT_AUX_2))
-		p->aux |= AUX_2;
+		pkt->aux |= AUX_2;
 	if(bit_is_set(mess, BIT_AUX_3))
-		p->aux |= AUX_3;
+		pkt->aux |= AUX_3;
 	if(bit_is_set(mess, BIT_AUX_4))
-		p->aux |= AUX_4;
+		pkt->aux |= AUX_4;
 	if(bit_is_set(mess, BIT_AUX_5))
-		p->aux |= AUX_5;
+		pkt->aux |= AUX_5;
 	if(bit_is_set(mess, BIT_AUX_6))
-		p->aux |= AUX_6;
+		pkt->aux |= AUX_6;
 }
 
 /*
  * decode_preset	Decode preset functions.
  */
-static inline void decode_preset(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_preset(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_RECALL))
-		p->command = CC_RECALL;
+		pkt->command = CC_RECALL;
 	else if(bit_is_set(mess, BIT_STORE))
-		p->command = CC_STORE;
-	p->preset = mess[5] & 0x0f;
+		pkt->command = CC_STORE;
+	pkt->preset = mess[5] & 0x0f;
 }
 
 /*
  * decode_ex_speed	Decode extended speed functions.
  */
-static inline void decode_ex_speed(struct ccpacket *p, uint8_t *mess) {
-	p->pan = ((mess[6] & 0x0f) << 7) | (mess[7] & 0x7f);
-	p->tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x7f);
+static inline void decode_ex_speed(struct ccpacket *pkt, uint8_t *mess) {
+	pkt->pan = ((mess[6] & 0x0f) << 7) | (mess[7] & 0x7f);
+	pkt->tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x7f);
 }
 
 /*
  * decode_ex_status	Decode extended status functions.
  */
-static inline void decode_ex_status(struct ccpacket *p, uint8_t *mess) {
-	p->status = STATUS_REQUEST;
+static inline void decode_ex_status(struct ccpacket *pkt, uint8_t *mess) {
+	pkt->status = STATUS_REQUEST;
 	if(bit_is_set(mess, BIT_STAT_SECTOR))
-		p->status |= STATUS_SECTOR;
+		pkt->status |= STATUS_SECTOR;
 	if(bit_is_set(mess, BIT_STAT_PRESET))
-		p->status |= STATUS_PRESET;
+		pkt->status |= STATUS_PRESET;
 	if(bit_is_set(mess, BIT_STAT_V15UVS) &&
 	   bit_is_set(mess, BIT_STAT_AUX_SET_2))
-		p->status |= STATUS_AUX_SET_2;
+		pkt->status |= STATUS_AUX_SET_2;
 }
 
 /*
  * decode_ex_preset	Decode extended preset functions.
  */
-static inline void decode_ex_preset(struct ccpacket *p, uint8_t *mess) {
+static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_EX_STORE))
-		p->command = CC_STORE;
+		pkt->command = CC_STORE;
 	else
-		p->command = CC_RECALL;
-	p->preset = mess[7] & 0x7f;
-	p->pan = mess[8] & 0x7f;
-	p->tilt = mess[9] & 0x7f;
+		pkt->command = CC_RECALL;
+	pkt->preset = mess[7] & 0x7f;
+	pkt->pan = mess[8] & 0x7f;
+	pkt->tilt = mess[9] & 0x7f;
 }
 
 /*
@@ -313,17 +313,17 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 /*
  * encode_pan_tilt	Encode a pan/tilt command.
  */
-static void encode_pan_tilt(uint8_t *mess, struct ccpacket *p) {
-	if(p->pan) {
-		if(p->command & CC_PAN_LEFT)
+static void encode_pan_tilt(uint8_t *mess, struct ccpacket *pkt) {
+	if(pkt->pan) {
+		if(pkt->command & CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
-		else if(p->command & CC_PAN_RIGHT)
+		else if(pkt->command & CC_PAN_RIGHT)
 			bit_set(mess, BIT_PAN_RIGHT);
 	}
-	if(p->tilt) {
-		if(p->command & CC_TILT_UP)
+	if(pkt->tilt) {
+		if(pkt->command & CC_TILT_UP)
 			bit_set(mess, BIT_TILT_UP);
-		else if(p->command & CC_TILT_DOWN)
+		else if(pkt->command & CC_TILT_DOWN)
 			bit_set(mess, BIT_TILT_DOWN);
 	}
 }
@@ -331,79 +331,79 @@ static void encode_pan_tilt(uint8_t *mess, struct ccpacket *p) {
 /*
  * encode_lens		Encode a lens command.
  */
-static void encode_lens(uint8_t *mess, struct ccpacket *p) {
-	if(p->iris == IRIS_OPEN)
+static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
+	if(pkt->iris == IRIS_OPEN)
 		bit_set(mess, BIT_IRIS_OPEN);
-	else if(p->iris == IRIS_CLOSE)
+	else if(pkt->iris == IRIS_CLOSE)
 		bit_set(mess, BIT_IRIS_CLOSE);
-	if(p->focus == FOCUS_NEAR)
+	if(pkt->focus == FOCUS_NEAR)
 		bit_set(mess, BIT_FOCUS_NEAR);
-	else if(p->focus == FOCUS_FAR)
+	else if(pkt->focus == FOCUS_FAR)
 		bit_set(mess, BIT_FOCUS_FAR);
-	if(p->zoom == ZOOM_IN)
+	if(pkt->zoom == ZOOM_IN)
 		bit_set(mess, BIT_ZOOM_IN);
-	else if(p->zoom == ZOOM_OUT)
+	else if(pkt->zoom == ZOOM_OUT)
 		bit_set(mess, BIT_ZOOM_OUT);
 }
 
 /*
  * encode_toggles	Encode toggle functions.
  */
-static void encode_toggles(uint8_t *mess, struct ccpacket *p) {
-	if(p->command == CC_ACK_ALARM)
+static void encode_toggles(uint8_t *mess, struct ccpacket *pkt) {
+	if(pkt->command == CC_ACK_ALARM)
 		bit_set(mess, BIT_ACK_ALARM);
-	if(p->command == CC_AUTO_IRIS)
+	if(pkt->command == CC_AUTO_IRIS)
 		bit_set(mess, BIT_AUTO_IRIS);
-	if(p->command == CC_AUTO_PAN)
+	if(pkt->command == CC_AUTO_PAN)
 		bit_set(mess, BIT_AUTO_PAN);
-	if(p->command == CC_LENS_SPEED)
+	if(pkt->command == CC_LENS_SPEED)
 		bit_set(mess, BIT_LENS_SPEED);
 }
 
 /*
  * encode_aux		Encode auxiliary functions.
  */
-static void encode_aux(uint8_t *mess, struct ccpacket *p) {
-	if(p->aux & AUX_CLEAR)
+static void encode_aux(uint8_t *mess, struct ccpacket *pkt) {
+	if(pkt->aux & AUX_CLEAR)
 		return;
-	if(p->aux & AUX_1)
+	if(pkt->aux & AUX_1)
 		bit_set(mess, BIT_AUX_1);
-	if(p->aux & AUX_2)
+	if(pkt->aux & AUX_2)
 		bit_set(mess, BIT_AUX_2);
-	if(p->aux & AUX_3)
+	if(pkt->aux & AUX_3)
 		bit_set(mess, BIT_AUX_3);
-	if(p->aux & AUX_4)
+	if(pkt->aux & AUX_4)
 		bit_set(mess, BIT_AUX_4);
-	if(p->aux & AUX_5)
+	if(pkt->aux & AUX_5)
 		bit_set(mess, BIT_AUX_5);
-	if(p->aux & AUX_6)
+	if(pkt->aux & AUX_6)
 		bit_set(mess, BIT_AUX_6);
 }
 
 /*
  * encode_preset	Encode preset functions.
  */
-static void encode_preset(uint8_t *mess, struct ccpacket *p) {
-	if(p->command & CC_RECALL)
+static void encode_preset(uint8_t *mess, struct ccpacket *pkt) {
+	if(pkt->command & CC_RECALL)
 		bit_set(mess, BIT_RECALL);
-	else if(p->command & CC_STORE)
+	else if(pkt->command & CC_STORE)
 		bit_set(mess, BIT_STORE);
-	mess[5] |= p->preset & 0x0f;
+	mess[5] |= pkt->preset & 0x0f;
 }
 
 /*
  * encode_command	Encode command functions.
  */
-static void encode_command(struct ccwriter *w, struct ccpacket *p) {
+static void encode_command(struct ccwriter *w, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(w, SIZE_COMMAND);
 	if(mess) {
-		encode_receiver(mess, p->receiver);
+		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_COMMAND);
-		encode_pan_tilt(mess, p);
-		encode_lens(mess, p);
-		encode_toggles(mess, p);
-		encode_aux(mess, p);
-		encode_preset(mess, p);
+		encode_pan_tilt(mess, pkt);
+		encode_lens(mess, pkt);
+		encode_toggles(mess, pkt);
+		encode_aux(mess, pkt);
+		encode_preset(mess, pkt);
 	}
 }
 
@@ -417,9 +417,9 @@ static int vicon_encode_speed(int speed) {
 /*
  * encode_speeds	Encode the pan and tilt speeds.
  */
-static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
-	int pan = vicon_encode_speed(p->pan);
-	int tilt = vicon_encode_speed(p->tilt);
+static void encode_speeds(uint8_t *mess, struct ccpacket *pkt) {
+	int pan = vicon_encode_speed(pkt->pan);
+	int tilt = vicon_encode_speed(pkt->tilt);
 
 	mess[6] = (pan >> 7) & 0x0f;
 	mess[7] = pan & 0x7f;
@@ -430,70 +430,70 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *p) {
 /*
  * encode_extended_speed	Encode extended speed message.
  */
-static void encode_extended_speed(struct ccwriter *w, struct ccpacket *p) {
+static void encode_extended_speed(struct ccwriter *w, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
-		encode_receiver(mess, p->receiver);
+		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
-		encode_pan_tilt(mess, p);
-		encode_lens(mess, p);
-		encode_toggles(mess, p);
-		encode_aux(mess, p);
-		encode_preset(mess, p);
-		encode_speeds(mess, p);
+		encode_pan_tilt(mess, pkt);
+		encode_lens(mess, pkt);
+		encode_toggles(mess, pkt);
+		encode_aux(mess, pkt);
+		encode_preset(mess, pkt);
+		encode_speeds(mess, pkt);
 	}
 }
 
 /*
  * encode_extended_preset	Encode extended preset functions.
  */
-static void encode_extended_preset(struct ccwriter *w, struct ccpacket *p) {
+static void encode_extended_preset(struct ccwriter *w, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
-		encode_receiver(mess, p->receiver);
+		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_REQUEST);
-		if(p->command & CC_STORE)
+		if(pkt->command & CC_STORE)
 			bit_set(mess, BIT_EX_STORE);
-		encode_lens(mess, p);
-		encode_toggles(mess, p);
-		encode_aux(mess, p);
-		mess[7] |= p->preset & 0x7f;
-		mess[8] |= p->pan & 0x7f;
-		mess[9] |= p->tilt & 0x7f;
+		encode_lens(mess, pkt);
+		encode_toggles(mess, pkt);
+		encode_aux(mess, pkt);
+		mess[7] |= pkt->preset & 0x7f;
+		mess[8] |= pkt->pan & 0x7f;
+		mess[9] |= pkt->tilt & 0x7f;
 	}
 }
 
 /*
  * encode_simple_status		Encode simple status message.
  */
-static inline void encode_simple_status(struct ccwriter *w, struct ccpacket *p)
+static inline void encode_simple_status(struct ccwriter *w, struct ccpacket *pkt)
 {
 	uint8_t *mess = ccwriter_append(w, SIZE_STATUS);
 	if(mess)
-		encode_receiver(mess, p->receiver);
+		encode_receiver(mess, pkt->receiver);
 }
 
 /*
  * encode_extended_status	Encode extended status message.
  */
 static inline void encode_extended_status(struct ccwriter *w,
-	struct ccpacket *p)
+	struct ccpacket *pkt)
 {
 	uint8_t *mess = ccwriter_append(w, SIZE_EXTENDED);
 	if(mess) {
-		encode_receiver(mess, p->receiver);
+		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_STATUS);
 		bit_set(mess, BIT_EX_REQUEST);
-		if(p->status & STATUS_SECTOR)
+		if(pkt->status & STATUS_SECTOR)
 			bit_set(mess, BIT_STAT_SECTOR);
-		if(p->status & STATUS_PRESET)
+		if(pkt->status & STATUS_PRESET)
 			bit_set(mess, BIT_STAT_PRESET);
-		if(p->status & STATUS_AUX_SET_2) {
+		if(pkt->status & STATUS_AUX_SET_2) {
 			bit_set(mess, BIT_STAT_V15UVS);
 			bit_set(mess, BIT_STAT_AUX_SET_2);
 		}
@@ -503,19 +503,19 @@ static inline void encode_extended_status(struct ccwriter *w,
 /*
  * encode_status	Encode a status message.
  */
-static void encode_status(struct ccwriter *w, struct ccpacket *p) {
-	if(p->status & STATUS_EXTENDED)
-		encode_extended_status(w, p);
+static void encode_status(struct ccwriter *w, struct ccpacket *pkt) {
+	if(pkt->status & STATUS_EXTENDED)
+		encode_extended_status(w, pkt);
 	else
-		encode_simple_status(w, p);
+		encode_simple_status(w, pkt);
 }
 
 /*
  * is_extended_preset	Test if a command is an extended preset.
  */
-static inline bool is_extended_preset(struct ccpacket *p) {
-	if(p->command & (CC_RECALL | CC_STORE))
-		return (p->preset > 15) || p->pan || p->tilt;
+static inline bool is_extended_preset(struct ccpacket *pkt) {
+	if(pkt->command & (CC_RECALL | CC_STORE))
+		return (pkt->preset > 15) || pkt->pan || pkt->tilt;
 	else
 		return false;
 }
@@ -523,16 +523,16 @@ static inline bool is_extended_preset(struct ccpacket *p) {
 /*
  * vicon_do_write	Write a packet in vicon protocol.
  */
-unsigned int vicon_do_write(struct ccwriter *w, struct ccpacket *p) {
-	if(p->receiver < 1 || p->receiver > VICON_MAX_ADDRESS)
+unsigned int vicon_do_write(struct ccwriter *w, struct ccpacket *pkt) {
+	if(pkt->receiver < 1 || pkt->receiver > VICON_MAX_ADDRESS)
 		return 0;
-	if(p->status)
-		encode_status(w, p);
-	else if(is_extended_preset(p))
-		encode_extended_preset(w, p);
-	else if(p->command & CC_PAN_TILT)
-		encode_extended_speed(w, p);
+	if(pkt->status)
+		encode_status(w, pkt);
+	else if(is_extended_preset(pkt))
+		encode_extended_preset(w, pkt);
+	else if(pkt->command & CC_PAN_TILT)
+		encode_extended_speed(w, pkt);
 	else
-		encode_command(w, p);
+		encode_command(w, pkt);
 	return 1;
 }
