@@ -21,7 +21,7 @@
 #define PT_COMMAND (0x02)
 #define SIZE_MSG (3)
 
-static inline bool pt_command(uint8_t *mess) {
+static inline bool is_pan_tilt_command(uint8_t *mess) {
 	return (mess[2] & PT_COMMAND) != 0;
 }
 
@@ -38,7 +38,7 @@ static inline int pt_extra(uint8_t *mess) {
 	return (mess[1] >> 1) & 0x07;
 }
 
-/* Valid pan/tilt speeds are 0 - 6 (or 7), here's a lookup table */
+/* Lookup table for pan/tilt speeds 0 - 6 (or 7) */
 static const int SPEED[] = {
 	1 << 8,
 	2 << 8,
@@ -52,7 +52,7 @@ static const int SPEED[] = {
 
 #define SPEED_FULL (0x07)
 
-static inline int pt_speed(uint8_t *mess) {
+static inline int decode_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
@@ -195,8 +195,8 @@ static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
 
 static inline void decode_packet(struct ccpacket *p, uint8_t *mess) {
 	int cmnd = decode_command(mess);
-	if(pt_command(mess))
-		decode_pan_tilt(p, cmnd, pt_speed(mess));
+	if(is_pan_tilt_command(mess))
+		decode_pan_tilt(p, cmnd, decode_speed(mess));
 	else
 		decode_extended(p, cmnd, pt_extra(mess));
 }
