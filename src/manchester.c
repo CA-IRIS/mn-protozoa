@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#include <stdbool.h>
+#include <stdbool.h>	/* for bool */
 #include <stdint.h>	/* for uint8_t */
 #include "ccreader.h"
 #include "manchester.h"
@@ -87,27 +87,45 @@ static const int LUT_AUX[] = {
 	2, 4, 6, 3, 5, 7
 };
 
+/*
+ * is_pan_tilt_command	Test if a message is a pan/tilt command.
+ */
 static inline bool is_pan_tilt_command(uint8_t *mess) {
 	return (mess[2] & PT_COMMAND) != 0;
 }
 
+/*
+ * decode_receiver	Decode the receiver address.
+ */
 static inline int decode_receiver(uint8_t *mess) {
 	return 1 + (((mess[0] & 0x0f) << 6) | ((mess[1] & 0x01) << 5) |
 		((mess[2] >> 2) & 0x1f));
 }
 
+/*
+ * decode_command	Decode the command code.
+ */
 static inline int decode_command(uint8_t *mess) {
 	return (mess[1] >> 4) & 0x03;
 }
 
+/*
+ * pt_extra		Decode the pan/tilt extra data.
+ */
 static inline int pt_extra(uint8_t *mess) {
 	return (mess[1] >> 1) & 0x07;
 }
 
+/*
+ * decode_speed		Decode pan/tilt speed.
+ */
 static inline int decode_speed(uint8_t *mess) {
 	return SPEED[pt_extra(mess)];
 }
 
+/*
+ * decode_pan_tilt	Decode pan/tilt command.
+ */
 static inline void decode_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 	int speed)
 {
@@ -131,6 +149,9 @@ static inline void decode_pan_tilt(struct ccpacket *p, enum pt_command_t cmnd,
 	}
 }
 
+/*
+ * decode_lens		Decode a lens command.
+ */
 static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 	switch(extra) {
 		case XL_ZOOM_IN:
@@ -164,6 +185,9 @@ static inline void decode_lens(struct ccpacket *p, enum lens_t extra) {
 	}
 }
 
+/*
+ * decode_aux		Decode an auxiliary command.
+ */
 static inline void decode_aux(struct ccpacket *p, int extra) {
 	if(extra == EX_AUX_FULL_UP) {
 		/* Weird special case for full up */
@@ -177,16 +201,25 @@ static inline void decode_aux(struct ccpacket *p, int extra) {
 		p->aux |= AUX_LUT[extra];
 }
 
+/*
+ * decode_recall	Decode a preset recall command.
+ */
 static inline void decode_recall(struct ccpacket *p, int extra) {
 	p->command |= CC_RECALL;
 	p->preset = extra + 1;
 }
 
+/*
+ * decode_store		Decode a preset store command.
+ */
 static inline void decode_store(struct ccpacket *p, int extra) {
 	p->command |= CC_STORE;
 	p->preset = extra + 1;
 }
 
+/*
+ * decode_extended	Decode an extended command.
+ */
 static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
 	int extra)
 {
@@ -206,6 +239,9 @@ static inline void decode_extended(struct ccpacket *p, enum ex_function_t cmnd,
 	}
 }
 
+/*
+ * decode_packet	Decode a manchester packet.
+ */
 static inline void decode_packet(struct ccpacket *p, uint8_t *mess) {
 	int cmnd = decode_command(mess);
 	if(is_pan_tilt_command(mess))
@@ -214,6 +250,9 @@ static inline void decode_packet(struct ccpacket *p, uint8_t *mess) {
 		decode_extended(p, cmnd, pt_extra(mess));
 }
 
+/*
+ * manchester_decode_packet	Decode a manchester packet.
+ */
 static inline void manchester_decode_packet(struct ccreader *r, uint8_t *mess) {
 	int receiver = decode_receiver(mess);
 	if(r->packet.receiver != receiver)
@@ -222,6 +261,9 @@ static inline void manchester_decode_packet(struct ccreader *r, uint8_t *mess) {
 	decode_packet(&r->packet, mess);
 }
 
+/*
+ * manchester_read_message	Read one manchester packet.
+ */
 static inline enum decode_t manchester_read_message(struct ccreader *r,
 	struct buffer *rxbuf)
 {
@@ -237,6 +279,9 @@ static inline enum decode_t manchester_read_message(struct ccreader *r,
 	return DECODE_MORE;
 }
 
+/*
+ * manchester_do_read		Read packets in manchester protocol.
+ */
 void manchester_do_read(struct ccreader *r, struct buffer *rxbuf) {
 	while(buffer_available(rxbuf) >= SIZE_MSG) {
 		if(manchester_read_message(r, rxbuf) == DECODE_DONE)
@@ -247,6 +292,9 @@ void manchester_do_read(struct ccreader *r, struct buffer *rxbuf) {
 		ccreader_process_packet(r);
 }
 
+/*
+ * encode_receiver		Encode the receiver address.
+ */
 static inline void encode_receiver(uint8_t *mess, int receiver) {
 	int r = receiver - 1;
 	mess[0] = FLAG | ((r >> 6) & 0x0f);
@@ -254,6 +302,9 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
 	mess[2] = (r & 0x1f) << 2;
 }
 
+/*
+ * encode_pan_tilt_command	Encode a pan/tilt command.
+ */
 static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *p,
 	enum pt_command_t cmnd, int speed)
 {
@@ -265,6 +316,9 @@ static void encode_pan_tilt_command(struct ccwriter *w, struct ccpacket *p,
 	}
 }
 
+/*
+ * encode_lens_function		Encode a lens function.
+ */
 static void encode_lens_function(struct ccwriter *w, struct ccpacket *p,
 	enum lens_t func)
 {
@@ -275,6 +329,9 @@ static void encode_lens_function(struct ccwriter *w, struct ccpacket *p,
 	}
 }
 
+/*
+ * encode_aux_function		Encode an auxiliary function.
+ */
 static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
 	int aux)
 {
@@ -285,6 +342,9 @@ static void encode_aux_function(struct ccwriter *w, struct ccpacket *p,
 	}
 }
 
+/*
+ * manchester_encode_speed	Encode pan/tilt speed.
+ */
 static int manchester_encode_speed(int speed) {
 	int s;
 	for(s = 0; s < SPEED_FULL; s++) {
@@ -295,6 +355,9 @@ static int manchester_encode_speed(int speed) {
 	return SPEED_FULL;
 }
 
+/*
+ * encode_pan		Encode a pan command.
+ */
 static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
 	int speed = manchester_encode_speed(p->pan);
 	if(p->command & CC_PAN_LEFT) {
@@ -310,6 +373,9 @@ static void encode_pan(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * encode_tilt		Encode a tilt command.
+ */
 static void encode_tilt(struct ccwriter *w, struct ccpacket *p) {
 	int speed = manchester_encode_speed(p->tilt);
 	if(p->command & CC_TILT_DOWN) {
@@ -325,6 +391,9 @@ static void encode_tilt(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * encode_zoom		Encode a zoom command.
+ */
 static inline void encode_zoom(struct ccwriter *w, struct ccpacket *p) {
 	if(p->zoom < 0)
 		encode_lens_function(w, p, XL_ZOOM_OUT);
@@ -332,6 +401,9 @@ static inline void encode_zoom(struct ccwriter *w, struct ccpacket *p) {
 		encode_lens_function(w, p, XL_ZOOM_IN);
 }
 
+/*
+ * encode_focus		Encode a focus command.
+ */
 static inline void encode_focus(struct ccwriter *w, struct ccpacket *p) {
 	if(p->focus < 0)
 		encode_lens_function(w, p, XL_FOCUS_NEAR);
@@ -339,6 +411,9 @@ static inline void encode_focus(struct ccwriter *w, struct ccpacket *p) {
 		encode_lens_function(w, p, XL_FOCUS_FAR);
 }
 
+/*
+ * encode_iris		Encode an iris command.
+ */
 static inline void encode_iris(struct ccwriter *w, struct ccpacket *p) {
 	if(p->iris < 0)
 		encode_lens_function(w, p, XL_IRIS_CLOSE);
@@ -346,6 +421,9 @@ static inline void encode_iris(struct ccwriter *w, struct ccpacket *p) {
 		encode_lens_function(w, p, XL_IRIS_OPEN);
 }
 
+/*
+ * encode_aux		Encode an auxiliary command.
+ */
 static inline void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	int i;
 	if(p->aux & AUX_CLEAR)
@@ -356,6 +434,9 @@ static inline void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 	}
 }
 
+/*
+ * encode_recall_function	Encode a recall preset function.
+ */
 static void encode_recall_function(struct ccwriter *w, struct ccpacket *p,
 	int preset)
 {
@@ -366,6 +447,9 @@ static void encode_recall_function(struct ccwriter *w, struct ccpacket *p,
 	}
 }
 
+/*
+ * encode_store_function	Encode a store preset function.
+ */
 static void encode_store_function(struct ccwriter *w, struct ccpacket *p,
 	int preset)
 {
@@ -376,6 +460,9 @@ static void encode_store_function(struct ccwriter *w, struct ccpacket *p,
 	}
 }
 
+/*
+ * encode_preset	Encode a preset command.
+ */
 static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 	int preset = p->preset;
 	if(preset < 1 || preset > 8)
@@ -386,6 +473,9 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *p) {
 		encode_store_function(w, p, preset - 1);
 }
 
+/*
+ * manchester_do_write	Write a packet in manchester protocol.
+ */
 unsigned int manchester_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(p->receiver < 1 || p->receiver > MANCHESTER_MAX_ADDRESS)
 		return 0;
