@@ -394,8 +394,8 @@ static inline void encode_checksum(uint8_t *mess) {
 /*
  * Encode a command message
  */
-static void encode_command(struct ccwriter *w, struct ccpacket *pkt) {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		encode_pan(mess, pkt);
@@ -409,8 +409,8 @@ static void encode_command(struct ccwriter *w, struct ccpacket *pkt) {
 /*
  * Encode a preset message
  */
-static void encode_preset(struct ccwriter *w, struct ccpacket *pkt) {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_EXTENDED);
@@ -428,8 +428,8 @@ static void encode_preset(struct ccwriter *w, struct ccpacket *pkt) {
 /*
  * Encode an auxiliary command
  */
-static void encode_aux(struct ccwriter *w, struct ccpacket *pkt) {
-	uint8_t *mess = ccwriter_append(w, SIZE_MSG);
+static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
+	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_EXTENDED);
@@ -461,17 +461,17 @@ static void encode_aux(struct ccwriter *w, struct ccpacket *pkt) {
 /*
  * Write a packet in the pelco_d protocol
  */
-unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *pkt) {
+unsigned int pelco_d_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->receiver < 1 || pkt->receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
 	if(ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
 	   ccpacket_has_power(pkt))
 	{
-		encode_command(w, pkt);
+		encode_command(wtr, pkt);
 	}
 	if(ccpacket_has_preset(pkt))
-		encode_preset(w, pkt);
+		encode_preset(wtr, pkt);
 	if(ccpacket_has_aux(pkt))
-		encode_aux(w, pkt);
+		encode_aux(wtr, pkt);
 	return 1;
 }
