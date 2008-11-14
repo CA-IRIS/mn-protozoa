@@ -76,17 +76,6 @@ static inline bool is_extended(uint8_t *mess) {
 }
 
 /*
- * Test if the packet has a sense function
- */
-static inline bool has_sense(struct ccpacket *p) {
-	if(p->command & (CC_AUTO_PAN | CC_MANUAL_PAN))
-		return true;
-	if(p->command & (CC_CAMERA_ON | CC_CAMERA_OFF))
-		return true;
-	return false;
-}
-
-/*
  * Calculate the checksum for a pelco_d packet
  */
 static uint8_t calculate_checksum(uint8_t *mess) {
@@ -482,8 +471,11 @@ static void encode_aux(struct ccwriter *w, struct ccpacket *p) {
 unsigned int pelco_d_do_write(struct ccwriter *w, struct ccpacket *p) {
 	if(p->receiver < 1 || p->receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
-	if(ccpacket_has_command(p) || has_sense(p))
+	if(ccpacket_has_command(p) || ccpacket_has_autopan(p) ||
+	   ccpacket_has_power(p))
+	{
 		encode_command(w, p);
+	}
 	if(ccpacket_has_preset(p))
 		encode_preset(w, p);
 	if(ccpacket_has_aux(p))

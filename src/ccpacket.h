@@ -111,6 +111,8 @@ bool ccpacket_is_stop(struct ccpacket *pkt);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_aux(struct ccpacket *pkt);
 bool ccpacket_has_preset(struct ccpacket *pkt);
+bool ccpacket_has_autopan(const struct ccpacket *pkt);
+bool ccpacket_has_power(const struct ccpacket *pkt);
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name);
 void ccpacket_count(struct ccpacket *pkt);
 void ccpacket_drop(struct ccpacket *pkt);

@@ -187,6 +187,26 @@ bool ccpacket_has_preset(struct ccpacket *pkt) {
 }
 
 /*
+ * ccpacket_has_autopan	Test if the packet has an autopan command.
+ */
+bool ccpacket_has_autopan(const struct ccpacket *pkt) {
+	if(pkt->command & (CC_AUTO_PAN | CC_MANUAL_PAN))
+		return true;
+	else
+		return false;
+}
+
+/*
+ * ccpacket_has_power	Test if the packet has a power command.
+ */
+bool ccpacket_has_power(const struct ccpacket *pkt) {
+	if(pkt->command & (CC_CAMERA_ON | CC_CAMERA_OFF))
+		return true;
+	else
+		return false;
+}
+
+/*
  * ccpacket_log_pan	Log any pan command in the camera control packet.
  *
  * log: message logger
