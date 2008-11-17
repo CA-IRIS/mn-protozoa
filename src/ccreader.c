@@ -39,7 +39,7 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	} else if(strcasecmp(protocol, "manchester") == 0) {
 		rdr->do_read = manchester_do_read;
 		ccreader_set_timeout(rdr, MANCHESTER_TIMEOUT);
-// Hack for IRIS output
+/* FIXME: Hack for IRIS output */
 ccreader_set_timeout(rdr, 400);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		rdr->do_read = pelco_d_do_read;
