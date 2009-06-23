@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2008  Minnesota Department of Transportation
+ * Copyright (C) 2006-2009  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #include "joystick.h"
 #include "manchester.h"
 #include "pelco_d.h"
+#include "pelco_p.h"
 #include "vicon.h"
 
 /*
@@ -42,6 +43,9 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		rdr->do_read = pelco_d_do_read;
 		ccreader_set_timeout(rdr, PELCO_D_TIMEOUT);
+	} else if(strcasecmp(protocol, "pelco_p") == 0) {
+		rdr->do_read = pelco_p_do_read;
+		ccreader_set_timeout(rdr, PELCO_P_TIMEOUT);
 	} else if(strcasecmp(protocol, "vicon") == 0) {
 		rdr->do_read = vicon_do_read;
 		ccreader_set_timeout(rdr, VICON_TIMEOUT);
