@@ -20,7 +20,8 @@
 	It can also transcode camera control commands between vendor protocols,
 	including <a href="manchester_code.html">American Dynamics
 	(manchester)</a>, <a href="vicon_code.html">Vicon</a> and
-	<a href="pelco_d_code.html">Pelco (D)</a>.
+	Pelco <a href="pelco_p_code.html">(P)</a> and 
+	<a href="pelco_d_code.html">(D)</a>.
 	It works by converting each input command to a protocol-neutral packet
 	and then converting that packet to an output command.
 	Commands can be received and sent from serial ports, UDP sockets or TCP
@@ -53,6 +54,8 @@
 	<dd>Manchester protocol (American Dynamics)</dd>
 	<dt>pelco_d</dt>
 	<dd>Pelco D camera control protocol</dd>
+	<dt>pelco_p</dt>
+	<dd>Pelco P camera control protocol</dd>
 	<dt>vicon</dt>
 	<dd>Vicon camera control protocol</dd>
 </dl>
@@ -94,6 +97,8 @@
 	<dd>Manchester protocol (American Dynamics)</dd>
 	<dt>pelco_d</dt>
 	<dd>Pelco D camera control protocol</dd>
+	<dt>pelco_p</dt>
+	<dd>Pelco P camera control protocol</dd>
 	<dt>vicon</dt>
 	<dd>Vicon camera control protocol</dd>
 	<dt>axis</dt>
@@ -182,7 +187,7 @@
 	vicon	tcp://0.0.0.0:8001 -	pelco_d udp://example.com:8001
 </pre>
 <p class="stamp">
-	2008 Oct 23
+	2009 June 23
 </p>
 </body>
 </html>
