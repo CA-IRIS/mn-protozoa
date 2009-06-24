@@ -75,7 +75,7 @@ enum extended_t {
 static uint8_t calculate_checksum(uint8_t *mess) {
 	int i;
 	int checksum = 0;
-	for(i = 1; i < 6; i++)
+	for(i = 0; i < 7; i++)
 		checksum ^= mess[i];
 	return checksum;
 }
