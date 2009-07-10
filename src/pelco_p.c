@@ -51,8 +51,8 @@ enum extended_t {
 	EX_STORE,		/* 00001 store preset */
 	EX_CLEAR,		/* 00010 clear preset */
 	EX_RECALL,		/* 00011 recall preset */
-	EX_AUX_SET,		/* 00100 set auxilliary */
-	EX_AUX_CLEAR,		/* 00101 clear auxilliary */
+	EX_AUX_SET,		/* 00100 set auxiliary */
+	EX_AUX_CLEAR,		/* 00101 clear auxiliary */
 	EX_RESERVED,		/* 00110 reserved */
 	EX_RESET,		/* 00111 remote reset */
 	EX_ZONE_START,		/* 01000 set zone start */
