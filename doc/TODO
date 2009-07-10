@@ -5,3 +5,4 @@
 *	Clean up driver API to allow coallescing deferred packets.
 *	Deferred packets aren't logged with --packet enabled.
 *	Use getaddrinfo instead of gethostbyname
+*	Fix AUX clear problem when converting to Pelco protocols.

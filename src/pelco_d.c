@@ -434,6 +434,7 @@ static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_EXTENDED);
+		/* FIXME: other protocols don't send an AUX_CLEAR ... */
 		if(pkt->aux & AUX_CLEAR)
 			mess[3] |= EX_AUX_CLEAR << 1;
 		else
