@@ -13,16 +13,22 @@
 <h2>Vicon Camera Control Code</h2>
 
 <p>
-	Older receivers (V1200R-PVP and V1300R-PVP) differ slightly from this
-	documentation. Variable speed pan is controlled by AUX 3 and AUX 4,
-	allowing 4 speed levels. Tilt is similarly controlled by AUX 5 and
-	AUX 6.
-</p>
-<p>
 	Commands sent to a camera remain active until another command is
 	received. For example, a pan will not stop until a command is sent
 	with pan speed of zero. There is a timeout function, but it is well
 	over 30 seconds.
+</p>
+<p>
+	For certain receivers, it appears that auxiliary functions require an
+	extended packet.
+	For these receivers, a basic command packet with aux functions set
+	will have no effect.
+</p>
+<p>
+	Older receivers (V1200R-PVP and V1300R-PVP) differ slightly from this
+	documentation. Variable speed pan is controlled by AUX 3 and AUX 4,
+	allowing 4 speed levels. Tilt is similarly controlled by AUX 5 and
+	AUX 6.
 </p>
 
 <div class="left">

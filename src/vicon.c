@@ -522,6 +522,15 @@ static inline bool is_extended_preset(struct ccpacket *pkt) {
 }
 
 /*
+ * is_extended_speed	Test if a command is an extended speed.
+ */
+static inline bool is_extended_speed(struct ccpacket *pkt) {
+	// NOTE: for certain receivers, it appears that auxiliary functions
+	//       will not work unless they are in an extended packet.
+	return (pkt->command & CC_PAN_TILT) || pkt->aux;
+}
+
+/*
  * vicon_do_write	Write a packet in vicon protocol.
  */
 unsigned int vicon_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
@@ -531,7 +540,7 @@ unsigned int vicon_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 		encode_status(wtr, pkt);
 	else if(is_extended_preset(pkt))
 		encode_extended_preset(wtr, pkt);
-	else if(pkt->command & CC_PAN_TILT)
+	else if(is_extended_speed(pkt))
 		encode_extended_speed(wtr, pkt);
 	else
 		encode_command(wtr, pkt);
