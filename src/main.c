@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
 	struct packet_counter *counter;
 	struct log log;
 	struct config cfg;
+	int n_channels;
 	bool daemonize = false;
 	bool dryrun = false;
 
@@ -84,7 +85,8 @@ int main(int argc, char* argv[]) {
 	}
 	if(dryrun)
 		goto out_0;
-	if(poller_init(&poll, cfg.n_channels, config_cede_channels(&cfg),
+	n_channels = cfg.n_channels;
+	if(poller_init(&poll, n_channels, config_cede_channels(&cfg),
 		cfg.defer) == NULL)
 	{
 		rc = (errno ? errno : -1);
@@ -93,10 +95,12 @@ int main(int argc, char* argv[]) {
 	if(daemonize) {
 		if(daemon(0, 0) < 0) {
 			rc = (errno ? errno : -1);
-			goto out_0;
+			goto out_1;
 		}
 	}
 	rc = poller_loop(&poll);
+out_1:
+	poller_destroy(&poll);
 out_0:
 	config_destroy(&cfg);
 	free(counter);
