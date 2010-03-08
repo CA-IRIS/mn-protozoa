@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2008  Minnesota Department of Transportation
+ * Copyright (C) 2006-2010  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,6 +13,7 @@
  * GNU General Public License for more details.
  */
 #include <string.h>		/* for memset */
+#include <sys/errno.h>		/* for errno */
 #include "config.h"
 #include "ccreader.h"
 #include "ccwriter.h"
@@ -316,4 +317,24 @@ struct channel *config_cede_channels(struct config *cfg) {
 	cfg->n_channels = 0;
 	cfg->chns = NULL;
 	return chn;
+}
+
+/*
+ * config_verify	Verify the configuration file.
+ *
+ * filename: name of the configuration file
+ * return: -1 on error; 0 on success
+ */
+int config_verify(const char *filename) {
+	struct config cfg;
+	int rc;
+
+	if(config_init(&cfg, NULL, NULL) == NULL)
+		return (errno ? errno : -1);
+	if(config_read(&cfg, filename) <= 0)
+		rc = (errno ? errno : -1);
+	else
+		rc = 0;
+	config_destroy(&cfg);
+	return rc;
 }

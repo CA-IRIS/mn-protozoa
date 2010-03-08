@@ -22,8 +22,20 @@
 #define VERSION "0.37"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2010  Mn/DOT"
 
-static const char *CONF_FILE = "/etc/protozoa.conf";
 static const char *LOG_FILE = "/var/log/protozoa";
+
+static int restart_daemon(int argc, char* argv[]) {
+	char **fargs;
+
+	fargs = (char **)calloc(argc, sizeof(char *));
+	if(fargs == NULL)
+		return errno;
+	memcpy(fargs, argv, argc * sizeof(char **));
+	if(execv(fargs[0], fargs))
+		return errno;
+	else
+		return 0;
+}
 
 int main(int argc, char* argv[]) {
 	int i;
@@ -89,6 +101,10 @@ out_0:
 	config_destroy(&cfg);
 	free(counter);
 out:
+	if(rc == 0) {
+		log_println(&log, CONF_FILE " modified: restarting");
+		rc = restart_daemon(argc, argv);
+	}
 	if(rc > 0)
 		log_println(&log, "Error: %s", strerror(rc));
 	log_destroy(&log);

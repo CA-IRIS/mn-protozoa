@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2008  Minnesota Department of Transportation
+ * Copyright (C) 2006-2010  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,9 @@
 #include <fcntl.h>	/* for open */
 #include <string.h>	/* for memset, strerror */
 #include <sys/errno.h>	/* for errno */
+#include <sys/inotify.h> /* for inotify_init, inotify_add_watch */
 #include <unistd.h>	/* for close */
+#include "config.h"	/* for config_verify */
 #include "poller.h"	/* for struct poller, prototypes */
 
 /*
@@ -31,12 +33,23 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 	memset(plr, 0, sizeof(struct poller));
 	plr->n_channels = n_channels;
 	plr->chns = chns;
-	plr->pollfds = malloc(sizeof(struct pollfd) * (n_channels + 1));
-	if(plr->pollfds == NULL)
-		return NULL;
 	plr->defer = dfr;
 	/* open an fd to poll for closed channels */
 	plr->fd_null = open("/dev/null", O_RDONLY);
+	if(plr->fd_null < 0)
+		return NULL;
+	/* initialize inotify fd */
+	plr->fd_inotify = inotify_init();
+	if(plr->fd_inotify < 0)
+		return NULL;
+	if(inotify_add_watch(plr->fd_inotify, CONF_FILE,
+	   IN_CLOSE_WRITE | IN_MOVE_SELF) < 0)
+	{
+		return NULL;
+	}
+	plr->pollfds = malloc(sizeof(struct pollfd) * (n_channels + 2));
+	if(plr->pollfds == NULL)
+		return NULL;
 	return plr;
 }
 
@@ -95,6 +108,17 @@ static void poller_register_deferred(struct poller *plr) {
 	pfd->events = POLLIN;
 }
 
+static struct pollfd *poller_inotify_pollfd(const struct poller *plr) {
+	return plr->pollfds + plr->n_channels + 1;
+}
+
+static void poller_register_inotify(struct poller *plr) {
+	struct pollfd *pfd = poller_inotify_pollfd(plr);
+
+	pfd->fd = plr->fd_inotify;
+	pfd->events = POLLIN;
+}
+
 /*
  * poller_register_events	Register events for all channels to poll.
  */
@@ -105,6 +129,7 @@ static void poller_register_events(struct poller *plr) {
 	for(i = 0; i < plr->n_channels; i++, chn = chn->next)
 		poller_register_channel(plr, chn, plr->pollfds + i);
 	poller_register_deferred(plr);
+	poller_register_inotify(plr);
 }
 
 static void debug_log(struct channel *chn, const char *msg) {
@@ -168,34 +193,55 @@ static void poller_defer_events(struct poller *plr) {
 		defer_next(plr->defer);
 }
 
+static int poller_check_config(struct poller *plr) {
+	struct pollfd *pfd = poller_inotify_pollfd(plr);
+	struct inotify_event evt;
+	int n_bytes;
+
+	if(pfd->revents & POLLIN) {
+		n_bytes = read(plr->fd_inotify, &evt,
+			sizeof(struct inotify_event));
+		if(n_bytes <= 0)
+			return errno;
+		if(config_verify(CONF_FILE) == 0)
+			return -1;
+	}
+	return 0;
+}
+
 /*
  * poller_do_poll	Poll all channels for new events.
+ *
+ * return: 0 on success, errno value on error
  */
 static int poller_do_poll(struct poller *plr) {
 	int i, r;
 	struct channel *chn = plr->chns;
 
 	do {
-		r = poll(plr->pollfds, plr->n_channels + 1, -1);
+		r = poll(plr->pollfds, plr->n_channels + 2, -1);
 	} while(r < 0 && errno == EINTR);
 	if(r < 0)
-		return r;
+		return errno;
 	for(i = 0; i < plr->n_channels; i++, chn = chn->next)
 		poller_channel_events(plr, chn, plr->pollfds + i);
 	poller_defer_events(plr);
-	return 0;
+	return poller_check_config(plr);
 }
 
 /*
  * poller_loop		Poll all channels for events in a continuous loop.
  *
- * return: -1 on error, otherwise does not return
+ * return: errno value on error, 0 to restart daemon
  */
 int poller_loop(struct poller *plr) {
 	int r = 0;
 	do {
 		poller_register_events(plr);
 		r = poller_do_poll(plr);
-	} while(r >= 0);
-	return r;
+	} while(r == 0);
+	if(r > 0)
+		return r;
+	else
+		return 0;
 }
