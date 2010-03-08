@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2007  Minnesota Department of Transportation
+ * Copyright (C) 2006-2010  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,7 +85,8 @@ void log_line_end(struct log *log) {
 void log_printf(struct log *log, const char *format, ...) {
 	va_list va;
 	va_start(va, format);
-	vfprintf(log->out, format, va);
+	if(log)
+		vfprintf(log->out, format, va);
 	va_end(va);
 }
 
@@ -98,8 +99,10 @@ void log_printf(struct log *log, const char *format, ...) {
 void log_println(struct log *log, const char *format, ...) {
 	va_list va;
 	va_start(va, format);
-	log_line_start(log);
-	vfprintf(log->out, format, va);
-	log_line_end(log);
+	if(log) {
+		log_line_start(log);
+		vfprintf(log->out, format, va);
+		log_line_end(log);
+	}
 	va_end(va);
 }
