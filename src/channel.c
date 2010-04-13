@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2008  Minnesota Department of Transportation
+ * Copyright (C) 2006-2010  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -450,8 +450,8 @@ int channel_open(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 int channel_close(struct channel *chn) {
-	/* don't clear txbuf; send buffered data after channel is reopened */
 	buffer_clear(&chn->rxbuf);
+	buffer_clear(&chn->txbuf);
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
 		int r = close(chn->fd);
