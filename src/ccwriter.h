@@ -1,7 +1,6 @@
 #ifndef __CCWRITER_H__
 #define __CCWRITER_H__
 
-#include <assert.h>	/* for assert */
 #include "ccpacket.h"	/* for struct ccpacket */
 #include "channel.h"	/* for struct channel */
 #include "defer.h"	/* for struct deferred_pkt, defer */

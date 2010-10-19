@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2009  Minnesota Department of Transportation
+ * Copyright (C) 2006-2010  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -188,13 +188,11 @@ static void ccwriter_check_deferred(struct ccwriter *wtr, struct ccpacket *pkt,
 }
 
 /*
- * ccwriter_do_write	Process one packet for the writer.
+ * ccwriter_do_write_	Process one packet for the writer.
  */
-int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+static int ccwriter_do_write_(struct ccwriter *wtr, struct ccpacket *pkt) {
 	unsigned int c;
 	struct deferred_pkt *dpkt = wtr->deferred + pkt->receiver - 1;
-
-	assert(pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv);
 
 	/* If it is too soon after the previous packet, defer until later */
 	if(ccwriter_too_soon(wtr, dpkt)) {
@@ -205,4 +203,14 @@ int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(c > 0)
 		ccwriter_check_deferred(wtr, pkt, dpkt);
 	return c;
+}
+
+/*
+ * ccwriter_do_write	Process one packet for the writer.
+ */
+int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+	if(pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv)
+		return ccwriter_do_write_(wtr, pkt);
+	else
+		return 0;
 }
