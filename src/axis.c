@@ -1,7 +1,7 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
  * Copyright (C) 2007  Traffic Technologies
- * Copyright (C) 2007-2008  Minnesota Department of Transportation
+ * Copyright (C) 2007-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 static const char *default_speed = "100";
 static const char *axis_header = "GET /axis-cgi/com/ptz.cgi?";
-static const char *axis_header_auth = "GET /axis-cgi/com/ptzconfig.cgi?";
+static const char *axis_header_config = "GET /axis-cgi/com/ptzconfig.cgi?";
 static const char *axis_trailer = " HTTP/1.0";
 static const char *axis_auth = "\r\nAuthorization: Basic ";
 static const char *axis_ending = "\r\n\r\n";
@@ -42,18 +42,18 @@ static void axis_add_to_buffer(struct ccwriter *wtr, const char *msg) {
  * axis_prepare_buffer	Prepare the transmit buffer for writing.
  *
  * somein: 1 -> some data in buffer; 2 -> authenticated request in buffer
- * auth: Flag to incidate an authenticated request
+ * config: Flag to incidate a config request
  * return: new value of somein
  */
-static int axis_prepare_buffer(struct ccwriter *wtr, int somein, bool auth) {
+static int axis_prepare_buffer(struct ccwriter *wtr, int somein, bool config) {
 	if(somein)
 		axis_add_to_buffer(wtr, "&");
 	else {
-		if(auth)
-			axis_add_to_buffer(wtr, axis_header_auth);
+		if(config)
+			axis_add_to_buffer(wtr, axis_header_config);
 		else
 			axis_add_to_buffer(wtr, axis_header);
-		somein = 1 + auth;
+		somein = 1 + config;
 	}
 	return somein;
 }
