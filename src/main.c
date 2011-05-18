@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2010  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.40"
-#define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2010  Mn/DOT"
+#define VERSION "0.41"
+#define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2011  Mn/DOT"
 
 static const char *LOG_FILE = "/var/log/protozoa";
 
