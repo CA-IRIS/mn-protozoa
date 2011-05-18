@@ -41,11 +41,11 @@ static void axis_add_to_buffer(struct ccwriter *wtr, const char *msg) {
 /*
  * axis_prepare_buffer	Prepare the transmit buffer for writing.
  *
- * somein: 1 -> some data in buffer; 2 -> authenticated request in buffer
- * config: Flag to incidate a config request
+ * somein: Flag to indicate data present in buffer
+ * config: Flag to indicate a config request
  * return: new value of somein
  */
-static int axis_prepare_buffer(struct ccwriter *wtr, int somein, bool config) {
+static bool axis_prepare_buffer(struct ccwriter *wtr, bool somein, bool config){
 	if(somein)
 		axis_add_to_buffer(wtr, "&");
 	else {
@@ -53,9 +53,8 @@ static int axis_prepare_buffer(struct ccwriter *wtr, int somein, bool config) {
 			axis_add_to_buffer(wtr, axis_header_config);
 		else
 			axis_add_to_buffer(wtr, axis_header);
-		somein = 1 + config;
 	}
-	return somein;
+	return true;
 }
 
 /*
@@ -108,8 +107,8 @@ static void encode_tilt(struct ccpacket *pkt, char *mess) {
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *pkt,
-	int somein)
+static bool encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *pkt,
+	bool somein)
 {
 	char mess[64];
 	mess[0] = '\0';
@@ -136,8 +135,8 @@ static int encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *pkt,
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_focus(struct ccwriter *wtr, struct ccpacket *pkt,
-	int somein)
+static bool encode_focus(struct ccwriter *wtr, struct ccpacket *pkt,
+	bool somein)
 {
 	char mess[32];
 	strcpy(mess, "continuousfocusmove=");
@@ -163,7 +162,9 @@ static int encode_focus(struct ccwriter *wtr, struct ccpacket *pkt,
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt, int somein) {
+static bool encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt,
+	bool somein)
+{
 	char mess[32];
 	strcpy(mess, "continuouszoommove=");
 	if(pkt->zoom == ZOOM_IN) {
@@ -188,8 +189,8 @@ static int encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt, int somein) {
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_command(struct ccwriter *wtr, struct ccpacket *pkt,
-	int somein)
+static bool encode_command(struct ccwriter *wtr, struct ccpacket *pkt,
+	bool somein)
 {
 	somein = encode_pan_tilt(wtr, pkt, somein);
 	somein = encode_focus(wtr, pkt, somein);
@@ -203,8 +204,8 @@ static int encode_command(struct ccwriter *wtr, struct ccpacket *pkt,
  * somein: Flag to determine whether some data is already in the buffer
  * return: new somein value
  */
-static int encode_preset(struct ccwriter *wtr, struct ccpacket *pkt,
-	int somein)
+static bool encode_preset(struct ccwriter *wtr, struct ccpacket *pkt,
+	bool somein)
 {
 	char num[16];
 	char mess[32];
@@ -233,7 +234,7 @@ static int encode_preset(struct ccwriter *wtr, struct ccpacket *pkt,
  * return: count of encoded packets
  */
 unsigned int axis_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
-	int somein = 0;
+	bool somein = false;
 	if(!buffer_is_empty(&wtr->chn->txbuf)) {
 		log_println(wtr->chn->log, "axis: dropping packet(s)");
 		buffer_clear(&wtr->chn->txbuf);
@@ -244,7 +245,7 @@ unsigned int axis_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 		somein = encode_command(wtr, pkt, somein);
 	if(somein) {
 		axis_add_to_buffer(wtr, axis_trailer);
-		if(somein == 2) {
+		if(wtr->auth) {
 			axis_add_to_buffer(wtr, axis_auth);
 			axis_add_to_buffer(wtr, wtr->auth);
 		}
