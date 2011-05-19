@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2008  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -159,7 +159,7 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
  * ccpacket_has_command	Test if a packet has a command to encode.
  *
  * pkt: Packet to check for command
- * return: True is command is present; false otherwise
+ * return: True if command is present; false otherwise
  */
 bool ccpacket_has_command(const struct ccpacket *pkt) {
 	if(pkt->command & CC_PAN_TILT)
