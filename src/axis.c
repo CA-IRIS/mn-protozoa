@@ -129,6 +129,18 @@ static bool encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *pkt,
 }
 
 /*
+ * encode_stop	Encode an axis pan/tilt stop request.
+ *
+ * somein: Flag to determine whether some data is already in the buffer
+ * return: new somein value
+ */
+static bool encode_stop(struct ccwriter *wtr, bool somein) {
+	somein = axis_prepare_buffer(wtr, somein, false);
+	axis_add_to_buffer(wtr, "continuouspantiltmove=0,0");
+	return somein;
+}
+
+/*
  * encode_focus		Encode an axis focus request.
  *
  * pkt: Packet with focus value to encode.
@@ -243,6 +255,8 @@ unsigned int axis_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 		somein = encode_preset(wtr, pkt, somein);
 	else if(ccpacket_has_command(pkt))
 		somein = encode_command(wtr, pkt, somein);
+	else
+		somein = encode_stop(wtr, somein);
 	if(somein) {
 		axis_add_to_buffer(wtr, axis_trailer);
 		if(wtr->auth) {
