@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2008  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,22 +130,22 @@ static inline void decode_pan_tilt(struct ccpacket *pkt, enum pt_command_t cmnd,
 	int speed)
 {
 	switch(cmnd) {
-		case PAN_LEFT:
-			pkt->command |= CC_PAN_LEFT;
-			pkt->pan = speed;
-			break;
-		case PAN_RIGHT:
-			pkt->command |= CC_PAN_RIGHT;
-			pkt->pan = speed;
-			break;
-		case TILT_DOWN:
-			pkt->command |= CC_TILT_DOWN;
-			pkt->tilt = speed;
-			break;
-		case TILT_UP:
-			pkt->command |= CC_TILT_UP;
-			pkt->tilt = speed;
-			break;
+	case PAN_LEFT:
+		pkt->command |= CC_PAN_LEFT;
+		pkt->pan = speed;
+		break;
+	case PAN_RIGHT:
+		pkt->command |= CC_PAN_RIGHT;
+		pkt->pan = speed;
+		break;
+	case TILT_DOWN:
+		pkt->command |= CC_TILT_DOWN;
+		pkt->tilt = speed;
+		break;
+	case TILT_UP:
+		pkt->command |= CC_TILT_UP;
+		pkt->tilt = speed;
+		break;
 	}
 }
 
@@ -154,34 +154,34 @@ static inline void decode_pan_tilt(struct ccpacket *pkt, enum pt_command_t cmnd,
  */
 static inline void decode_lens(struct ccpacket *pkt, enum lens_t extra) {
 	switch(extra) {
-		case XL_ZOOM_IN:
-			pkt->zoom = ZOOM_IN;
-			break;
-		case XL_ZOOM_OUT:
-			pkt->zoom = ZOOM_OUT;
-			break;
-		case XL_FOCUS_FAR:
-			pkt->focus = FOCUS_FAR;
-			break;
-		case XL_FOCUS_NEAR:
-			pkt->focus = FOCUS_NEAR;
-			break;
-		case XL_IRIS_OPEN:
-			pkt->iris = IRIS_OPEN;
-			break;
-		case XL_IRIS_CLOSE:
-			pkt->iris = IRIS_CLOSE;
-			break;
-		case XL_TILT_DOWN:
-			/* Weird special case for full down */
-			pkt->command |= CC_TILT_DOWN;
-			pkt->tilt = SPEED_MAX;
-			break;
-		case XL_PAN_LEFT:
-			/* Weird special case for full left */
-			pkt->command |= CC_PAN_LEFT;
-			pkt->pan = SPEED_MAX;
-			break;
+	case XL_ZOOM_IN:
+		pkt->zoom = ZOOM_IN;
+		break;
+	case XL_ZOOM_OUT:
+		pkt->zoom = ZOOM_OUT;
+		break;
+	case XL_FOCUS_FAR:
+		pkt->focus = FOCUS_FAR;
+		break;
+	case XL_FOCUS_NEAR:
+		pkt->focus = FOCUS_NEAR;
+		break;
+	case XL_IRIS_OPEN:
+		pkt->iris = IRIS_OPEN;
+		break;
+	case XL_IRIS_CLOSE:
+		pkt->iris = IRIS_CLOSE;
+		break;
+	case XL_TILT_DOWN:
+		/* Weird special case for full down */
+		pkt->command |= CC_TILT_DOWN;
+		pkt->tilt = SPEED_MAX;
+		break;
+	case XL_PAN_LEFT:
+		/* Weird special case for full left */
+		pkt->command |= CC_PAN_LEFT;
+		pkt->pan = SPEED_MAX;
+		break;
 	}
 }
 
@@ -220,22 +220,22 @@ static inline void decode_store(struct ccpacket *pkt, int extra) {
 /*
  * decode_extended	Decode an extended command.
  */
-static inline void decode_extended(struct ccpacket *pkt, enum ex_function_t cmnd,
-	int extra)
+static inline void decode_extended(struct ccpacket *pkt,
+	enum ex_function_t cmnd, int extra)
 {
 	switch(cmnd) {
-		case EX_LENS:
-			decode_lens(pkt, extra);
-			break;
-		case EX_AUX:
-			decode_aux(pkt, extra);
-			break;
-		case EX_RECALL:
-			decode_recall(pkt, extra);
-			break;
-		case EX_STORE:
-			decode_store(pkt, extra);
-			break;
+	case EX_LENS:
+		decode_lens(pkt, extra);
+		break;
+	case EX_AUX:
+		decode_aux(pkt, extra);
+		break;
+	case EX_RECALL:
+		decode_recall(pkt, extra);
+		break;
+	case EX_STORE:
+		decode_store(pkt, extra);
+		break;
 	}
 }
 
