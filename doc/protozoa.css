@@ -46,3 +46,6 @@ TD {
 	float: right;
 	width: 33%;
 }
+.all {
+	clear: both;
+}
