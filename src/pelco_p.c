@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2009  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -184,22 +184,22 @@ static inline enum decode_t pelco_decode_command(struct ccreader *rdr,
  */
 static enum aux_t decode_aux(int a) {
 	switch(a) {
-		case 1:
-			return AUX_1;
-		case 2:
-			return AUX_2;
-		case 3:
-			return AUX_3;
-		case 4:
-			return AUX_4;
-		case 5:
-			return AUX_5;
-		case 6:
-			return AUX_6;
-		case 7:
-			return AUX_7;
-		case 8:
-			return AUX_8;
+	case 1:
+		return AUX_1;
+	case 2:
+		return AUX_2;
+	case 3:
+		return AUX_3;
+	case 4:
+		return AUX_4;
+	case 5:
+		return AUX_5;
+	case 6:
+		return AUX_6;
+	case 7:
+		return AUX_7;
+	case 8:
+		return AUX_8;
 	}
 	return AUX_NONE;
 }
@@ -211,27 +211,27 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 	int p0, int p1)
 {
 	switch(ex) {
-		case EX_STORE:
-			pkt->command |= CC_STORE;
-			pkt->preset = p0;
-			break;
-		case EX_RECALL:
-			pkt->command |= CC_RECALL;
-			pkt->preset = p0;
-			break;
-		case EX_CLEAR:
-			pkt->command |= CC_CLEAR;
-			pkt->preset = p0;
-			break;
-		case EX_AUX_SET:
-			pkt->aux = decode_aux(p0);
-			break;
-		case EX_AUX_CLEAR:
-			pkt->aux = decode_aux(p0) | AUX_CLEAR;
-			break;
-		/* FIXME: add other extended functions */
-		default:
-			break;
+	case EX_STORE:
+		pkt->command |= CC_STORE;
+		pkt->preset = p0;
+		break;
+	case EX_RECALL:
+		pkt->command |= CC_RECALL;
+		pkt->preset = p0;
+		break;
+	case EX_CLEAR:
+		pkt->command |= CC_CLEAR;
+		pkt->preset = p0;
+		break;
+	case EX_AUX_SET:
+		pkt->aux = decode_aux(p0);
+		break;
+	case EX_AUX_CLEAR:
+		pkt->aux = decode_aux(p0) | AUX_CLEAR;
+		break;
+	/* FIXME: add other extended functions */
+	default:
+		break;
 	}
 }
 
