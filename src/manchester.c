@@ -210,14 +210,6 @@ static inline void decode_recall(struct ccpacket *pkt, int extra) {
 }
 
 /*
- * decode_store		Decode a preset store command.
- */
-static inline void decode_store(struct ccpacket *pkt, int extra) {
-	pkt->command |= CC_STORE;
-	pkt->preset = extra + 1;
-}
-
-/*
  * decode_extended	Decode an extended command.
  */
 static inline void decode_extended(struct ccpacket *pkt,
@@ -234,7 +226,7 @@ static inline void decode_extended(struct ccpacket *pkt,
 		decode_recall(pkt, extra);
 		break;
 	case EX_STORE:
-		decode_store(pkt, extra);
+		ccpacket_store_preset(pkt, extra + 1);
 		break;
 	}
 }

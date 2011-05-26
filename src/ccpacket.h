@@ -49,6 +49,9 @@ enum command_t {
 	CC_ACK_ALARM = 1 << 11,
 	CC_CAMERA_ON = 1 << 12,
 	CC_CAMERA_OFF = 1 << 13,
+	CC_MENU_OPEN = 1 << 14,
+	CC_MENU_ENTER = 1 << 15,
+	CC_MENU_CANCEL = 1 << 16,
 };
 
 #define SPEED_MAX ((1 << 11) - 1)
@@ -106,6 +109,7 @@ struct ccpacket {
 
 void ccpacket_init(struct ccpacket *pkt);
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
+void ccpacket_store_preset(struct ccpacket *pkt, int p_num);
 void ccpacket_clear(struct ccpacket *pkt);
 bool ccpacket_is_stop(struct ccpacket *pkt);
 bool ccpacket_has_command(const struct ccpacket *pkt);

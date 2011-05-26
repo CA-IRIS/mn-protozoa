@@ -17,6 +17,15 @@
 #include "ccpacket.h"
 
 /*
+ * Special preset numbers for on-screen menu functions
+ */
+enum special_presets {
+	MENU_OPEN_PRESET = 77,
+	MENU_ENTER_PRESET = 78,
+	MENU_CANCEL_PRESET = 79,
+};
+
+/*
  * packet_counter_init	Initialize a new packet counter.
  *
  * log: message logger
@@ -123,6 +132,27 @@ void ccpacket_init(struct ccpacket *pkt) {
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout) {
 	timeval_set_now(&pkt->expire);
 	timeval_adjust(&pkt->expire, timeout);
+}
+
+/*
+ * ccpacket_store_preset	Decode a store preset command, replacing
+ *				predefined presets with menu commands.
+ */
+void ccpacket_store_preset(struct ccpacket *pkt, int p_num) {
+	switch(p_num) {
+	case MENU_OPEN_PRESET:
+		pkt->command |= CC_MENU_OPEN;
+		break;
+	case MENU_ENTER_PRESET:
+		pkt->command |= CC_MENU_ENTER;
+		break;
+	case MENU_CANCEL_PRESET:
+		pkt->command |= CC_MENU_CANCEL;
+		break;
+	default:
+		pkt->command |= CC_STORE;
+		pkt->preset = p_num;
+	}
 }
 
 /*
@@ -279,6 +309,12 @@ static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " lens-speed");
 	if(pkt->command & CC_ACK_ALARM)
 		log_printf(log, " ack-alarm");
+	if(pkt->command & CC_MENU_OPEN)
+		log_printf(log, " menu-open");
+	if(pkt->command & CC_MENU_ENTER)
+		log_printf(log, " menu-enter");
+	if(pkt->command & CC_MENU_CANCEL)
+		log_printf(log, " menu-cancel");
 }
 
 /*

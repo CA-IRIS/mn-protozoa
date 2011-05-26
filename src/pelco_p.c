@@ -23,6 +23,10 @@
 #define SIZE_MSG (8)
 #define TURBO_SPEED (1 << 6)
 
+enum pelco_special_presets {
+	PELCO_PRESET_MENU_OPEN = 95,
+};
+
 /*
  * Packet bit positions for PTZ functions.
  */
@@ -212,8 +216,7 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 {
 	switch(ex) {
 	case EX_STORE:
-		pkt->command |= CC_STORE;
-		pkt->preset = p0;
+		ccpacket_store_preset(pkt, p0);
 		break;
 	case EX_RECALL:
 		pkt->command |= CC_RECALL;
@@ -459,11 +462,25 @@ static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
 }
 
 /*
+ * adjust_menu_commands	Adjust menu commands for pelco d protocol.
+ */
+static inline void adjust_menu_commands(struct ccpacket *pkt) {
+	if(pkt->command & CC_MENU_OPEN) {
+		pkt->command |= CC_STORE;
+		pkt->preset = PELCO_PRESET_MENU_OPEN;
+	} else if(pkt->command & CC_MENU_ENTER)
+		pkt->iris = IRIS_OPEN;
+	else if(pkt->command & CC_MENU_CANCEL)
+		pkt->iris = IRIS_CLOSE;
+}
+
+/*
  * pelco_p_do_write	Write a packet in the pelco_p protocol.
  */
 unsigned int pelco_p_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->receiver < 1 || pkt->receiver > PELCO_P_MAX_ADDRESS)
 		return 0;
+	adjust_menu_commands(pkt);
 	if(ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
 	   ccpacket_has_power(pkt))
 	{

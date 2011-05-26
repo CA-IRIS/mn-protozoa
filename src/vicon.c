@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2008  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,10 @@
 #define SIZE_STATUS (2)
 #define SIZE_COMMAND (6)
 #define SIZE_EXTENDED (10)
+
+enum vicon_special_presets {
+	VICON_PRESET_MENU_OPEN = 94,
+};
 
 /*
  * Packet bit positions for PTZ functions.
@@ -168,11 +172,12 @@ static inline void decode_aux(struct ccpacket *pkt, uint8_t *mess) {
  * decode_preset	Decode preset functions.
  */
 static inline void decode_preset(struct ccpacket *pkt, uint8_t *mess) {
-	if(bit_is_set(mess, BIT_RECALL))
+	int p_num = mess[5] & 0x0f;
+	if(bit_is_set(mess, BIT_RECALL)) {
 		pkt->command = CC_RECALL;
-	else if(bit_is_set(mess, BIT_STORE))
-		pkt->command = CC_STORE;
-	pkt->preset = mess[5] & 0x0f;
+		pkt->preset = p_num;
+	} else if(bit_is_set(mess, BIT_STORE))
+		ccpacket_store_preset(pkt, p_num);
 }
 
 /*
@@ -201,11 +206,13 @@ static inline void decode_ex_status(struct ccpacket *pkt, uint8_t *mess) {
  * decode_ex_preset	Decode extended preset functions.
  */
 static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
+	int p_num = mess[7] & 0x7f;
 	if(bit_is_set(mess, BIT_EX_STORE))
-		pkt->command = CC_STORE;
-	else
+		ccpacket_store_preset(pkt, p_num);
+	else {
 		pkt->command = CC_RECALL;
-	pkt->preset = mess[7] & 0x7f;
+		pkt->preset = p_num;
+	}
 	pkt->pan = mess[8] & 0x7f;
 	pkt->tilt = mess[9] & 0x7f;
 }
@@ -350,13 +357,13 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
  * encode_toggles	Encode toggle functions.
  */
 static void encode_toggles(uint8_t *mess, struct ccpacket *pkt) {
-	if(pkt->command == CC_ACK_ALARM)
+	if(pkt->command & CC_ACK_ALARM)
 		bit_set(mess, BIT_ACK_ALARM);
-	if(pkt->command == CC_AUTO_IRIS)
+	if(pkt->command & CC_AUTO_IRIS)
 		bit_set(mess, BIT_AUTO_IRIS);
-	if(pkt->command == CC_AUTO_PAN)
+	if(pkt->command & CC_AUTO_PAN)
 		bit_set(mess, BIT_AUTO_PAN);
-	if(pkt->command == CC_LENS_SPEED)
+	if(pkt->command & CC_LENS_SPEED)
 		bit_set(mess, BIT_LENS_SPEED);
 }
 
@@ -531,11 +538,25 @@ static inline bool is_extended_speed(struct ccpacket *pkt) {
 }
 
 /*
+ * adjust_menu_commands	Adjust menu commands for vicon protocol.
+ */
+static inline void adjust_menu_commands(struct ccpacket *pkt) {
+	if(pkt->command & CC_MENU_OPEN) {
+		pkt->command |= CC_STORE;
+		pkt->preset = VICON_PRESET_MENU_OPEN;
+	} else if(pkt->command & CC_MENU_ENTER)
+		pkt->command |= CC_AUTO_PAN;
+	else if(pkt->command & CC_MENU_CANCEL)
+		pkt->command |= CC_AUTO_IRIS;
+}
+
+/*
  * vicon_do_write	Write a packet in vicon protocol.
  */
 unsigned int vicon_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(pkt->receiver < 1 || pkt->receiver > VICON_MAX_ADDRESS)
 		return 0;
+	adjust_menu_commands(pkt);
 	if(pkt->status)
 		encode_status(wtr, pkt);
 	else if(is_extended_preset(pkt))
