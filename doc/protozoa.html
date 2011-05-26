@@ -27,6 +27,15 @@
 	Commands can be received and sent from serial ports, UDP sockets or TCP
 	sockets.
 </p>
+<p>
+	Protozoa interprets some preset store commands as on-screen menu
+	features.
+	Storing preset 77 will bring up the on-screen menu.
+	Storing preset 78 will issue a menu "enter" command.
+	Storing preset 79 will issue a menu "cancel" command.
+	These presets can be used in a programmable keyboard to create keys
+	which navigate on-screen menus for any camera protocol.
+</p>
 <h3>Configuration File</h3>
 <p>
 	The configuration file <code>/etc/protozoa.conf</code> contains a
@@ -187,7 +196,7 @@
 	vicon	tcp://0.0.0.0:8001 -	pelco_d udp://example.com:8001
 </pre>
 <p class="stamp">
-	2009 June 23
+	2011 May 26
 </p>
 </body>
 </html>
