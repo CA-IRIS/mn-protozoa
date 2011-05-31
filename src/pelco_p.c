@@ -311,10 +311,8 @@ static inline void encode_receiver(uint8_t *mess, int receiver) {
  * pelco_p_encode_speed	Encode pan or tilt speed.
  */
 static int pelco_p_encode_speed(int speed) {
-	int s = speed >> 5;
-	/* round up to the next speed level */
-	if(speed % 32)
-		s++;
+	/* round to the nearest speed level */
+	int s = (speed >> 5) + ((speed % 32) >> 4);
 	if(s < TURBO_SPEED)
 		return s;
 	else
