@@ -43,12 +43,12 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		rdr->do_read = pelco_d_do_read;
 		ccreader_set_timeout(rdr, PELCO_D_TIMEOUT);
-	} else if(strcasecmp(protocol, "pelco_d7") == 0) {
-		rdr->do_read = pelco_d_do_read;
-		rdr->flags = PT_DEADZONE;
-		ccreader_set_timeout(rdr, PELCO_D_TIMEOUT);
 	} else if(strcasecmp(protocol, "pelco_p") == 0) {
 		rdr->do_read = pelco_p_do_read;
+		ccreader_set_timeout(rdr, PELCO_D_TIMEOUT);
+	} else if(strcasecmp(protocol, "pelco_p7") == 0) {
+		rdr->do_read = pelco_p_do_read;
+		rdr->flags = PT_DEADZONE;
 		ccreader_set_timeout(rdr, PELCO_P_TIMEOUT);
 	} else if(strcasecmp(protocol, "vicon") == 0) {
 		rdr->do_read = vicon_do_read;

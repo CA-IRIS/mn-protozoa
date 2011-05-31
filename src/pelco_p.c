@@ -92,10 +92,26 @@ static inline int decode_receiver(uint8_t *mess) {
 }
 
 /*
+ * decode_speed0	Decode pan/tilt speed with no deadzone.
+ */
+static inline int decode_speed0(uint8_t val) {
+	return val << 5;
+}
+
+/*
+ * decode_speed7	Decode pan/tilt speed with deadzone between 1 and 6.
+ *			Valid speeds are 0, and 7 - 64.
+ */
+static inline int decode_speed7(uint8_t val) {
+	return val >= 7 ? ((val - 6) * SPEED_MAX / (64 - 6)) : 0;
+}
+
+/*
  * decode_speed		Decode pan or tilt speed.
  */
-static inline int decode_speed(uint8_t val) {
-	int speed = val << 5;
+static inline int decode_speed(uint8_t val, enum rdr_flags_t flags) {
+	int speed = (flags & PT_DEADZONE) ?
+		decode_speed7(val) : decode_speed0(val);
 	if(speed > SPEED_MAX)
 		return SPEED_MAX;
 	else
@@ -105,8 +121,10 @@ static inline int decode_speed(uint8_t val) {
 /*
  * decode_pan		Decode the pan speed (and command).
  */
-static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
-	int pan = decode_speed(mess[4]);
+static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess,
+	enum rdr_flags_t flags)
+{
+	int pan = decode_speed(mess[4], flags);
 	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
 		pkt->command |= CC_PAN_RIGHT;
 		pkt->pan = pan;
@@ -122,8 +140,10 @@ static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 /*
  * decode_tilt		Decode the tilt speed (and command).
  */
-static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
-	int tilt = decode_speed(mess[5]);
+static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess,
+	enum rdr_flags_t flags)
+{
+	int tilt = decode_speed(mess[5], flags);
 	if(bit_is_set(mess, BIT_TILT_UP)) {
 		pkt->command |= CC_TILT_UP;
 		pkt->tilt = tilt;
@@ -175,8 +195,8 @@ static inline enum decode_t pelco_decode_command(struct ccreader *rdr,
 	uint8_t *mess)
 {
 	rdr->packet.receiver = decode_receiver(mess);
-	decode_pan(&rdr->packet, mess);
-	decode_tilt(&rdr->packet, mess);
+	decode_pan(&rdr->packet, mess, rdr->flags);
+	decode_tilt(&rdr->packet, mess, rdr->flags);
 	decode_lens(&rdr->packet, mess);
 	decode_sense(&rdr->packet, mess);
 	ccreader_process_packet(rdr);
