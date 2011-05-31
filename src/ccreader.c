@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2009  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,10 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 		ccreader_set_timeout(rdr, MANCHESTER_TIMEOUT);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		rdr->do_read = pelco_d_do_read;
+		ccreader_set_timeout(rdr, PELCO_D_TIMEOUT);
+	} else if(strcasecmp(protocol, "pelco_d7") == 0) {
+		rdr->do_read = pelco_d_do_read;
+		rdr->flags = PT_DEADZONE;
 		ccreader_set_timeout(rdr, PELCO_D_TIMEOUT);
 	} else if(strcasecmp(protocol, "pelco_p") == 0) {
 		rdr->do_read = pelco_p_do_read;
@@ -107,6 +111,7 @@ static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
 {
 	ccpacket_init(&rdr->packet);
 	rdr->timeout = DEFAULT_TIMEOUT;
+	rdr->flags = 0;
 	rdr->head = NULL;
 	rdr->log = log;
 	if(ccreader_set_protocol(rdr, protocol) < 0)

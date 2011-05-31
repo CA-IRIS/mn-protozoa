@@ -7,6 +7,10 @@
 
 #define DEFAULT_TIMEOUT (1000)
 
+enum rdr_flags_t {
+	PT_DEADZONE = (1 << 0),	/* pan/tilt values skip over deadzone */
+};
+
 enum decode_t {
 	DECODE_MORE = 0,	/* more buffered packets may be decoded */
 	DECODE_DONE = 1,	/* buffered packet decoding is done */
@@ -24,6 +28,7 @@ struct ccreader {
 	void	(*do_read)	(struct ccreader *rdr, struct buffer *rxbuf);
 	struct	ccpacket	packet;		/* camera control packet */
 	unsigned int		timeout;	/* time to hold commands (ms) */
+	enum rdr_flags_t	flags;		/* special reader flags */
 	struct	ccnode		*head;		/* head of writer list */
 	const char		*name;		/* channel name */
 	struct	log		*log;		/* message logger */
