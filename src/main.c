@@ -19,7 +19,7 @@
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.45"
+#define VERSION "0.46"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2011  Mn/DOT"
 
 static const char *LOG_FILE = "/var/log/protozoa";
@@ -107,7 +107,10 @@ out_0:
 out:
 	if(rc == 0) {
 		log_println(&log, CONF_FILE " modified: restarting");
-		rc = restart_daemon(argc, argv);
+		log_destroy(&log);
+		restart_daemon(argc, argv);
+		/* exec must have failed, give up */
+		exit(EXIT_FAILURE);
 	}
 	if(rc > 0)
 		log_println(&log, "Error: %s", strerror(rc));
