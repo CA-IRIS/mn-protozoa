@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2010  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,23 +34,27 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 	plr->n_channels = n_channels;
 	plr->chns = chns;
 	plr->defer = dfr;
-	/* open an fd to poll for closed channels */
-	plr->fd_null = open("/dev/null", O_RDONLY);
-	if(plr->fd_null < 0)
-		return NULL;
-	/* initialize inotify fd */
-	plr->fd_inotify = inotify_init();
-	if(plr->fd_inotify < 0)
-		return NULL;
-	if(inotify_add_watch(plr->fd_inotify, CONF_FILE,
-	   IN_CLOSE_WRITE | IN_MOVE_SELF) < 0)
-	{
-		return NULL;
-	}
 	plr->pollfds = malloc(sizeof(struct pollfd) * (n_channels + 2));
 	if(plr->pollfds == NULL)
 		return NULL;
-	return plr;
+	/* open an fd to poll for closed channels */
+	plr->fd_null = open("/dev/null", O_RDONLY);
+	if(plr->fd_null < 0)
+		goto out;
+	/* initialize inotify fd */
+	plr->fd_inotify = inotify_init();
+	if(plr->fd_inotify < 0)
+		goto out1;
+	plr->wd_inotify = inotify_add_watch(plr->fd_inotify, CONF_FILE,
+		IN_CLOSE_WRITE | IN_MOVE_SELF);
+	if(plr->wd_inotify >= 0)
+		return plr;
+	close(plr->fd_inotify);
+out1:
+	close(plr->fd_null);
+out:
+	free(plr->pollfds);
+	return NULL;
 }
 
 /*
@@ -58,14 +62,16 @@ struct poller *poller_init(struct poller *plr, int n_channels,
  */
 void poller_destroy(struct poller *plr) {
 	struct channel *chn = plr->chns;
-	close(plr->fd_null);
-	free(plr->pollfds);
 	while(chn) {
 		struct channel *nchn = chn->next;
 		channel_destroy(chn);
 		free(chn);
 		chn = nchn;
 	}
+	inotify_rm_watch(plr->fd_inotify, plr->wd_inotify);
+	close(plr->fd_inotify);
+	close(plr->fd_null);
+	free(plr->pollfds);
 	memset(plr, 0, sizeof(struct poller));
 }
 

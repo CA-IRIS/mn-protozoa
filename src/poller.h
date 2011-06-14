@@ -12,6 +12,7 @@ struct poller {
 	struct defer	*defer;
 	int		fd_null;
 	int		fd_inotify;
+	int		wd_inotify;
 };
 
 struct poller *poller_init(struct poller *plr, int n_channels,
