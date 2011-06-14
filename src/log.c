@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2010  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,10 @@ struct log *log_open_file(struct log *log, const char *filename) {
  * log_destroy		Destroy a previously initialized message log.
  */
 void log_destroy(struct log *log) {
-	fclose(log->out);
+	if(log->out != stderr) {
+		fclose(log->out);
+		log->out = stderr;
+	}
 }
 
 /*
