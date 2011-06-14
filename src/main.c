@@ -24,7 +24,7 @@
 
 static const char *LOG_FILE = "/var/log/protozoa";
 
-static int restart_daemon(int argc, char* argv[]) {
+static int restart_exec(int argc, char* argv[]) {
 	char **fargs;
 
 	fargs = (char **)calloc(argc, sizeof(char *));
@@ -108,7 +108,7 @@ out:
 	if(rc == 0) {
 		log_println(&log, CONF_FILE " modified: restarting");
 		log_destroy(&log);
-		restart_daemon(argc, argv);
+		restart_exec(argc, argv);
 		/* exec must have failed, give up */
 		exit(EXIT_FAILURE);
 	}
