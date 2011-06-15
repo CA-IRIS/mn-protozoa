@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2008  Minnesota Department of Transportation
+ * Copyright (C) 2008-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #include <unistd.h>	/* for write */
 #include "timer.h"
 
-struct timer timer_singleton;
+static struct timer timer_singleton;
 
 /*
  * timer_handler		Signal handler for timer signals.
