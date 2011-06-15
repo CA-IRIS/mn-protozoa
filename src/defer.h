@@ -20,6 +20,7 @@ struct defer {
 };
 
 struct defer *defer_init(struct defer *dfr);
+void defer_destroy(struct defer *dfr);
 int defer_packet(struct defer *dfr, struct deferred_pkt *dpkt,
 	struct ccpacket *pkt, unsigned int ms);
 int defer_next(struct defer *dfr);

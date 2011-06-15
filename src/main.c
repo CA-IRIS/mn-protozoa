@@ -16,6 +16,7 @@
 #include <unistd.h>	/* for daemon */
 #include <sys/errno.h>	/* for errno */
 
+#include "timer.h"
 #include "config.h"
 #include "poller.h"
 
@@ -76,33 +77,38 @@ int main(int argc, char* argv[]) {
 		counter = NULL;
 	if(config_init(&cfg, &log, counter) == NULL) {
 		rc = (errno ? errno : -1);
-		goto out;
+		goto out_0;
 	}
+	if(timer_init() == NULL)
+		goto out_1;
 	if(config_read(&cfg, CONF_FILE) <= 0) {
 		log_println(&log, "Check configuration file: %s", CONF_FILE);
 		rc = (errno ? errno : -1);
-		goto out_0;
+		goto out_2;
 	}
 	if(dryrun)
-		goto out_0;
+		goto out_2;
 	n_channels = cfg.n_channels;
 	if(poller_init(&poll, n_channels, config_cede_channels(&cfg),
 		cfg.defer) == NULL)
 	{
 		rc = (errno ? errno : -1);
-		goto out_0;
+		goto out_2;
 	}
 	if(daemonize) {
 		if(daemon(0, 0) < 0) {
 			rc = (errno ? errno : -1);
-			goto out_1;
+			goto out_3;
 		}
 	}
 	rc = poller_loop(&poll);
-out_1:
+out_3:
 	poller_destroy(&poll);
-out_0:
+out_2:
+	timer_destroy();
+out_1:
 	config_destroy(&cfg);
+out_0:
 	free(counter);
 out:
 	if(rc == 0) {

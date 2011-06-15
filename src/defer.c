@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2008  Minnesota Department of Transportation
+ * Copyright (C) 2008-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#include "timer.h"	/* for timer_init */
+#include "timer.h"
 #include "timeval.h"
 #include "defer.h"
 #include "ccwriter.h"
@@ -31,14 +31,17 @@ static cl_compare_t compare_pkts(const void *value0, const void *value1) {
  * defer_init		Initialize the deferred packet engine.
  */
 struct defer *defer_init(struct defer *dfr) {
-	if(cl_rbtree_init(&dfr->tree, CL_DUP_ALLOW, compare_pkts) == NULL)
+	if(cl_rbtree_init(&dfr->tree, CL_DUP_ALLOW, compare_pkts))
+		return dfr;
+	else
 		return NULL;
-	if(timer_init() == NULL)
-		goto fail;
-	return dfr;
-fail:
+}
+
+/*
+ * defer_destroy	Destroy the deferred packet engine.
+ */
+void defer_destroy(struct defer *dfr) {
 	cl_rbtree_clear(&dfr->tree, NULL, NULL);
-	return NULL;
 }
 
 /*
