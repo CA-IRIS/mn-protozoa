@@ -17,11 +17,15 @@
 	It is designed to run as a daemon on a Linux system.
 	It can combine control codes from different sources to facilitate
 	sharing control between systems.
-	It can also transcode camera control commands between vendor protocols,
-	including <a href="manchester_code.html">American Dynamics
-	(manchester)</a>, <a href="vicon_code.html">Vicon</a> and
-	Pelco <a href="pelco_p_code.html">(P)</a> and 
-	<a href="pelco_d_code.html">(D)</a>.
+	It can also transcode camera control commands between the following
+	vendor protocols:
+<ul>
+	<li><a href="manchester_code.html">AD (manchester)</a></li>
+	<li><a href="vicon_code.html">Vicon</a></li>
+	<li><a href="pelco_p_code.html">Pelco (P)</a></li>
+	<li><a href="pelco_d_code.html">Pelco (D)</a></li>
+	<li><a href="infinova_code.html">Infinova</a></li>
+</ul>
 	It works by converting each input command to a protocol-neutral packet
 	and then converting that packet to an output command.
 	Commands can be received and sent from serial ports, UDP sockets or TCP
@@ -198,7 +202,7 @@
 	vicon	tcp://0.0.0.0:8001 -	pelco_d udp://example.com:8001
 </pre>
 <p class="stamp">
-	2011 May 31
+	2011 September 22
 </p>
 </body>
 </html>
