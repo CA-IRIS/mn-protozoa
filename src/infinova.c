@@ -41,7 +41,7 @@ static void infinova_header(struct ccwriter *wtr, uint8_t msg_id,
 /*
  * infinova_authenticate	Authenticate an infinova socket connection.
  */
-void infinova_authenticate(struct ccwriter *wtr) {
+static void infinova_authenticate(struct ccwriter *wtr) {
 	infinova_header(wtr, MSG_ID_AUTH, AUTH_SZ);
 	ccwriter_append(wtr, AUTH_SZ + 2);	/* why 2 extra bytes??? */
 	/* FIXME: we should probably fill in user name and password here */
@@ -63,5 +63,9 @@ static void infinova_d_header(struct ccwriter *wtr) {
  * infinova_d_do_write	Write a packet in the infinova_d protocol.
  */
 unsigned int infinova_d_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+	/* We need to authenticate if the channel is currently closed.
+	 * Camera will close the socket after 90 seconds of inactivity. */
+	if(!channel_is_open(wtr->chn))
+		infinova_authenticate(wtr);
 	return pelco_d_do_write_cb(wtr, pkt, infinova_d_header);
 }

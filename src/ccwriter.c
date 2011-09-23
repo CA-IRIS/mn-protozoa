@@ -63,7 +63,6 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 		wtr->do_write = infinova_d_do_write;
 		wtr->gaptime = PELCO_D_GAPTIME;
 		wtr->timeout = PELCO_D_TIMEOUT;
-		infinova_authenticate(wtr);
 		return ccwriter_set_receivers(wtr, PELCO_D_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		wtr->do_write = pelco_d_do_write;
