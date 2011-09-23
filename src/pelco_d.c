@@ -19,7 +19,6 @@
 #include "bitarray.h"
 
 #define FLAG (0xff)
-#define SIZE_MSG (7)
 #define TURBO_SPEED (1 << 6)
 
 enum pelco_special_presets {
@@ -275,7 +274,7 @@ static inline enum decode_t pelco_decode_message(struct ccreader *rdr,
 		buffer_consume(rxbuf, 1);
 		return DECODE_MORE;
 	}
-	buffer_consume(rxbuf, SIZE_MSG);
+	buffer_consume(rxbuf, PELCO_D_SZ);
 	if(!checksum_is_valid(mess)) {
 		log_println(rdr->log, "Pelco(D): invalid checksum");
 		return DECODE_MORE;
@@ -290,7 +289,7 @@ static inline enum decode_t pelco_decode_message(struct ccreader *rdr,
  * pelco_d_do_read	Read messages in pelco_d protocol.
  */
 void pelco_d_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
-	while(buffer_available(rxbuf) >= SIZE_MSG) {
+	while(buffer_available(rxbuf) >= PELCO_D_SZ) {
 		if(pelco_decode_message(rdr, rxbuf) == DECODE_DONE)
 			break;
 	}
@@ -397,7 +396,7 @@ static inline void encode_checksum(uint8_t *mess) {
  * encode_command	Encode a command message.
  */
 static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
-	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		encode_pan(mess, pkt);
@@ -412,7 +411,7 @@ static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
  * encode_preset	Encode a preset message.
  */
 static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
-	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_EXTENDED);
@@ -431,7 +430,7 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
  * encode_aux		Encode an auxiliary command.
  */
 static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
-	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
+	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if(mess) {
 		encode_receiver(mess, pkt->receiver);
 		bit_set(mess, BIT_EXTENDED);
@@ -475,20 +474,37 @@ static inline void adjust_menu_commands(struct ccpacket *pkt) {
 }
 
 /*
- * pelco_d_do_write	Write a packet in the pelco_d protocol.
+ * pelco_d_do_write_cb	Write a packet in the pelco_d protocol.
  */
-unsigned int pelco_d_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+unsigned int pelco_d_do_write_cb(struct ccwriter *wtr, struct ccpacket *pkt,
+	ccwriter_cb *prepare_writer)
+{
 	if(pkt->receiver < 1 || pkt->receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
 	adjust_menu_commands(pkt);
 	if(ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
 	   ccpacket_has_power(pkt))
 	{
+		if(prepare_writer)
+			prepare_writer(wtr);
 		encode_command(wtr, pkt);
 	}
-	if(ccpacket_has_preset(pkt))
+	if(ccpacket_has_preset(pkt)) {
+		if(prepare_writer)
+			prepare_writer(wtr);
 		encode_preset(wtr, pkt);
-	if(ccpacket_has_aux(pkt))
+	}
+	if(ccpacket_has_aux(pkt)) {
+		if(prepare_writer)
+			prepare_writer(wtr);
 		encode_aux(wtr, pkt);
+	}
 	return 1;
+}
+
+/*
+ * pelco_d_do_write	Write a packet in the pelco_d protocol.
+ */
+unsigned int pelco_d_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
+	return pelco_d_do_write_cb(wtr, pkt, NULL);
 }

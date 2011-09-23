@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2010  Minnesota Department of Transportation
+ * Copyright (C) 2006-2011  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #include "ccwriter.h"
 #include "defer.h"
 #include "axis.h"
+#include "infinova.h"
 #include "manchester.h"
 #include "pelco_d.h"
 #include "pelco_p.h"
@@ -58,6 +59,12 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 		wtr->gaptime = MANCHESTER_GAPTIME;
 		wtr->timeout = MANCHESTER_TIMEOUT;
 		return ccwriter_set_receivers(wtr, MANCHESTER_MAX_ADDRESS);
+	} else if(strcasecmp(protocol, "infinova_d") == 0) {
+		wtr->do_write = infinova_d_do_write;
+		wtr->gaptime = PELCO_D_GAPTIME;
+		wtr->timeout = PELCO_D_TIMEOUT;
+		infinova_authenticate(wtr);
+		return ccwriter_set_receivers(wtr, PELCO_D_MAX_ADDRESS);
 	} else if(strcasecmp(protocol, "pelco_d") == 0) {
 		wtr->do_write = pelco_d_do_write;
 		wtr->gaptime = PELCO_D_GAPTIME;
