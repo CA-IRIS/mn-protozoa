@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2011  Minnesota Department of Transportation
+ * Copyright (C) 2011-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,15 +27,17 @@ static void infinova_header(struct ccwriter *wtr, uint8_t msg_id,
 	unsigned int n_bytes)
 {
 	uint8_t *mess = ccwriter_append(wtr, HEADER_SZ);
-	mess[0] = 'I';		/* magic numbers */
-	mess[1] = 'N';
-	mess[2] = 'F';
-	mess[3] = msg_id;
-	if(msg_id == MSG_ID_AUTH) {
-		mess[5] = 1;	/* don't know what these do ... */
-		mess[7] = 1;
+	if(mess) {
+		mess[0] = 'I';		/* magic numbers */
+		mess[1] = 'N';
+		mess[2] = 'F';
+		mess[3] = msg_id;
+		if(msg_id == MSG_ID_AUTH) {
+			mess[5] = 1;	/* don't know what these do ... */
+			mess[7] = 1;
+		}
+		mess[11] = n_bytes;
 	}
-	mess[11] = n_bytes;
 }
 
 /*
@@ -55,8 +57,10 @@ static void infinova_d_header(struct ccwriter *wtr) {
 	infinova_header(wtr, MSG_ID_PTZ, HEADER_SZ + PELCO_D_SZ);
 	/* PTZ packets need an extra header */
 	mess = ccwriter_append(wtr, HEADER_SZ);
-	mess[0] = 1;	/* don't know what this means */
-	mess[7] = PELCO_D_SZ;
+	if(mess) {
+		mess[0] = 1;	/* don't know what this means */
+		mess[7] = PELCO_D_SZ;
+	}
 }
 
 /*
