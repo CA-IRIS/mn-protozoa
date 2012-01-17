@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -155,7 +155,8 @@ void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes) {
 		return mess;
 	} else {
 		log_println(wtr->chn->log,
-			"ccwriter_append: output buffer full");
+			"ccwriter_append (%s): output buffer full",
+			wtr->chn->name);
 		return NULL;
 	}
 }
