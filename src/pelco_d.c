@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -485,20 +485,24 @@ unsigned int pelco_d_do_write_cb(struct ccwriter *wtr, struct ccpacket *pkt,
 	if(ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
 	   ccpacket_has_power(pkt))
 	{
-		if(prepare_writer)
-			prepare_writer(wtr);
-		encode_command(wtr, pkt);
+		if(prepare_writer(wtr))
+			encode_command(wtr, pkt);
 	}
 	if(ccpacket_has_preset(pkt)) {
-		if(prepare_writer)
-			prepare_writer(wtr);
-		encode_preset(wtr, pkt);
+		if(prepare_writer(wtr))
+			encode_preset(wtr, pkt);
 	}
 	if(ccpacket_has_aux(pkt)) {
-		if(prepare_writer)
-			prepare_writer(wtr);
-		encode_aux(wtr, pkt);
+		if(prepare_writer(wtr))
+			encode_aux(wtr, pkt);
 	}
+	return 1;
+}
+
+/*
+ * pelco_d_prepare_true	Prepare a write for pelco_d protocol.
+ */
+static int pelco_d_prepare_true(struct ccwriter *wtr) {
 	return 1;
 }
 
@@ -506,5 +510,5 @@ unsigned int pelco_d_do_write_cb(struct ccwriter *wtr, struct ccpacket *pkt,
  * pelco_d_do_write	Write a packet in the pelco_d protocol.
  */
 unsigned int pelco_d_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
-	return pelco_d_do_write_cb(wtr, pkt, NULL);
+	return pelco_d_do_write_cb(wtr, pkt, pelco_d_prepare_true);
 }

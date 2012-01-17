@@ -16,7 +16,7 @@ struct ccwriter {
 	struct defer		*defer;		/* deferred packet handler */
 };
 
-typedef void (ccwriter_cb) (struct ccwriter *wtr);
+typedef int (ccwriter_cb) (struct ccwriter *wtr);
 
 struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
 	const char *auth);

@@ -23,7 +23,7 @@
 /*
  * infinova_header	Write out an infinova header.
  */
-static void infinova_header(struct ccwriter *wtr, uint8_t msg_id,
+static int infinova_header(struct ccwriter *wtr, uint8_t msg_id,
 	unsigned int n_bytes)
 {
 	uint8_t *mess = ccwriter_append(wtr, HEADER_SZ);
@@ -37,30 +37,36 @@ static void infinova_header(struct ccwriter *wtr, uint8_t msg_id,
 			mess[7] = 1;
 		}
 		mess[11] = n_bytes;
-	}
+		return 1;
+	} else
+		return 0;
 }
 
 /*
  * infinova_authenticate	Authenticate an infinova socket connection.
  */
 static void infinova_authenticate(struct ccwriter *wtr) {
-	infinova_header(wtr, MSG_ID_AUTH, AUTH_SZ);
-	ccwriter_append(wtr, AUTH_SZ + 2);	/* why 2 extra bytes??? */
-	/* FIXME: we should probably fill in user name and password here */
+	if(infinova_header(wtr, MSG_ID_AUTH, AUTH_SZ)) {
+		/* We don't know why, but we need two extra bytes here */
+		ccwriter_append(wtr, AUTH_SZ + 2);
+		/* FIXME: fill in user name and password here??? */
+	}
 }
 
 /*
  * infinova_d_header		Write a header for a pelco D PTZ packet.
  */
-static void infinova_d_header(struct ccwriter *wtr) {
-	uint8_t *mess;
-	infinova_header(wtr, MSG_ID_PTZ, HEADER_SZ + PELCO_D_SZ);
-	/* PTZ packets need an extra header */
-	mess = ccwriter_append(wtr, HEADER_SZ);
-	if(mess) {
-		mess[0] = 1;	/* don't know what this means */
-		mess[7] = PELCO_D_SZ;
+static int infinova_d_header(struct ccwriter *wtr) {
+	if(infinova_header(wtr, MSG_ID_PTZ, HEADER_SZ + PELCO_D_SZ)) {
+		/* PTZ packets need an extra header */
+		uint8_t *mess = ccwriter_append(wtr, HEADER_SZ);
+		if(mess) {
+			mess[0] = 1;	/* don't know what this means */
+			mess[7] = PELCO_D_SZ;
+			return 1;
+		}
 	}
+	return 0;
 }
 
 /*
