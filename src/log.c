@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,11 +63,11 @@ void log_line_start(struct log *log) {
 	struct timeval tv;
 	struct timezone tz;
 	struct tm *now;
-	char buf[17];
+	char buf[22];
 
 	gettimeofday(&tv, &tz);
 	now = localtime(&tv.tv_sec);
-	strftime(buf, 17, "%b %d %H:%M:%S ", now);
+	strftime(buf, 22, "%Y %b %d %H:%M:%S ", now);
 	fprintf(log->out, buf);
 }
 
