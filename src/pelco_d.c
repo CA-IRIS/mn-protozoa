@@ -261,17 +261,17 @@ static inline enum decode_t pelco_decode_extended(struct ccreader *rdr,
 static void pelco_log_discard(struct ccreader *rdr, uint8_t *mess, int n_bytes,
 	const char *msg)
 {
-	char lbuf[128];
+	char lbuf[256];
 	int i;
-	snprintf(lbuf, 128, "Pelco(D): %s; discarding %d bytes: ", msg,
-		n_bytes);
-	for(i = 0; i < n_bytes && i < 8 && strlen(lbuf) <= 122; i++) {
+	snprintf(lbuf, 256, "Pelco(D) rcv: %s -- %s; discarding %d bytes: ",
+		rdr->name, msg, n_bytes);
+	for(i = 0; i < n_bytes && i < 8 && strlen(lbuf) <= 250; i++) {
 		char hchar[4];
 		snprintf(hchar, 4, "%02X ", mess[i]);
-		strncat(lbuf, hchar, 128 - strlen(lbuf));
+		strncat(lbuf, hchar, 250 - strlen(lbuf));
 	}
 	if(n_bytes > 8)
-		strncat(lbuf, "...", 128 - strlen(lbuf));
+		strncat(lbuf, "...", 250 - strlen(lbuf));
 	log_println(rdr->log, lbuf);
 }
 
