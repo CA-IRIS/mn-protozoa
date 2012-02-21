@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  */
 #include <stdbool.h>	/* for bool */
 #include <stdint.h>	/* for uint8_t */
+#include <string.h>	/* for strlen, strncat */
 #include "ccreader.h"
 #include "pelco_p.h"
 #include "bitarray.h"
@@ -274,6 +275,43 @@ static inline enum decode_t pelco_decode_extended(struct ccreader *rdr,
 }
 
 /*
+ * pelco_log_discard	Log discarded data.
+ */
+static void pelco_log_discard(struct ccreader *rdr, uint8_t *mess, int n_bytes,
+	const char *msg)
+{
+	char lbuf[128];
+	int i;
+	snprintf(lbuf, 128, "Pelco(P): %s; discarding %d bytes: ", msg,
+		n_bytes);
+	for(i = 0; i < n_bytes && i < 8 && strlen(lbuf) <= 122; i++) {
+		char hchar[4];
+		snprintf(hchar, 4, "%02X ", mess[i]);
+		strncat(lbuf, hchar, 128 - strlen(lbuf));
+	}
+	if(n_bytes > 8)
+		strncat(lbuf, "...", 128 - strlen(lbuf));
+	log_println(rdr->log, lbuf);
+}
+
+/*
+ * pelco_discard_garbage	Scan receive buffer for garbage data.
+ */
+static void pelco_discard_garbage(struct ccreader *rdr, struct buffer *rxbuf,
+	const char *msg)
+{
+	uint8_t *mess = buffer_output(rxbuf);
+	int n_bytes = 1;
+	while(n_bytes < buffer_available(rxbuf)) {
+		if(mess[n_bytes] == STX)
+			break;
+		n_bytes++;
+	}
+	buffer_consume(rxbuf, n_bytes);
+	pelco_log_discard(rdr, mess, n_bytes, msg);
+}
+
+/*
  * checksum_is_valid	Test if a message checksum is valid.
  */
 static inline bool checksum_is_valid(uint8_t *mess) {
@@ -288,20 +326,18 @@ static inline enum decode_t pelco_decode_message(struct ccreader *rdr,
 {
 	uint8_t *mess = buffer_output(rxbuf);
 	if(mess[0] != STX) {
-		log_println(rdr->log, "Pelco(P): unexpected byte %02X",
-			mess[0]);
-		buffer_consume(rxbuf, 1);
+		pelco_discard_garbage(rdr, rxbuf, "Invalid STX");
 		return DECODE_MORE;
 	}
-	buffer_consume(rxbuf, SIZE_MSG);
 	if(mess[6] != ETX) {
-		log_println(rdr->log, "Pelco(P): invalid ETX %02X", mess[6]);
+		pelco_discard_garbage(rdr, rxbuf, "Invalid ETX");
 		return DECODE_MORE;
 	}
 	if(!checksum_is_valid(mess)) {
-		log_println(rdr->log, "Pelco(P): invalid checksum");
+		pelco_discard_garbage(rdr, rxbuf, "Invalid checksum");
 		return DECODE_MORE;
 	}
+	buffer_consume(rxbuf, SIZE_MSG);
 	if(bit_is_set(mess, BIT_EXTENDED))
 		return pelco_decode_extended(rdr, mess);
 	else
