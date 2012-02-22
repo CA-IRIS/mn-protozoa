@@ -282,9 +282,8 @@ static void pelco_log_discard(struct ccreader *rdr, uint8_t *mess, int n_bytes,
 {
 	char lbuf[256];
 	int i;
-	snprintf(lbuf, 256, "Pelco(P) rcv: %s -- %s; discarding %d bytes: ",
-		rdr->name, msg, n_bytes);
-	for(i = 0; i < n_bytes && i < 8 && strlen(lbuf) <= 250; i++) {
+	snprintf(lbuf, 256, "Pelco(P) %s; discarding %d bytes: ", msg, n_bytes);
+	for(i = 0; i < n_bytes && i < 24 && strlen(lbuf) <= 250; i++) {
 		char hchar[4];
 		snprintf(hchar, 4, "%02X ", mess[i]);
 		strncat(lbuf, hchar, 256 - strlen(lbuf));
