@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2010  Minnesota Department of Transportation
+ * Copyright (C) 2006-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -521,8 +521,7 @@ static inline bool channel_is_listening(const struct channel *chn) {
  * msg: message to write to log
  */
 void channel_log(struct channel *chn, const char* msg) {
-	log_println(chn->log, "channel: %s %s:%d", msg, chn->name,
-		chn->extra);
+	log_println(chn->log, "channel: %s %s:%d", msg, chn->name, chn->extra);
 }
 
 /*
