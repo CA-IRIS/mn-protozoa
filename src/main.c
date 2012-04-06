@@ -13,43 +13,74 @@
  * GNU General Public License for more details.
  */
 #include <string.h>	/* for strerror */
-#include <unistd.h>	/* for daemon */
+#include <unistd.h>	/* for daemon, sleep */
 #include <sys/errno.h>	/* for errno */
 
 #include "timer.h"
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.51"
+#define VERSION "0.52"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2012  Mn/DOT"
 
 static const char *LOG_FILE = "/var/log/protozoa";
 
-static int restart_exec(int argc, char* argv[]) {
-	char **fargs;
+/** Run the main protozoa loop.
+ *
+ * Return: errno value on error, or 0 if config file has changed.
+ */
+static int run_protozoa(struct log *log, bool dryrun) {
+	struct packet_counter	*counter;
+	struct config		cfg;
+	struct poller		poll;
+	int			n_channels;
+	int			rc = 0;
 
-	fargs = (char **)calloc(argc, sizeof(char *));
-	if(fargs == NULL)
-		return errno;
-	memcpy(fargs, argv, argc * sizeof(char **));
-	if(execv(fargs[0], fargs))
-		return errno;
+	log_println(log, BANNER);
+	if(log->stats)
+		counter = packet_counter_new(log);
 	else
-		return 0;
+		counter = NULL;
+	if(config_init(&cfg, log, counter) == NULL) {
+		rc = (errno ? errno : -1);
+		goto out_0;
+	}
+	if(config_read(&cfg, CONF_FILE) <= 0) {
+		log_println(log, "Check configuration file: %s", CONF_FILE);
+		rc = (errno ? errno : -1);
+		goto out_1;
+	}
+	if(dryrun)
+		goto out_1;
+	if(timer_init() == NULL) {
+		rc = (errno ? errno : -1);
+		goto out_1;
+	}
+	n_channels = cfg.n_channels;
+	if(poller_init(&poll, n_channels, config_cede_channels(&cfg),
+		cfg.defer) == NULL)
+	{
+		rc = (errno ? errno : -1);
+		goto out_2;
+	}
+	rc = poller_loop(&poll);
+	poller_destroy(&poll);
+out_2:
+	timer_destroy();
+out_1:
+	config_destroy(&cfg);
+out_0:
+	free(counter);
+	return rc;
 }
 
 int main(int argc, char* argv[]) {
 	int i;
-	int rc;
-	struct poller poll;
-	struct packet_counter *counter;
+	int rc = 0;
 	struct log log;
-	struct config cfg;
-	int n_channels;
 	bool daemonize = false;
 	bool dryrun = false;
 
-	rc = 0;
 	log_init(&log);
 	for(i = 0; i < argc; i++) {
 		if(strcmp(argv[i], "--daemonize") == 0)
@@ -69,55 +100,26 @@ int main(int argc, char* argv[]) {
 			rc = (errno ? errno : -1);
 			goto out;
 		}
-	}
-	log_println(&log, BANNER);
-	if(log.stats)
-		counter = packet_counter_new(&log);
-	else
-		counter = NULL;
-	if(config_init(&cfg, &log, counter) == NULL) {
-		rc = (errno ? errno : -1);
-		goto out_0;
-	}
-	if(timer_init() == NULL)
-		goto out_1;
-	if(config_read(&cfg, CONF_FILE) <= 0) {
-		log_println(&log, "Check configuration file: %s", CONF_FILE);
-		rc = (errno ? errno : -1);
-		goto out_2;
-	}
-	if(dryrun)
-		goto out_2;
-	n_channels = cfg.n_channels;
-	if(poller_init(&poll, n_channels, config_cede_channels(&cfg),
-		cfg.defer) == NULL)
-	{
-		rc = (errno ? errno : -1);
-		goto out_2;
-	}
-	if(daemonize) {
 		if(daemon(0, 0) < 0) {
 			rc = (errno ? errno : -1);
-			goto out_3;
+			goto out;
 		}
 	}
-	rc = poller_loop(&poll);
-out_3:
-	poller_destroy(&poll);
-out_2:
-	timer_destroy();
-out_1:
-	config_destroy(&cfg);
-out_0:
-	free(counter);
-out:
-	if(rc == 0) {
-		log_println(&log, CONF_FILE " modified: restarting");
-		log_destroy(&log);
-		restart_exec(argc, argv);
-		/* exec must have failed, give up */
-		exit(EXIT_FAILURE);
+	while(true) {
+		rc = run_protozoa(&log, dryrun);
+		if(dryrun)
+			break;
+		if(rc > 0)
+			log_println(&log, "Error: %s", strerror(rc));
+		else if(rc < 0)
+			log_println(&log, "Unknown error");
+		else
+			log_println(&log, CONF_FILE " modified");
+		log_println(&log, "** restarting **");
+		/* don't chew through CPU */
+		sleep(1);
 	}
+out:
 	if(rc > 0)
 		log_println(&log, "Error: %s", strerror(rc));
 	log_destroy(&log);
