@@ -32,6 +32,7 @@ struct config *config_init(struct config *cfg, struct log *log,
 	cfg->line = malloc(LINE_LENGTH);
 	if(cfg->line == NULL)
 		return NULL;
+	memset(cfg->line, 0, LINE_LENGTH);
 	cfg->log = log;
 	cfg->counter = cnt;
 	cfg->defer = malloc(sizeof(struct defer));
