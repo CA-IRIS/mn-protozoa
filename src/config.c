@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,10 @@ struct config *config_init(struct config *cfg, struct log *log,
 	cfg->defer = malloc(sizeof(struct defer));
 	if(defer_init(cfg->defer) == NULL)
 		goto fail;
+	cl_pool_init(&cfg->reader_pool, sizeof(struct ccreader));
+	cl_pool_init(&cfg->node_pool, sizeof(struct ccnode));
+	cl_pool_init(&cfg->writer_pool, sizeof(struct ccwriter));
+	cfg->writer_head = NULL;
 	return cfg;
 fail:
 	free(cfg->line);
@@ -47,6 +51,7 @@ fail:
  * config_destroy	Destroy a previously initialized config.
  */
 void config_destroy(struct config *cfg) {
+	struct ccwriter *writer = cfg->writer_head;
 	struct channel *chn = cfg->chns;
 	while(chn) {
 		struct channel *nchn = chn->next;
@@ -54,6 +59,14 @@ void config_destroy(struct config *cfg) {
 		free(chn);
 		chn = nchn;
 	}
+	while(writer) {
+		struct ccwriter *next = writer->next;
+		ccwriter_destroy(writer);
+		writer = next;
+	}
+	cl_pool_destroy(&cfg->reader_pool);
+	cl_pool_destroy(&cfg->node_pool);
+	cl_pool_destroy(&cfg->writer_pool);
 	defer_destroy(cfg->defer);
 	free(cfg->defer);
 	free(cfg->line);
@@ -196,6 +209,15 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
 	return _config_get_channel(cfg, pname, extra, flags);
 }
 
+/* config_create_writer	Create a new ccwriter.
+ */
+static struct ccwriter *config_create_writer(struct config *cfg) {
+	struct ccwriter *writer = cl_pool_alloc(&cfg->writer_pool);
+	writer->next = cfg->writer_head;
+	cfg->writer_head = writer;
+	return writer;
+}
+
 /*
  * config_directive	Process one configuration directive.
  *
@@ -214,6 +236,7 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	struct channel *chn_in, *chn_out;
 	struct ccreader *reader;
 	struct ccwriter *writer;
+	struct ccnode *node;
 
 	log_println(cfg->log, "config: %s %s %s -> %s %s %s", protocol_in,
 		port_in, range, protocol_out, port_out, shift);
@@ -221,7 +244,8 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	if(chn_in == NULL)
 		goto fail;
 	if(chn_in->reader == NULL) {
-		reader = ccreader_new(chn_in->name, cfg->log, protocol_in);
+		reader = cl_pool_alloc(&cfg->reader_pool);
+		ccreader_init(reader, chn_in->name, cfg->log, protocol_in);
 		chn_in->reader = reader;
 		reader->packet.counter = cfg->counter;
 	} else {
@@ -231,11 +255,11 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 	chn_out = config_get_channel(cfg, port_out, 0);
 	if(chn_out == NULL)
 		goto fail;
-	writer = ccwriter_new(chn_out, protocol_out, auth_out);
-	if(writer == NULL)
-		goto fail;
+	writer = config_create_writer(cfg);
+	ccwriter_init(writer, chn_out, protocol_out, auth_out);
 	writer->defer = cfg->defer;
-	ccreader_add_writer(reader, writer, range, shift);
+	node = cl_pool_alloc(&cfg->node_pool);
+	ccreader_add_writer(reader, node, writer, range, shift);
 	return 0;
 fail:
 	return -1;

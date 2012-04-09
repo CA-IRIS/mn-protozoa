@@ -14,12 +14,14 @@ struct ccwriter {
 	unsigned int		timeout;	/* time command is held (ms) */
 	char			*auth;		/* authentication token */
 	struct defer		*defer;		/* deferred packet handler */
+	struct ccwriter		*next;		/* next writer */
 };
 
 typedef int (ccwriter_cb) (struct ccwriter *wtr);
 
-struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
-	const char *auth);
+struct ccwriter *ccwriter_init(struct ccwriter *writer, struct channel *chn,
+	const char *protocol, const char *auth);
+void ccwriter_destroy(struct ccwriter *wtr);
 void *ccwriter_append(struct ccwriter *wtr, size_t n_bytes);
 int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt);
 

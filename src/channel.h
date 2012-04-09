@@ -14,7 +14,7 @@ enum ch_flag_t {
 };
 
 struct channel {
-	char		*name;			/* channel name */
+	char		name[64];		/* channel name */
 	int		sfd;			/* server file descriptor */
 	int		fd;			/* file descriptor */
 	int		extra;			/* extra parameter */

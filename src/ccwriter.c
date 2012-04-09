@@ -92,14 +92,14 @@ static int ccwriter_set_protocol(struct ccwriter *wtr, const char *protocol) {
 }
 
 /*
- * ccwriter_init	Initialize a new camera control writer.
+ * ccwriter_init	Initialize a camera control writer.
  *
  * chn: channel to write camera control output
  * protocol: protocol name
  * auth: authentication token
  * return: pointer to struct ccwriter on success; NULL on error
  */
-static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
+struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 	const char *protocol, const char *auth)
 {
 	wtr->chn = chn;
@@ -121,25 +121,12 @@ static struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 }
 
 /*
- * ccwriter_new		Construct a new camera control writer.
- *
- * chn: channel to write camera control output
- * protocol: protocol name
- * auth: authentication token
- * return: pointer to camera control writer
+ * ccwriter_destroy	Destroy a camera control writer.
  */
-struct ccwriter *ccwriter_new(struct channel *chn, const char *protocol,
-	const char *auth)
-{
-	struct ccwriter *wtr = malloc(sizeof(struct ccwriter));
-	if(wtr == NULL)
-		return NULL;
-	if(ccwriter_init(wtr, chn, protocol, auth) == NULL)
-		goto fail;
-	return wtr;
-fail:
-	free(wtr);
-	return NULL;
+void ccwriter_destroy(struct ccwriter *wtr) {
+	free(wtr->auth);
+	free(wtr->deferred);
+	memset(wtr, 0, sizeof(struct ccwriter));
 }
 
 /*

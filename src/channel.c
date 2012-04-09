@@ -40,10 +40,8 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	chn->extra = extra;
 	chn->flags = flags;
 	chn->log = log;
-	chn->name = malloc(strlen(name) + 1);
-	if(chn->name == NULL)
-		goto fail;
-	strcpy(chn->name, name);
+	strncpy(chn->name, name, sizeof(chn->name));
+	chn->name[sizeof(chn->name) - 1] = '\0';
 	if(buffer_init(&chn->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	if(buffer_init(&chn->txbuf, BUFFER_SIZE) == NULL)
@@ -51,7 +49,6 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	chn->reader = NULL;
 	return chn;
 fail:
-	free(chn->name);
 	memset(chn, 0, sizeof(struct channel));
 	return NULL;
 }
@@ -63,7 +60,6 @@ void channel_destroy(struct channel *chn) {
 	channel_close(chn);
 	buffer_destroy(&chn->rxbuf);
 	buffer_destroy(&chn->txbuf);
-	free(chn->name);
 	memset(chn, 0, sizeof(struct channel));
 }
 

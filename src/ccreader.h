@@ -34,12 +34,12 @@ struct ccreader {
 	struct	log		*log;		/* message logger */
 };
 
-struct ccreader *ccreader_new(const char *name, struct log *log,
-	const char *protocol);
+struct ccreader *ccreader_init(struct ccreader *rdr, const char *name,
+	struct log *log, const char *protocol);
 void ccreader_previous_camera(struct ccreader *rdr);
 void ccreader_next_camera(struct ccreader *rdr);
-void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr,
-	const char *range, const char *shift);
+void ccreader_add_writer(struct ccreader *rdr, struct ccnode *node,
+	struct ccwriter *wtr, const char *range, const char *shift);
 unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr);
 unsigned int ccreader_process_packet(struct ccreader *rdr);
 

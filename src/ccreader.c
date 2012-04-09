@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2012  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,10 +60,6 @@ static int ccreader_set_protocol(struct ccreader *rdr, const char *protocol) {
 	return 0;
 }
 
-static struct ccnode *ccnode_new() {
-	return malloc(sizeof(struct ccnode));
-}
-
 static struct ccnode *ccnode_init(struct ccnode *node) {
 	node->writer = NULL;
 	node->range_first = 1;
@@ -100,46 +96,26 @@ void ccreader_next_camera(struct ccreader *rdr) {
 }
 
 /*
- * ccreader_init	Initialize a new camera control reader.
+ * ccreader_init	Initialize a camera control reader.
  *
+ * name: name of reader
  * log: message logger
  * protocol: protocol name
  * return: pointer to struct ccreader on success; NULL on failure
  */
-static struct ccreader *ccreader_init(struct ccreader *rdr, struct log *log,
-	const char *protocol)
+struct ccreader *ccreader_init(struct ccreader *rdr, const char *name,
+	struct log *log, const char *protocol)
 {
 	ccpacket_init(&rdr->packet);
 	rdr->timeout = DEFAULT_TIMEOUT;
 	rdr->flags = 0;
 	rdr->head = NULL;
+	rdr->name = name;
 	rdr->log = log;
 	if(ccreader_set_protocol(rdr, protocol) < 0)
 		return NULL;
 	else
 		return rdr;
-}
-
-/*
- * ccreader_new		Construct a new camera control reader.
- *
- * log: message logger
- * protocol: protocol name
- * return: pointer to struct ccreader on success; NULL on failure
- */
-struct ccreader *ccreader_new(const char *name, struct log *log,
-	const char *protocol)
-{
-	struct ccreader *rdr = malloc(sizeof(struct ccreader));
-	if(rdr == NULL)
-		return NULL;
-	if(ccreader_init(rdr, log, protocol) == NULL)
-		goto fail;
-	rdr->name = name;
-	return rdr;
-fail:
-	free(rdr);
-	return NULL;
 }
 
 /*
@@ -149,14 +125,10 @@ fail:
  * range: range of receiver addresses
  * shift: receiver address shift offset
  */
-void ccreader_add_writer(struct ccreader *rdr, struct ccwriter *wtr,
-	const char *range, const char *shift)
+void ccreader_add_writer(struct ccreader *rdr, struct ccnode *node,
+	struct ccwriter *wtr, const char *range, const char *shift)
 {
-	struct ccnode *node = ccnode_new();
-	if(node == NULL)
-		return;
-	if(ccnode_init(node) == NULL)
-		return;
+	ccnode_init(node);
 	node->writer = wtr;
 	ccnode_set_range(node, range);
 	ccnode_set_shift(node, shift);
