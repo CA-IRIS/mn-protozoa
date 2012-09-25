@@ -20,7 +20,7 @@
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.52"
+#define VERSION "0.53"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2012  Mn/DOT"
 
 static const char *LOG_FILE = "/var/log/protozoa";
@@ -82,6 +82,7 @@ int main(int argc, char* argv[]) {
 	bool dryrun = false;
 
 	log_init(&log);
+	log_println(&log, "================== protozoa init ===============");
 	for(i = 0; i < argc; i++) {
 		if(strcmp(argv[i], "--daemonize") == 0)
 			daemonize = true;
@@ -115,7 +116,7 @@ int main(int argc, char* argv[]) {
 			log_println(&log, "Unknown error");
 		else
 			log_println(&log, CONF_FILE " modified");
-		log_println(&log, "** restarting **");
+		log_println(&log, "** reloading **");
 		/* don't chew through CPU */
 		sleep(1);
 	}
