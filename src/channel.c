@@ -40,8 +40,7 @@ struct channel* channel_init(struct channel *chn, const char *name, int extra,
 	chn->extra = extra;
 	chn->flags = flags;
 	chn->log = log;
-	strncpy(chn->name, name, sizeof(chn->name));
-	chn->name[sizeof(chn->name) - 1] = '\0';
+	snprintf(chn->name, sizeof(chn->name), "%s", name);
 	if(buffer_init(&chn->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	if(buffer_init(&chn->txbuf, BUFFER_SIZE) == NULL)
