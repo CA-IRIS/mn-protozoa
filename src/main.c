@@ -20,7 +20,7 @@
 #include "config.h"
 #include "poller.h"
 
-#define VERSION "0.53"
+#define VERSION "0.54"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2012  Mn/DOT"
 
 static const char *LOG_FILE = "/var/log/protozoa";
