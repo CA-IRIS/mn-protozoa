@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2012  Minnesota Department of Transportation
+ * Copyright (C) 2006-2013  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
 	wtr->n_rcv = 0;
 	wtr->timeout = DEFAULT_TIMEOUT;
 	wtr->auth = NULL;
-	if(auth) {
+	if(auth && strlen(auth) > 0) {
 		wtr->auth = malloc(strlen(auth) + 1);
 		if(wtr->auth == NULL)
 			return NULL;
