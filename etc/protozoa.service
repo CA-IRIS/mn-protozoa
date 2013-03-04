@@ -2,7 +2,8 @@
 Description=Protozoa Camera Control Transceiver
 
 [Service]
-ExecStart=/usr/bin/nice --adjustment=-20 /usr/local/bin/protozoa
+ExecStart=/usr/local/bin/protozoa
+Nice=-20
 Type=simple
 Restart=always
 User=protozoa
