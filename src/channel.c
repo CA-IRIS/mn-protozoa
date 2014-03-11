@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2012  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 #include <errno.h>		/* for EINPROGRESS */
 #include <fcntl.h>		/* for open, O_RDWR, O_NOCTTY, O_NONBLOCK */
 #include <netdb.h>		/* for socket stuff */
-#include <netinet/tcp.h>	/* for TCP_NODELAY */
+#include <netinet/tcp.h>	/* for TCP_NODELAY, TCP_KEEPCNT, etc. */
 #include <unistd.h>		/* for close */
 #include <string.h>		/* for memset, memcpy, strlen, strcpy */
 #include <termios.h>		/* for serial port stuff */
@@ -118,7 +118,7 @@ static inline int channel_sport_baud_mask(int baud) {
 		case 38400:
 			return B38400;
 		default:
-			return -1;
+			return B0;
 	}
 }
 
@@ -139,8 +139,6 @@ static inline int channel_configure_sport(struct channel *chn) {
 
 	/* serial port baud rate stored in chn->extra parameter */
 	int b = channel_sport_baud_mask(chn->extra);
-	if(b < 0)
-		return -1;
 	if(cfsetispeed(&ttyset, b) < 0)
 		return -1;
 	if(cfsetospeed(&ttyset, b) < 0)
@@ -160,13 +158,17 @@ static int channel_open_sport(struct channel *chn) {
 		chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	} while(chn->fd < 0 && errno == EINTR);
 	if(chn->fd < 0) {
+		channel_log(chn, strerror(errno));
 		chn->fd = 0;
 		return -1;
 	}
-	if(chn->extra)
-		return channel_configure_sport(chn);
-	else
-		return 0;
+	if(chn->extra && channel_configure_sport(chn) < 0)
+		goto fail;
+	return 0;
+fail:
+	channel_log(chn, strerror(errno));
+	channel_close(chn);
+	return -1;
 }
 
 /*
@@ -190,20 +192,24 @@ static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
 /*
  * channel_udp_socket	Open a UDP socket for the I/O channel.
  *
- * return: fd of socket on success; -1 on error
+ * return: 0 on success; -1 on error
  */
-static int channel_udp_socket() {
+static int channel_udp_socket(struct channel *chn) {
 	int on = 1;	/* turn "on" values for setsockopt */
-	int fd = socket(PF_INET, SOCK_DGRAM, 0);
-	if(fd < 0)
+	chn->fd = socket(PF_INET, SOCK_DGRAM, 0);
+	if(chn->fd < 0) {
+		channel_log(chn, strerror(errno));
+		chn->fd = 0;
 		return -1;
-	if(fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+	}
+	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
 		goto fail;
-	if(setsockopt(fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
+	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
 		goto fail;
-	return fd;
+	return 0;
 fail:
-	close(fd);
+	channel_log(chn, strerror(errno));
+	channel_close(chn);
 	return -1;
 }
 
@@ -217,18 +223,16 @@ static int channel_bind_udp(struct channel *chn) {
 	struct sockaddr_in sa;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
-	chn->fd = channel_udp_socket();
-	if(chn->fd < 0) {
-		chn->fd = 0;
+	if(channel_udp_socket(chn) < 0)
 		return -1;
-	}
 	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
 		goto fail;
 	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
 		goto fail;
 	return 0;
 fail:
-	close(chn->fd);
+	channel_log(chn, strerror(errno));
+	channel_close(chn);
 	return -1;
 }
 
@@ -242,16 +246,17 @@ static int channel_connect_udp(struct channel *chn) {
 	int r;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
-	chn->fd = channel_udp_socket();
-	if(chn->fd < 0) {
-		chn->fd = 0;
+	if(channel_udp_socket(chn) < 0)
 		return -1;
-	}
 	r = connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa));
-	if(r < 0 && errno == EINPROGRESS)
-		return 0;
+	if(r < 0 && errno != EINPROGRESS)
+		goto fail;
 	else
-		return r;
+		return 0;
+fail:
+	channel_log(chn, strerror(errno));
+	channel_close(chn);
+	return -1;
 }
 
 /*
@@ -272,7 +277,7 @@ static int channel_open_udp(struct channel *chn) {
  *				so they will never notice a connection is lost
  *				without using keepalive probes.
  *
- * return: fd of socket on success; -1 on error
+ * return: 0 on success; -1 on error
  */
 static int channel_set_tcp_keepalive(int fd) {
 	static int on = 1;		/* turn "on" values for setsockopt */
@@ -281,36 +286,40 @@ static int channel_set_tcp_keepalive(int fd) {
 	static int kintvl = 10;		/* 10 second keepalive interval time */
 	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)) < 0)
 		return -1;
-	if(setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &kcnt, sizeof(kcnt)) < 0)
+	if(setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &kcnt, sizeof(kcnt)) < 0)
 		return -1;
-	if(setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &kidle, sizeof(kidle)) < 0)
+	if(setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &kidle, sizeof(kidle)) < 0)
 		return -1;
-	if(setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &kintvl, sizeof(kintvl)) < 0)
+	if(setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &kintvl,sizeof(kintvl))<0)
 		return -1;
-	return fd;
+	return 0;
 }
 
 /*
  * channel_tcp_socket	Open a TCP socket for the I/O channel.
  *
- * return: fd of socket on success; -1 on error
+ * return: 0 on success; -1 on error
  */
-static int channel_tcp_socket() {
+static int channel_tcp_socket(struct channel *chn) {
 	int on = 1;	/* turn "on" values for setsockopt */
-	int fd = socket(PF_INET, SOCK_STREAM, 0);
-	if(fd < 0)
+	chn->fd = socket(PF_INET, SOCK_STREAM, 0);
+	if(chn->fd < 0) {
+		channel_log(chn, strerror(errno));
+		chn->fd = 0;
 		return -1;
-	if(fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+	}
+	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
 		goto fail;
-	if(channel_set_tcp_keepalive(fd) < 0)
+	if(channel_set_tcp_keepalive(chn->fd) < 0)
 		goto fail;
-	if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
+	if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
 		goto fail;
-	if(setsockopt(fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
+	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
 		goto fail;
-	return fd;
+	return 0;
 fail:
-	close(fd);
+	channel_log(chn, strerror(errno));
+	channel_close(chn);
 	return -1;
 }
 
@@ -324,11 +333,8 @@ static int channel_listen_tcp(struct channel *chn) {
 	struct sockaddr_in sa;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
-	chn->fd = channel_tcp_socket();
-	if(chn->fd < 0) {
-		chn->fd = 0;
+	if(channel_tcp_socket(chn) < 0)
 		return -1;
-	}
 	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
 		goto fail;
 	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
@@ -338,22 +344,25 @@ static int channel_listen_tcp(struct channel *chn) {
 	chn->sfd = chn->fd;
 	return 0;
 fail:
-	close(chn->fd);
+	channel_log(chn, strerror(errno));
+	channel_close(chn);
 	return -1;
 }
 
 /*
  * channel_accept	Accept a tcp client connection on the I/O channel.
  *
- * return: fd on success; -1 on error
+ * return: 0 on success; -1 on error
  */
 static int channel_accept(struct channel *chn) {
 	int fd = accept(chn->sfd, NULL, 0);
-	if(fd < 0)
-		return fd;
+	if(fd < 0) {
+		channel_log(chn, strerror(errno));
+		return -1;
+	}
 	channel_log(chn, "accepting");
 	chn->fd = fd;
-	return fd;
+	return 0;
 }
 
 /*
@@ -366,16 +375,17 @@ static int channel_connect_tcp(struct channel *chn) {
 	int r;
 	if(channel_fill_sockaddr(chn, &sa) == NULL)
 		return -1;
-	chn->fd = channel_tcp_socket();
-	if(chn->fd < 0) {
-		chn->fd = 0;
+	if(channel_tcp_socket(chn) < 0)
 		return -1;
-	}
 	r = connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa));
-	if(r < 0 && errno == EINPROGRESS)
-		return 0;
+	if(r < 0 && errno != EINPROGRESS)
+		goto fail;
 	else
-		return r;
+		return 0;
+fail:
+	channel_log(chn, strerror(errno));
+	channel_close(chn);
+	return -1;
 }
 
 /*
@@ -387,6 +397,8 @@ static bool channel_is_localhost(const struct channel *chn) {
 	if(strstr(chn->name, "localhost") == chn->name)
 		return true;
 	if(strstr(chn->name, "0.0.0.0") == chn->name)
+		return true;
+	if(strstr(chn->name, "::") == chn->name)
 		return true;
 	return false;
 }
@@ -450,8 +462,14 @@ int channel_close(struct channel *chn) {
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
 		int r = close(chn->fd);
-		chn->fd = chn->sfd;
-		return r;
+		if(r < 0) {
+			channel_log(chn, strerror(errno));
+			chn->fd = 0;
+			return -1;
+		} else {
+			chn->fd = chn->sfd;
+			return 0;
+		}
 	} else
 		return 0;
 }
