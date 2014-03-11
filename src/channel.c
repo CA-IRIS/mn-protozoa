@@ -389,8 +389,6 @@ static bool channel_is_localhost(const struct channel *chn) {
 		return true;
 	if(strstr(chn->name, "0.0.0.0") == chn->name)
 		return true;
-	if(strstr(chn->name, "::") == chn->name)
-		return true;
 	return false;
 }
 
