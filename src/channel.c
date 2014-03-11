@@ -157,11 +157,8 @@ static int channel_open_sport(struct channel *chn) {
 	do {
 		chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	} while(chn->fd < 0 && errno == EINTR);
-	if(chn->fd < 0) {
-		channel_log(chn, strerror(errno));
-		chn->fd = 0;
-		return -1;
-	}
+	if(chn->fd < 0)
+		goto fail;
 	if(chn->extra && channel_configure_sport(chn) < 0)
 		goto fail;
 	return 0;
@@ -197,11 +194,8 @@ static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
 static int channel_udp_socket(struct channel *chn) {
 	int on = 1;	/* turn "on" values for setsockopt */
 	chn->fd = socket(PF_INET, SOCK_DGRAM, 0);
-	if(chn->fd < 0) {
-		channel_log(chn, strerror(errno));
-		chn->fd = 0;
-		return -1;
-	}
+	if(chn->fd < 0)
+		goto fail;
 	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
 		goto fail;
 	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
@@ -303,11 +297,8 @@ static int channel_set_tcp_keepalive(int fd) {
 static int channel_tcp_socket(struct channel *chn) {
 	int on = 1;	/* turn "on" values for setsockopt */
 	chn->fd = socket(PF_INET, SOCK_STREAM, 0);
-	if(chn->fd < 0) {
-		channel_log(chn, strerror(errno));
-		chn->fd = 0;
-		return -1;
-	}
+	if(chn->fd < 0)
+		goto fail;
 	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
 		goto fail;
 	if(channel_set_tcp_keepalive(chn->fd) < 0)
@@ -459,6 +450,10 @@ int channel_open(struct channel *chn) {
 int channel_close(struct channel *chn) {
 	buffer_clear(&chn->rxbuf);
 	buffer_clear(&chn->txbuf);
+	if(chn->fd < 0) {
+		chn->fd = 0;
+		return -1;
+	}
 	if(channel_is_open(chn)) {
 		channel_log(chn, "closing");
 		int r = close(chn->fd);
