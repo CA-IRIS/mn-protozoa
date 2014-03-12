@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 #include <assert.h>		/* for assert */
-#include <errno.h>		/* for EINPROGRESS */
+#include <errno.h>		/* for EINPROGRESS, EINTR */
 #include <fcntl.h>		/* for open, O_RDWR, O_NOCTTY, O_NONBLOCK */
 #include <netdb.h>		/* for socket stuff */
 #include <netinet/tcp.h>	/* for TCP_NODELAY, TCP_KEEPCNT, etc. */
