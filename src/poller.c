@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,10 +85,8 @@ static inline void poller_register_channel(struct poller *plr,
 	struct channel *chn, struct pollfd *pfd)
 {
 	if(!channel_is_open(chn)) {
-		if(channel_is_waiting(chn) && channel_open(chn) < 0) {
-			channel_log(chn, strerror(errno));
-			channel_close(chn);
-		}
+		if(channel_is_waiting(chn))
+			channel_open(chn);
 	}
 	if(channel_is_open(chn)) {
 		pfd->fd = chn->fd;
@@ -176,15 +174,12 @@ static inline void poller_channel_events(struct poller *plr,
 	if(pfd->revents & POLLOUT) {
 		ssize_t n_bytes = channel_write(chn);
 		if(n_bytes < 0) {
-			channel_log(chn, strerror(errno));
 			channel_close(chn);
 			return;
 		}
 	}
 	if(pfd->revents & POLLIN) {
 		ssize_t n_bytes = channel_read(chn);
-		if(n_bytes < 0)
-			channel_log(chn, strerror(errno));
 		if(n_bytes <= 0) {
 			channel_close(chn);
 			return;

@@ -25,6 +25,15 @@
 #define BUFFER_SIZE 256
 
 /*
+ * channel_log		Log a message related to the I/O channel.
+ *
+ * msg: message to write to log
+ */
+static void channel_log(struct channel *chn, const char* msg) {
+	log_println(chn->log, "channel: %s %s:%d", msg, chn->name, chn->extra);
+}
+
+/*
  * channel_init		Initialize a new I/O channel.
  *
  * name: channel name
@@ -522,15 +531,6 @@ static inline bool channel_is_listening(const struct channel *chn) {
 }
 
 /*
- * channel_log		Log a message related to the I/O channel.
- *
- * msg: message to write to log
- */
-void channel_log(struct channel *chn, const char* msg) {
-	log_println(chn->log, "channel: %s %s:%d", msg, chn->name, chn->extra);
-}
-
-/*
  * channel_log_buffer	Log buffer debug information.
  *
  * buf: buffer to debug
@@ -581,9 +581,15 @@ static void channel_log_buffer_out(struct channel *chn) {
 ssize_t channel_read(struct channel *chn) {
 	ssize_t n_bytes;
 
-	if(channel_is_listening(chn))
-		return channel_accept(chn);
+	if(channel_is_listening(chn)) {
+		int r = channel_accept(chn);
+		// Pretend we read 1 byte, because zero
+		// indicates the channel has been closed
+		return r < 0 ? -1 : 1;
+	}
 	n_bytes = buffer_read(&chn->rxbuf, chn->fd);
+	if(n_bytes < 0)
+		channel_log(chn, strerror(errno));
 	if(n_bytes <= 0)
 		return n_bytes;
 	channel_clear_response(chn);
@@ -605,8 +611,12 @@ ssize_t channel_read(struct channel *chn) {
  * return: number of bytes written; -1 on error
  */
 ssize_t channel_write(struct channel *chn) {
+	ssize_t n_bytes;
 	if(chn->flags & FLAG_RESP_REQUIRED)
 		chn->flags |= FLAG_NEEDS_RESP;
 	channel_log_buffer_out(chn);
-	return buffer_write(&chn->txbuf, chn->fd);
+	n_bytes = buffer_write(&chn->txbuf, chn->fd);
+	if(n_bytes < 0)
+		channel_log(chn, strerror(errno));
+	return n_bytes;
 }
