@@ -30,26 +30,28 @@
  * msg: message to write to log
  */
 static void channel_log(struct channel *chn, const char* msg) {
-	log_println(chn->log, "channel: %s %s:%d", msg, chn->name, chn->extra);
+	log_println(chn->log, "channel: %s %s:%s", msg, chn->name,chn->service);
 }
 
 /*
  * channel_init		Initialize a new I/O channel.
  *
  * name: channel name
- * extra: extra data to initialize the channel
+ * service: service (port or serial baud rate)
  * flags: flags for special channel options
  * log: message logger
  * return: struct channel or NULL on error
  */
-struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	enum ch_flag_t flags, struct log *log)
+struct channel* channel_init(struct channel *chn, const char *name,
+	const char *service, enum ch_flag_t flags, struct log *log)
 {
 	memset(chn, 0, sizeof(struct channel));
-	chn->extra = extra;
 	chn->flags = flags;
 	chn->log = log;
-	snprintf(chn->name, sizeof(chn->name), "%s", name);
+	strncpy(chn->name, name, sizeof(chn->name));
+	chn->name[sizeof(chn->name) - 1] = '\0';
+	strncpy(chn->service, service, sizeof(chn->service));
+	chn->service[sizeof(chn->service) - 1] = '\0';
 	if(buffer_init(&chn->rxbuf, BUFFER_SIZE) == NULL)
 		goto fail;
 	if(buffer_init(&chn->txbuf, BUFFER_SIZE) == NULL)
@@ -95,13 +97,13 @@ static enum ch_flag_t channel_flags(const struct channel *chn) {
 /*
  * channel_matches	Test if a channel matches the given parameters.
  */
-bool channel_matches(struct channel *chn, const char *name, int extra,
+bool channel_matches(struct channel *chn, const char *name, const char *service,
 	enum ch_flag_t flags)
 {
 	if(strcmp(chn->name, name) == 0) {
 		enum ch_flag_t f = channel_flags(chn) & chn->flags;
 		enum ch_flag_t fo = channel_flags(chn) & flags;
-		return (chn->extra == extra) && (f == fo);
+		return (strcmp(chn->service, service) == 0) && (f == fo);
 	} else
 		return false;
 }
@@ -109,10 +111,13 @@ bool channel_matches(struct channel *chn, const char *name, int extra,
 /*
  * channel_sport_baud_mask	Get the baud mask for a baud rate.
  *
- * baud: baud rate to get the mask for
  * return: baud mask
  */
-static inline int channel_sport_baud_mask(int baud) {
+static int channel_sport_baud_mask(struct channel *chn) {
+	/* serial port baud rate stored in chn->service */
+	int baud;
+	if(sscanf(chn->service, "%d", &baud) != 1)
+		return B0;
 	switch(baud) {
 		case 1200:
 			return B1200;
@@ -136,7 +141,7 @@ static inline int channel_sport_baud_mask(int baud) {
  *
  * return: 0 on success; -1 on error
  */
-static inline int channel_configure_sport(struct channel *chn) {
+static int channel_configure_sport(struct channel *chn, int baud) {
 	struct termios ttyset;
 
 	ttyset.c_iflag = 0;
@@ -146,11 +151,9 @@ static inline int channel_configure_sport(struct channel *chn) {
 	ttyset.c_cc[VMIN] = 0;
 	ttyset.c_cc[VTIME] = 1;
 
-	/* serial port baud rate stored in chn->extra parameter */
-	int b = channel_sport_baud_mask(chn->extra);
-	if(cfsetispeed(&ttyset, b) < 0)
+	if(cfsetispeed(&ttyset, baud) < 0)
 		return -1;
-	if(cfsetospeed(&ttyset, b) < 0)
+	if(cfsetospeed(&ttyset, baud) < 0)
 		return -1;
 	if(tcsetattr(chn->fd, TCSAFLUSH, &ttyset) < 0)
 		return -1;
@@ -163,12 +166,14 @@ static inline int channel_configure_sport(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 static int channel_open_sport(struct channel *chn) {
+	int baud;
 	do {
 		chn->fd = open(chn->name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	} while(chn->fd < 0 && errno == EINTR);
 	if(chn->fd < 0)
 		goto fail;
-	if(chn->extra && channel_configure_sport(chn) < 0)
+	baud = channel_sport_baud_mask(chn);
+	if((baud != B0) && channel_configure_sport(chn, baud) < 0)
 		goto fail;
 	return 0;
 fail:
@@ -185,13 +190,16 @@ fail:
 static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
 	struct sockaddr_in *sa)
 {
+	int port;
 	struct hostent *host = gethostbyname(chn->name);
 	if(host == NULL)
 		return NULL;
 	sa->sin_family = AF_INET;
 	memcpy(&sa->sin_addr.s_addr, host->h_addr, host->h_length);
-	/* tcp port stored in chn->extra parameter */
-	sa->sin_port = htons(chn->extra);
+	/* tcp port stored in chn->service parameter */
+	if(sscanf(chn->service, "%d", &port) != 1)
+		return NULL;
+	sa->sin_port = htons(port);
 	return sa;
 }
 
@@ -545,7 +553,7 @@ static void channel_log_buffer(struct channel *chn, struct buffer *buf,
 
 	log_line_start(chn->log);
 	log_printf(chn->log, prefix);
-	log_printf(chn->log, " %s:%d", chn->name, chn->extra);
+	log_printf(chn->log, " %s:%s", chn->name, chn->service);
 	for(mess = start; mess < stop; mess++)
 		log_printf(chn->log, " %02x", *mess);
 	log_line_end(chn->log);

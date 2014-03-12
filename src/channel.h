@@ -14,10 +14,10 @@ enum ch_flag_t {
 };
 
 struct channel {
-	char		name[64];		/* channel name */
+	char		name[32];		/* channel name */
+	char		service[32];		/* service (port / baud rate) */
 	int		sfd;			/* server file descriptor */
 	int		fd;			/* file descriptor */
-	int		extra;			/* extra parameter */
 	enum ch_flag_t	flags;			/* channel flags */
 
 	struct buffer	rxbuf;			/* receive buffer */
@@ -28,10 +28,10 @@ struct channel {
 	struct channel	*next;			/* next channel in list */
 };
 
-struct channel* channel_init(struct channel *chn, const char *name, int extra,
-	enum ch_flag_t flags, struct log *log);
+struct channel* channel_init(struct channel *chn, const char *name,
+	const char *service, enum ch_flag_t flags, struct log *log);
 void channel_destroy(struct channel *chn);
-bool channel_matches(struct channel *chn, const char *name, int extra,
+bool channel_matches(struct channel *chn, const char *name, const char *service,
 	enum ch_flag_t flags);
 int channel_open(struct channel *chn);
 int channel_close(struct channel *chn);

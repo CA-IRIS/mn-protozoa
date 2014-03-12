@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2012  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,16 +78,16 @@ void config_destroy(struct config *cfg) {
  * config_find_channel	Find a configured channel by name.
  *
  * name: name of channel to find
- * extra: extra channel parameter
+ * service: service (port or serial baud rate)
  * flags: flags to for special channel options
  * return: pointer to channel; or NULL if not found
  */
 static struct channel *config_find_channel(struct config *cfg,
-	const char *name, int extra, enum ch_flag_t flags)
+	const char *name, const char *service, enum ch_flag_t flags)
 {
 	struct channel *chn = cfg->chns;
 	while(chn) {
-		if(channel_matches(chn, name, extra, flags))
+		if(channel_matches(chn, name, service, flags))
 			return chn;
 		chn = chn->next;
 	}
@@ -98,17 +98,17 @@ static struct channel *config_find_channel(struct config *cfg,
  * config_new_channel	Create a new channel in the configuration.
  *
  * name: name of the channel
- * extra: extra channel parameter (baud rate or tcp port)
+ * service: service (port or serial baud rate)
  * flags: flags to for special channel options
  * return: pointer to channel; or NULL on error
  */
 static struct channel *config_new_channel(struct config *cfg, const char *name,
-	int extra, enum ch_flag_t flags)
+	const char *service, enum ch_flag_t flags)
 {
 	struct channel *chn = malloc(sizeof(struct channel));
 	if(chn == NULL)
 		goto fail;
-	if(channel_init(chn, name, extra, flags, cfg->log) == NULL)
+	if(channel_init(chn, name, service, flags, cfg->log) == NULL)
 		goto fail;
 	chn->next = cfg->chns;
 	cfg->chns = chn;
@@ -120,39 +120,33 @@ fail:
 }
 
 /*
- * parse_extra		Parse the extra value after a colon.
- *
- * name: channel name (port:baud or host:port pair)
- * return: parsed value of the suffix after the colon
- */
-static int parse_extra(const char *name) {
-	int extra = 0;
-	char *c = strrchr(name, (int)':');
-	if(c)
-		sscanf(c + 1, "%d", &extra);
-	return extra;
-}
-
-/*
- * find_colon		Find a colon in a string.
- */
-static inline size_t find_colon(const char *name) {
-	char *c = strrchr(name, (int)':');
-	if(c)
-		return c - name;
-	else
-		return strlen(name);
-}
-
-/*
  * copy_name		Copy a port/host name.
  */
 static void copy_name(const char *name, char *pname, const int plen) {
-	size_t len = find_colon(name);
-	if(len > plen)
-		len = plen;
-	strncpy(pname, name, len);
-	pname[len] = '\0';
+	char *c = strrchr(name, ':');
+	if(c) {
+		size_t len = c - name;
+		if(len >= plen)
+			len = plen - 1;
+		strncpy(pname, name, len);
+		pname[len] = '\0';
+	} else {
+		strncpy(pname, name, plen);
+		pname[plen - 1] = '\0';
+	}
+}
+
+/*
+ * starts_with		Check if a string starts with a specified prefix.
+ */
+static bool starts_with(const char *str, const char *pre) {
+	while(*pre) {
+		if(*str != *pre)
+			return false;
+		str++;
+		pre++;
+	}
+	return true;
 }
 
 /*
@@ -160,13 +154,14 @@ static void copy_name(const char *name, char *pname, const int plen) {
  *
  * name: channel name (port:baud or host:port pair)
  * pname: parsed value of the channel name.
+ * plen: length of pname buffer.
  */
 static enum ch_flag_t parse_name(const char *name, char *pname, const int plen){
 	enum ch_flag_t flags = 0;
-	if(strstr(name, "udp://") == name) {
+	if(starts_with(name, "udp://")) {
 		copy_name(name + 6, pname, plen);
 		flags |= FLAG_UDP;
-	} else if(strstr(name, "tcp://") == name) {
+	} else if(starts_with(name, "tcp://")) {
 		copy_name(name + 6, pname, plen);
 		flags |= FLAG_TCP;
 	} else
@@ -175,21 +170,37 @@ static enum ch_flag_t parse_name(const char *name, char *pname, const int plen){
 }
 
 /*
+ * parse_service	Parse the service value after a colon.
+ *
+ * name: channel name (port:baud or host:service pair)
+ * service: parsed value of service (or baud rate)
+ * plen: length of service buffer.
+ */
+static void parse_service(const char *name, char *service, int plen) {
+	char *c = strrchr(name, ':');
+	if(c) {
+		strncpy(service, c + 1, plen);
+		service[plen - 1] = '\0';
+	} else
+		service[0] = '\0';
+}
+
+/*
  * _config_get_channel	Find an existing channel or create a new one.
  *
  * name: name of the channel (device node or hostname)
- * extra: extra parameter (baud rate or tcp port)
+ * service: service (port or serial baud rate)
  * flags: flags for special channel options
  * return: pointer to channel; or NULL on error
  */
 static struct channel *_config_get_channel(struct config *cfg, const char *name,
-	int extra, enum ch_flag_t flags)
+	const char *service, enum ch_flag_t flags)
 {
-	struct channel *chn = config_find_channel(cfg, name, extra, flags);
+	struct channel *chn = config_find_channel(cfg, name, service, flags);
 	if(chn)
 		return chn;
 	else
-		return config_new_channel(cfg, name, extra, flags);
+		return config_new_channel(cfg, name, service, flags);
 }
 
 /*
@@ -203,11 +214,12 @@ static struct channel *config_get_channel(struct config *cfg, const char *name,
 	enum ch_flag_t flags)
 {
 	char pname[32];
-	int extra = parse_extra(name);
+	char service[32];
 
 	flags |= parse_name(name, pname, 32);
+	parse_service(name, service, 32);
 
-	return _config_get_channel(cfg, pname, extra, flags);
+	return _config_get_channel(cfg, pname, service, flags);
 }
 
 /* config_create_writer	Create a new ccwriter.

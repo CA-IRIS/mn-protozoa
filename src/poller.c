@@ -137,7 +137,7 @@ static void poller_register_events(struct poller *plr) {
 }
 
 static void debug_log(struct channel *chn, const char *msg) {
-	log_println(chn->log, "debug: %s %s:%d", msg, chn->name, chn->extra);
+	log_println(chn->log, "debug: %s %s:%s", msg, chn->name, chn->service);
 }
 
 /*
