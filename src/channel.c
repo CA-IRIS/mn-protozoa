@@ -184,106 +184,6 @@ fail:
 }
 
 /*
- * channel_fill_sockaddr	Fill a sockaddr structure
- *
- * return: NULL on error; pointer to struct sockaddr on success
- */
-static struct sockaddr_in *channel_fill_sockaddr(struct channel *chn,
-	struct sockaddr_in *sa)
-{
-	int port;
-	struct hostent *host = gethostbyname(chn->name);
-	if(host == NULL)
-		return NULL;
-	sa->sin_family = AF_INET;
-	memcpy(&sa->sin_addr.s_addr, host->h_addr, host->h_length);
-	/* tcp port stored in chn->service parameter */
-	if(sscanf(chn->service, "%d", &port) != 1)
-		return NULL;
-	sa->sin_port = htons(port);
-	return sa;
-}
-
-/*
- * channel_udp_socket	Open a UDP socket for the I/O channel.
- *
- * return: 0 on success; -1 on error
- */
-static int channel_udp_socket(struct channel *chn) {
-	int on = 1;	/* turn "on" values for setsockopt */
-	chn->fd = socket(PF_INET, SOCK_DGRAM, 0);
-	if(chn->fd < 0)
-		goto fail;
-	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
-		goto fail;
-	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
-		goto fail;
-	return 0;
-fail:
-	channel_log(chn, strerror(errno));
-	channel_close(chn);
-	return -1;
-}
-
-/*
- * channel_bind_udp	Bind a udp port for the I/O channel.
- *
- * return: 0 on success; -1 on error
- */
-static int channel_bind_udp(struct channel *chn) {
-	static int on = 1;		/* turn "on" values for setsockopt */
-	struct sockaddr_in sa;
-	if(channel_fill_sockaddr(chn, &sa) == NULL)
-		return -1;
-	if(channel_udp_socket(chn) < 0)
-		return -1;
-	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
-		goto fail;
-	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
-		goto fail;
-	return 0;
-fail:
-	channel_log(chn, strerror(errno));
-	channel_close(chn);
-	return -1;
-}
-
-/*
- * channel_connect_udp	Connect a udp port for the I/O channel.
- *
- * return: 0 on success; -1 on error
- */
-static int channel_connect_udp(struct channel *chn) {
-	struct sockaddr_in sa;
-	int r;
-	if(channel_fill_sockaddr(chn, &sa) == NULL)
-		return -1;
-	if(channel_udp_socket(chn) < 0)
-		return -1;
-	r = connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa));
-	if(r < 0 && errno != EINPROGRESS)
-		goto fail;
-	else
-		return 0;
-fail:
-	channel_log(chn, strerror(errno));
-	channel_close(chn);
-	return -1;
-}
-
-/*
- * channel_open_udp	Open a udp port for the I/O channel.
- *
- * return: 0 on success; -1 on error
- */
-static int channel_open_udp(struct channel *chn) {
-	if(chn->flags & FLAG_LISTEN)
-		return channel_bind_udp(chn);
-	else
-		return channel_connect_udp(chn);
-}
-
-/*
  * channel_set_tcp_keepalive	Set keepalive option on a socket. This is
  *				needed because some sockets never write data,
  *				so they will never notice a connection is lost
@@ -308,28 +208,155 @@ static int channel_set_tcp_keepalive(int fd) {
 }
 
 /*
- * channel_tcp_socket	Open a TCP socket for the I/O channel.
+ * channel_config_socket	Configure a socket for an I/O channel
  *
  * return: 0 on success; -1 on error
  */
-static int channel_tcp_socket(struct channel *chn) {
-	int on = 1;	/* turn "on" values for setsockopt */
-	chn->fd = socket(PF_INET, SOCK_STREAM, 0);
-	if(chn->fd < 0)
-		goto fail;
+static int channel_config_socket(struct channel *chn, int stype) {
+	static int on = 1;		/* turn "on" values for setsockopt */
 	if(fcntl(chn->fd, F_SETFL, O_NONBLOCK) < 0)
-		goto fail;
-	if(channel_set_tcp_keepalive(chn->fd) < 0)
-		goto fail;
-	if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
 		goto fail;
 	if(setsockopt(chn->fd, SOL_IP, IP_RECVERR, &on, sizeof(on)) < 0)
 		goto fail;
+	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+		goto fail;
+	if(stype == SOCK_STREAM) {
+		if(channel_set_tcp_keepalive(chn->fd) < 0)
+			goto fail;
+		if(setsockopt(chn->fd, IPPROTO_TCP, TCP_NODELAY, &on,
+		              sizeof(on)) < 0)
+			goto fail;
+	}
 	return 0;
 fail:
 	channel_log(chn, strerror(errno));
-	channel_close(chn);
 	return -1;
+}
+
+/*
+ * channel_open_bind	Open a channel socket and bind
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_open_bind(struct channel *chn, int stype) {
+	struct addrinfo hints;
+	struct addrinfo *ai;
+	struct addrinfo *rai = NULL;
+	int rc;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = stype;
+	hints.ai_flags = AI_PASSIVE;
+
+	rc = getaddrinfo(chn->name, chn->service, &hints, &rai);
+	if(rc) {
+		channel_log(chn, gai_strerror(rc));
+		return -1;
+	}
+	for(ai = rai; ai; ai = ai->ai_next) {
+		chn->fd = socket(ai->ai_family, ai->ai_socktype,
+			ai->ai_protocol);
+		if(chn->fd < 0) {
+			channel_log(chn, strerror(errno));
+			continue;
+		}
+		if(channel_config_socket(chn, ai->ai_socktype) < 0)
+			break;
+		if(bind(chn->fd, ai->ai_addr, ai->ai_addrlen) == 0) {
+			freeaddrinfo(rai);
+			return 0;
+		}
+		// Log bind error
+		channel_log(chn, strerror(errno));
+		break;
+	}
+	channel_log(chn, "Unable to bind");
+	freeaddrinfo(rai);
+	return -1;
+}
+
+/*
+ * channel_open_connect		Open a channel socket and connect
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_open_connect(struct channel *chn, int stype) {
+	struct addrinfo hints;
+	struct addrinfo *ai;
+	struct addrinfo *rai = NULL;
+	int rc;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = stype;
+	hints.ai_flags = 0;
+
+	rc = getaddrinfo(chn->name, chn->service, &hints, &rai);
+	if(rc) {
+		channel_log(chn, gai_strerror(rc));
+		return -1;
+	}
+	for(ai = rai; ai; ai = ai->ai_next) {
+		chn->fd = socket(ai->ai_family, ai->ai_socktype,
+			ai->ai_protocol);
+		if(chn->fd < 0) {
+			channel_log(chn, strerror(errno));
+			continue;
+		}
+		if(channel_config_socket(chn, ai->ai_socktype) < 0)
+			break;
+		if((connect(chn->fd, ai->ai_addr, ai->ai_addrlen) == 0) ||
+		   (errno == EINPROGRESS))
+		{
+			freeaddrinfo(rai);
+			return 0;
+		}
+		// Log connect error
+		channel_log(chn, strerror(errno));
+		break;
+	}
+	channel_log(chn, "Unable to connect");
+	freeaddrinfo(rai);
+	return -1;
+}
+
+/*
+ * channel_bind_udp	Bind a udp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_bind_udp(struct channel *chn) {
+	if(channel_open_bind(chn, SOCK_DGRAM) < 0) {
+		channel_close(chn);
+		return -1;
+	} else
+		return 0;
+}
+
+/*
+ * channel_connect_udp	Connect a udp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_connect_udp(struct channel *chn) {
+	if(channel_open_connect(chn, SOCK_DGRAM) < 0) {
+		channel_close(chn);
+		return -1;
+	} else
+		return 0;
+}
+
+/*
+ * channel_open_udp	Open a udp port for the I/O channel.
+ *
+ * return: 0 on success; -1 on error
+ */
+static int channel_open_udp(struct channel *chn) {
+	if(chn->flags & FLAG_LISTEN)
+		return channel_bind_udp(chn);
+	else
+		return channel_connect_udp(chn);
 }
 
 /*
@@ -338,22 +365,15 @@ fail:
  * return: 0 on success; -1 on error
  */
 static int channel_listen_tcp(struct channel *chn) {
-	static int on = 1;	/* turn "on" values for setsockopt */
-	struct sockaddr_in sa;
-	if(channel_fill_sockaddr(chn, &sa) == NULL)
-		return -1;
-	if(channel_tcp_socket(chn) < 0)
-		return -1;
-	if(setsockopt(chn->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+	if(channel_open_bind(chn, SOCK_STREAM) < 0)
 		goto fail;
-	if(bind(chn->fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
+	if(listen(chn->fd, 1) < 0) {
+		channel_log(chn, strerror(errno));
 		goto fail;
-	if(listen(chn->fd, 1) < 0)
-		goto fail;
+	}
 	chn->sfd = chn->fd;
 	return 0;
 fail:
-	channel_log(chn, strerror(errno));
 	channel_close(chn);
 	return -1;
 }
@@ -380,21 +400,11 @@ static int channel_accept(struct channel *chn) {
  * return: 0 on success; -1 on error
  */
 static int channel_connect_tcp(struct channel *chn) {
-	struct sockaddr_in sa;
-	int r;
-	if(channel_fill_sockaddr(chn, &sa) == NULL)
+	if(channel_open_connect(chn, SOCK_STREAM) < 0) {
+		channel_close(chn);
 		return -1;
-	if(channel_tcp_socket(chn) < 0)
-		return -1;
-	r = connect(chn->fd, (struct sockaddr *)&sa, sizeof(sa));
-	if(r < 0 && errno != EINPROGRESS)
-		goto fail;
-	else
+	} else
 		return 0;
-fail:
-	channel_log(chn, strerror(errno));
-	channel_close(chn);
-	return -1;
 }
 
 /*
