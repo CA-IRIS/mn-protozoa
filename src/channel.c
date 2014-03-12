@@ -109,9 +109,9 @@ bool channel_matches(struct channel *chn, const char *name, const char *service,
 }
 
 /*
- * channel_sport_baud_mask	Get the baud mask for a baud rate.
+ * channel_sport_baud_mask	Get the baud mask for a serial port channel.
  *
- * return: baud mask
+ * return: baud mask or B0 for invalid baud rate
  */
 static int channel_sport_baud_mask(struct channel *chn) {
 	/* serial port baud rate stored in chn->service */
@@ -139,6 +139,7 @@ static int channel_sport_baud_mask(struct channel *chn) {
 /*
  * channel_configure_sport	Configure a serial port for the I/O channel.
  *
+ * baud: baud rate mask
  * return: 0 on success; -1 on error
  */
 static int channel_configure_sport(struct channel *chn, int baud) {
