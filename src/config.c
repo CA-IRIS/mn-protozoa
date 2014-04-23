@@ -18,6 +18,17 @@
 #include "ccreader.h"
 #include "ccwriter.h"
 
+/* Default config file */
+#define CONF_FILE "/etc/protozoa.conf"
+
+/**
+ * config_file		Get name of config file.
+ */
+const char *config_file(void) {
+	char *cf = getenv("PROTOZOA_CONFIG");
+	return (cf) ? cf : CONF_FILE;
+}
+
 /*
  * config_init		Initialize a new configuration reader.
  *

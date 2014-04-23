@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2013  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,8 +45,8 @@ static int run_protozoa(struct log *log, bool dryrun) {
 		rc = (errno ? errno : -1);
 		goto out_0;
 	}
-	if(config_read(&cfg, CONF_FILE) <= 0) {
-		log_println(log, "Check configuration file: %s", CONF_FILE);
+	if(config_read(&cfg, config_file()) <= 0) {
+		log_println(log, "Check configuration file: %s", config_file());
 		rc = (errno ? errno : -1);
 		goto out_1;
 	}
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 		else if(rc < 0)
 			log_println(&log, "Unknown error");
 		else
-			log_println(&log, CONF_FILE " modified");
+			log_println(&log, "%s modified", config_file());
 		log_println(&log, "** reloading **");
 		/* don't chew through CPU */
 		sleep(1);

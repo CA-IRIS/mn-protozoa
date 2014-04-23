@@ -45,7 +45,7 @@ struct poller *poller_init(struct poller *plr, int n_channels,
 	plr->fd_inotify = inotify_init();
 	if(plr->fd_inotify < 0)
 		goto out1;
-	plr->wd_inotify = inotify_add_watch(plr->fd_inotify, CONF_FILE,
+	plr->wd_inotify = inotify_add_watch(plr->fd_inotify, config_file(),
 		IN_CLOSE_WRITE | IN_MOVE_SELF);
 	if(plr->wd_inotify >= 0)
 		return plr;
@@ -204,7 +204,7 @@ static int poller_check_config(struct poller *plr) {
 			sizeof(struct inotify_event));
 		if(n_bytes <= 0)
 			return errno;
-		if(config_verify(CONF_FILE) == 0)
+		if(config_verify(config_file()) == 0)
 			return -1;
 	}
 	return 0;

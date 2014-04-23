@@ -6,7 +6,6 @@
 #include "defer.h"
 
 #define LINE_LENGTH (256)
-#define CONF_FILE "/etc/protozoa.conf"
 
 struct config {
 	struct cl_pool		reader_pool;
@@ -21,6 +20,7 @@ struct config {
 	int			n_channels;
 };
 
+const char *config_file(void);
 struct config *config_init(struct config *cfg, struct log *log,
 	struct packet_counter *cnt);
 void config_destroy(struct config *cfg);
