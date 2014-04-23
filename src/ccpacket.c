@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -322,10 +322,12 @@ static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
  *
  * log: message logger
  */
-void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *name) {
+void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
+	const char *name)
+{
+	pkt->n_packet++;
 	log_line_start(log);
-	log_printf(log, "packet: %lld %s rcv: %d", pkt->n_packet++, name,
-		pkt->receiver);
+	log_printf(log, "packet: %s %s rcv: %d", dir, name, pkt->receiver);
 	if(pkt->status)
 		log_printf(log, " status: %d", pkt->status);
 	ccpacket_log_pan(pkt, log);

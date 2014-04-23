@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2012  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -170,8 +170,6 @@ static unsigned int ccreader_do_writers(struct ccreader *rdr) {
 		node = node->next;
 	}
 	pkt->receiver = receiver;	/* restore "true" receiver */
-	if(res && rdr->log->packet)
-		ccpacket_log(pkt, rdr->log, rdr->name);
 	return res;
 }
 
@@ -184,6 +182,8 @@ static unsigned int ccreader_do_writers(struct ccreader *rdr) {
 unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	struct ccpacket *pkt = &rdr->packet;
 	unsigned int res = 0;
+	if(rdr->log->packet)
+		ccpacket_log(pkt, rdr->log, "IN", rdr->name);
 	if(pkt->status)
 		ccpacket_drop(pkt);
 	else {
