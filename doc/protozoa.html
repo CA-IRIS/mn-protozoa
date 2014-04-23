@@ -1,10 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-
+<!DOCTYPE html>
+<html>
 <head>
-	<meta name="Author" content="Douglas Lau"/>
+	<meta charset="UTF-8" name="Author" content="Douglas Lau"/>
 	<link href="protozoa.css" rel="stylesheet" type="text/css"/>
 	<title>Protozoa Camera Control Transceiver</title>
 </head>
@@ -42,8 +39,10 @@
 </p>
 <h3>Configuration File</h3>
 <p>
-	The configuration file <code>/etc/protozoa.conf</code> contains a
-	series of data control directives, one per line.
+	The configuration file is located at <code>/etc/protozoa.conf</code> by
+	default, but that location can be overridden using the PROTOZOA_CONFIG
+	environment variable.
+	It contains a series of data control directives, one per line.
 	A directive describes the command flow from an input source to an
 	output sink.
 	For each directive, there are five (or more) parameters, which must be
@@ -204,7 +203,7 @@
 	vicon	tcp://0.0.0.0:8001 -	pelco_d udp://example.com:8001
 </pre>
 <p class="stamp">
-	2011 September 23
+	2014 April 23
 </p>
 </body>
 </html>
