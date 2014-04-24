@@ -4,19 +4,6 @@
 #include "log.h"
 #include "timeval.h"
 
-struct packet_counter {
-	struct log	*log;		/* logger */
-	long long	n_packets;	/* total count of packets */
-	long long	n_dropped;	/* count of dropped packets */
-	long long	n_status;	/* count of status packets */
-	long long	n_pan;		/* count of pan packets */
-	long long	n_tilt;		/* count of tilt packets */
-	long long	n_zoom;		/* count of zoom packets */
-	long long	n_lens;		/* count of lens packets */
-	long long	n_aux;		/* count of aux packets */
-	long long	n_preset;	/* count of preset packets */
-};
-
 struct packet_counter *packet_counter_init(struct packet_counter *cnt,
 	struct log *log);
 struct packet_counter *packet_counter_new(struct log *log);
