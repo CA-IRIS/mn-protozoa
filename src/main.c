@@ -23,7 +23,23 @@
 #define VERSION "0.56a"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2014  MnDOT"
 
+/** Log file to use when daemonized */
 static const char *LOG_FILE = "/var/log/protozoa";
+
+/** Make process into a daemon.
+ *
+ * @return errno value on error, or 0 if successful.
+ */
+static int make_daemon(struct log *log) {
+	if(log_open_file(log, LOG_FILE) == NULL) {
+		log_println(log, "Cannot open: %s", LOG_FILE);
+		return (errno ? errno : -1);
+	}
+	if(daemon(0, 0) < 0)
+		return (errno ? errno : -1);
+	else
+		return 0;
+}
 
 /** Run the main protozoa loop.
  *
@@ -96,15 +112,9 @@ int main(int argc, char* argv[]) {
 			log.stats = true;
 	}
 	if(daemonize) {
-		if(log_open_file(&log, LOG_FILE) == NULL) {
-			log_println(&log, "Cannot open: %s", LOG_FILE);
-			rc = (errno ? errno : -1);
+		rc = make_daemon(&log);
+		if(rc)
 			goto out;
-		}
-		if(daemon(0, 0) < 0) {
-			rc = (errno ? errno : -1);
-			goto out;
-		}
 	}
 	while(true) {
 		rc = run_protozoa(&log, dryrun);
