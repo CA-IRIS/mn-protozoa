@@ -12,8 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#include <stdlib.h>	/* for malloc */
-#include <string.h>	/* for memset */
+#include <string.h>	/* for memcpy */
 #include "ccpacket.h"
 #include "stats.h"
 

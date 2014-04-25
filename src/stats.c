@@ -36,7 +36,7 @@ struct ptz_stats {
  * Initialize packet stats.
  *
  * @param log		Message logger
- * @return		Pointer to packet counter
+ * @return		Pointer to packet stats
  */
 static struct ptz_stats *ptz_stats_init(struct ptz_stats *self,
 	struct log *log)
