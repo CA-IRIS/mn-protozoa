@@ -47,18 +47,14 @@ static int make_daemon(struct log *log) {
  * Return: errno value on error, or 0 if config file has changed.
  */
 static int run_protozoa(struct log *log, bool dryrun) {
-	struct ptz_stats	*stats;
 	struct config		cfg;
 	struct poller		poll;
 	int			n_channels;
 	int			rc = 0;
 
 	log_println(log, BANNER);
-	if(log->stats)
-		stats = ptz_stats_new(log);
-	else
-		stats = NULL;
-	if(config_init(&cfg, log, stats) == NULL) {
+	ptz_stats_init(log->stats ? log : NULL);
+	if(config_init(&cfg, log) == NULL) {
 		rc = (errno ? errno : -1);
 		goto out_0;
 	}
@@ -87,7 +83,6 @@ out_2:
 out_1:
 	config_destroy(&cfg);
 out_0:
-	free(stats);
 	return rc;
 }
 

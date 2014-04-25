@@ -255,7 +255,7 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
  */
 void ccpacket_count(struct ccpacket *pkt) {
 	if(pkt->stats)
-		ptz_stats_count(pkt->stats, pkt);
+		ptz_stats_count(pkt);
 }
 
 /*
@@ -263,7 +263,7 @@ void ccpacket_count(struct ccpacket *pkt) {
  */
 void ccpacket_drop(struct ccpacket *pkt) {
 	if(pkt->stats) {
-		ptz_stats_drop(pkt->stats);
+		ptz_stats_drop();
 		ccpacket_count(pkt);
 	}
 }

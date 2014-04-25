@@ -33,19 +33,15 @@ const char *config_file(void) {
  * config_init		Initialize a new configuration reader.
  *
  * log: message logger (borrowed pointer)
- * stats: packet stats (borrowed pointer)
  * return: pointer to struct config or NULL on error
  */
-struct config *config_init(struct config *cfg, struct log *log,
-	struct ptz_stats *stats)
-{
+struct config *config_init(struct config *cfg, struct log *log) {
 	memset(cfg, 0, sizeof(struct config));
 	cfg->line = malloc(LINE_LENGTH);
 	if(cfg->line == NULL)
 		return NULL;
 	memset(cfg->line, 0, LINE_LENGTH);
 	cfg->log = log;
-	cfg->stats = stats;
 	cfg->defer = malloc(sizeof(struct defer));
 	if(defer_init(cfg->defer) == NULL)
 		goto fail;
@@ -271,7 +267,6 @@ static int config_directive(struct config *cfg, const char *protocol_in,
 		reader = cl_pool_alloc(&cfg->reader_pool);
 		ccreader_init(reader, chn_in->name, cfg->log, protocol_in);
 		chn_in->reader = reader;
-		reader->packet.stats = cfg->stats;
 	} else {
 		/* FIXME: check for redefined protocol */
 		reader = chn_in->reader;
@@ -379,7 +374,7 @@ int config_verify(const char *filename) {
 	struct config cfg;
 	int rc;
 
-	if(config_init(&cfg, NULL, NULL) == NULL)
+	if(config_init(&cfg, NULL) == NULL)
 		return (errno ? errno : -1);
 	if(config_read(&cfg, filename) <= 0)
 		rc = (errno ? errno : -1);
