@@ -17,9 +17,9 @@
 #include "stats.h"
 
 /*
- * Packet counter struct.
+ * Packet stats struct.
  */
-struct packet_counter {
+struct ptz_stats {
 	struct log	*log;		/* logger */
 	long long	n_packets;	/* total count of packets */
 	long long	n_dropped;	/* count of dropped packets */
@@ -33,97 +33,98 @@ struct packet_counter {
 };
 
 /**
- * Initialize a new packet counter.
+ * Initialize packet stats.
  *
  * @param log		Message logger
  * @return		Pointer to packet counter
  */
-struct packet_counter *packet_counter_init(struct packet_counter *cnt,
+static struct ptz_stats *ptz_stats_init(struct ptz_stats *self,
 	struct log *log)
 {
-	memset(cnt, 0, sizeof(struct packet_counter));
-	cnt->log = log;
-	return cnt;
+	memset(self, 0, sizeof(struct ptz_stats));
+	self->log = log;
+	return self;
 }
 
 /**
- * Construct a new packet counter.
+ * Construct packet stats.
  *
  * @param log		Message logger
- * @return		Pointer to packet counter; NULL or error
+ * @return		Pointer to packet stats; NULL or error
  */
-struct packet_counter *packet_counter_new(struct log *log) {
-	struct packet_counter *cnt = malloc(sizeof(struct packet_counter));
-	if(cnt == NULL)
+struct ptz_stats *ptz_stats_new(struct log *log) {
+	struct ptz_stats *self = malloc(sizeof(struct ptz_stats));
+	if(self)
+		return ptz_stats_init(self, log);
+	else
 		return NULL;
-	return packet_counter_init(cnt, log);
 }
 
 /**
- * Print packet counter statistics.
+ * Print packet statistics.
  *
  * @param stat		Name of statistic to print
  * @param count		Count of the statistic
  */
-static void packet_counter_print(const struct packet_counter *cnt,
+static void ptz_stats_print(const struct ptz_stats *self,
 	const char *stat, long long count)
 {
-	float percent = 100 * (float)count / (float)cnt->n_packets;
-	log_println(cnt->log, "%10s: %10lld  %6.2f%%", stat, count, percent);
+	float percent = 100 * (float)count / (float)self->n_packets;
+	log_println(self->log, "%10s: %10lld  %6.2f%%", stat, count, percent);
 }
 
 /**
- * Display all packet counter statistics.
+ * Display all packet statistics.
  */
-static void packet_counter_display(const struct packet_counter *cnt) {
-	log_println(cnt->log, "protozoa statistics: %lld packets",
-		cnt->n_packets);
-	if(cnt->n_dropped)
-		packet_counter_print(cnt, "dropped", cnt->n_dropped);
-	if(cnt->n_status)
-		packet_counter_print(cnt, "status", cnt->n_status);
-	if(cnt->n_pan)
-		packet_counter_print(cnt, "pan", cnt->n_pan);
-	if(cnt->n_tilt)
-		packet_counter_print(cnt, "tilt", cnt->n_tilt);
-	if(cnt->n_zoom)
-		packet_counter_print(cnt, "zoom", cnt->n_zoom);
-	if(cnt->n_lens)
-		packet_counter_print(cnt, "lens", cnt->n_lens);
-	if(cnt->n_aux)
-		packet_counter_print(cnt, "aux", cnt->n_aux);
-	if(cnt->n_preset)
-		packet_counter_print(cnt, "preset", cnt->n_preset);
+static void ptz_stats_display(const struct ptz_stats *self) {
+	log_println(self->log, "protozoa statistics: %lld packets",
+		self->n_packets);
+	if(self->n_dropped)
+		ptz_stats_print(self, "dropped", self->n_dropped);
+	if(self->n_status)
+		ptz_stats_print(self, "status", self->n_status);
+	if(self->n_pan)
+		ptz_stats_print(self, "pan", self->n_pan);
+	if(self->n_tilt)
+		ptz_stats_print(self, "tilt", self->n_tilt);
+	if(self->n_zoom)
+		ptz_stats_print(self, "zoom", self->n_zoom);
+	if(self->n_lens)
+		ptz_stats_print(self, "lens", self->n_lens);
+	if(self->n_aux)
+		ptz_stats_print(self, "aux", self->n_aux);
+	if(self->n_preset)
+		ptz_stats_print(self, "preset", self->n_preset);
 }
 
 /**
- * Count one packet in the packet counter.
+ * Count one packet in the packet stats.
  *
  * @param pkt		Packet to count
  */
-void packet_counter_count(struct packet_counter *cnt, struct ccpacket *pkt) {
-	cnt->n_packets++;
+void ptz_stats_count(struct ptz_stats *self, struct ccpacket *pkt) {
+	self->n_packets++;
 	if(pkt->status)
-		cnt->n_status++;
+		self->n_status++;
 	if(pkt->command & (CC_PAN_LEFT | CC_PAN_RIGHT) && pkt->pan)
-		cnt->n_pan++;
+		self->n_pan++;
 	if(pkt->command & (CC_TILT_UP | CC_TILT_DOWN) && pkt->tilt)
-		cnt->n_tilt++;
+		self->n_tilt++;
 	if(pkt->zoom)
-		cnt->n_zoom++;
+		self->n_zoom++;
 	if(pkt->focus | pkt->iris)
-		cnt->n_lens++;
+		self->n_lens++;
 	if(pkt->aux)
-		cnt->n_aux++;
+		self->n_aux++;
 	if(pkt->command & (CC_RECALL | CC_STORE))
-		cnt->n_preset++;
-	if((cnt->n_packets % 100) == 0)
-		packet_counter_display(cnt);
+		self->n_preset++;
+	if((self->n_packets % 100) == 0)
+		ptz_stats_display(self);
 }
 
 /**
  * Drop one camera control packet.
  */
-void packet_counter_drop(struct packet_counter *cnt) {
-	cnt->n_dropped++;
+void ptz_stats_drop(struct ptz_stats *self) {
+	self->n_dropped++;
 }

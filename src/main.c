@@ -19,6 +19,7 @@
 #include "timer.h"
 #include "config.h"
 #include "poller.h"
+#include "stats.h"
 
 #define VERSION "0.56a"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2014  MnDOT"
@@ -46,7 +47,7 @@ static int make_daemon(struct log *log) {
  * Return: errno value on error, or 0 if config file has changed.
  */
 static int run_protozoa(struct log *log, bool dryrun) {
-	struct packet_counter	*counter;
+	struct ptz_stats	*stats;
 	struct config		cfg;
 	struct poller		poll;
 	int			n_channels;
@@ -54,10 +55,10 @@ static int run_protozoa(struct log *log, bool dryrun) {
 
 	log_println(log, BANNER);
 	if(log->stats)
-		counter = packet_counter_new(log);
+		stats = ptz_stats_new(log);
 	else
-		counter = NULL;
-	if(config_init(&cfg, log, counter) == NULL) {
+		stats = NULL;
+	if(config_init(&cfg, log, stats) == NULL) {
 		rc = (errno ? errno : -1);
 		goto out_0;
 	}
@@ -86,7 +87,7 @@ out_2:
 out_1:
 	config_destroy(&cfg);
 out_0:
-	free(counter);
+	free(stats);
 	return rc;
 }
 

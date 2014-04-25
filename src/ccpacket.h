@@ -4,10 +4,6 @@
 #include "log.h"
 #include "timeval.h"
 
-struct packet_counter *packet_counter_init(struct packet_counter *cnt,
-	struct log *log);
-struct packet_counter *packet_counter_new(struct log *log);
-
 enum status_t {
 	STATUS_NONE = 0,
 	STATUS_REQUEST = 1 << 0,
@@ -91,7 +87,7 @@ struct ccpacket {
 	int		preset;		/* preset number */
 	struct timeval	expire;		/* expiration time */
 	long long	n_packet;	/* packet number */
-	struct packet_counter *counter;	/* packet counter */
+	struct ptz_stats *stats;	/* packet stats */
 };
 
 void ccpacket_init(struct ccpacket *pkt);
