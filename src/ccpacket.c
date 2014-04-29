@@ -30,7 +30,6 @@ enum special_presets {
  */
 void ccpacket_init(struct ccpacket *pkt) {
 	timeval_set_now(&pkt->expire);
-	pkt->n_packet = 0;
 	ccpacket_clear(pkt);
 }
 
@@ -233,7 +232,6 @@ static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
 	const char *name)
 {
-	pkt->n_packet++;
 	log_line_start(log);
 	log_printf(log, "packet: %s %s rcv: %d", dir, name, pkt->receiver);
 	if(pkt->status)

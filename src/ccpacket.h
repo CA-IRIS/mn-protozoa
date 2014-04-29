@@ -86,7 +86,6 @@ struct ccpacket {
 	enum aux_t	aux;		/* bitmask of aux functions */
 	int		preset;		/* preset number */
 	struct timeval	expire;		/* expiration time */
-	long long	n_packet;	/* packet number */
 };
 
 void ccpacket_init(struct ccpacket *pkt);
