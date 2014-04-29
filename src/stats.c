@@ -110,5 +110,6 @@ void ptz_stats_count(struct ccpacket *pkt) {
  * Drop one camera control packet.
  */
 void ptz_stats_drop(void) {
-	stats.n_dropped++;
+	if (stats.log)
+		stats.n_dropped++;
 }

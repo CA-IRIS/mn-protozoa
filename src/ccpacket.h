@@ -87,7 +87,6 @@ struct ccpacket {
 	int		preset;		/* preset number */
 	struct timeval	expire;		/* expiration time */
 	long long	n_packet;	/* packet number */
-	struct ptz_stats *stats;	/* packet stats */
 };
 
 void ccpacket_init(struct ccpacket *pkt);

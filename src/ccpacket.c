@@ -30,7 +30,6 @@ enum special_presets {
  */
 void ccpacket_init(struct ccpacket *pkt) {
 	timeval_set_now(&pkt->expire);
-	pkt->stats = NULL;
 	pkt->n_packet = 0;
 	ccpacket_clear(pkt);
 }
@@ -254,18 +253,15 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
  * ccpacket_count	Count the camera control packet statistics.
  */
 void ccpacket_count(struct ccpacket *pkt) {
-	if(pkt->stats)
-		ptz_stats_count(pkt);
+	ptz_stats_count(pkt);
 }
 
 /*
  * ccpacket_drop	Drop the camera control packet.
  */
 void ccpacket_drop(struct ccpacket *pkt) {
-	if(pkt->stats) {
-		ptz_stats_drop();
-		ccpacket_count(pkt);
-	}
+	ptz_stats_drop();
+	ccpacket_count(pkt);
 }
 
 /*
