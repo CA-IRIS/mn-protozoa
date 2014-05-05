@@ -33,23 +33,40 @@ void ccpacket_init(struct ccpacket *pkt) {
 	ccpacket_clear(pkt);
 }
 
-/**
- * Set receiver for packet.
+/** Set receiver for packet.
  *
- * @param self		Packet object.
  * @param receiver	Receiver address.
  */
 void ccpacket_set_receiver(struct ccpacket *self, int receiver) {
 	self->receiver = receiver;
 }
 
-/**
- * Get receiver for packet.
+/** Get receiver for packet.
  *
  * @return Receiver address.
  */
 int ccpacket_get_receiver(const struct ccpacket *self) {
 	return self->receiver;
+}
+
+/** Set pan speed.
+ *
+ * @param speed		Pan speed.
+ */
+void ccpacket_set_pan_speed(struct ccpacket *self, int speed) {
+	self->pan = speed;
+}
+
+/** Get pan speed.
+ */
+int ccpacket_get_pan_speed(const struct ccpacket *self) {
+	return self->pan;
+}
+
+/** Check if packet has pan.
+ */
+bool ccpacket_has_pan(const struct ccpacket *self) {
+	return (self->command & CC_PAN) && (self->pan);
 }
 
 /*

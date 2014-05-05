@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2007-2008  Minnesota Department of Transportation
+ * Copyright (C) 2007-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 				pkt->command |= CC_PAN_LEFT;
 			if(speed > 0)
 				pkt->command |= CC_PAN_RIGHT;
-			pkt->pan = remap_speed(speed);
+			ccpacket_set_pan_speed(pkt, remap_speed(speed));
 			break;
 		case JAXIS_TILT:
 			pkt->command ^= pkt->command & CC_TILT;

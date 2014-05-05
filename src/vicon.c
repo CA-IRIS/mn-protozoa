@@ -95,13 +95,13 @@ static inline bool is_extended_command(uint8_t *mess) {
 static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
 		pkt->command |= CC_PAN_RIGHT;
-		pkt->pan = SPEED_MAX;
+		ccpacket_set_pan_speed(pkt, SPEED_MAX);
 	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
 		pkt->command |= CC_PAN_LEFT;
-		pkt->pan = SPEED_MAX;
+		ccpacket_set_pan_speed(pkt, SPEED_MAX);
 	} else {
 		pkt->command |= CC_PAN_LEFT;
-		pkt->pan = 0;
+		ccpacket_set_pan_speed(pkt, 0);
 	}
 }
 
@@ -188,8 +188,9 @@ static inline void decode_preset(struct ccpacket *pkt, uint8_t *mess) {
  * decode_ex_speed	Decode extended speed functions.
  */
 static inline void decode_ex_speed(struct ccpacket *pkt, uint8_t *mess) {
-	pkt->pan = ((mess[6] & 0x0f) << 7) | (mess[7] & 0x7f);
+	int pan = ((mess[6] & 0x0f) << 7) | (mess[7] & 0x7f);
 	pkt->tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x7f);
+	ccpacket_set_pan_speed(pkt, pan);
 }
 
 /*
@@ -211,14 +212,16 @@ static inline void decode_ex_status(struct ccpacket *pkt, uint8_t *mess) {
  */
 static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
 	int p_num = mess[7] & 0x7f;
+	int pan = mess[8] & 0x7f;
+	int tilt = mess[9] & 0x7f;
 	if(bit_is_set(mess, BIT_EX_STORE))
 		ccpacket_store_preset(pkt, p_num);
 	else {
 		pkt->command = CC_RECALL;
 		pkt->preset = p_num;
 	}
-	pkt->pan = mess[8] & 0x7f;
-	pkt->tilt = mess[9] & 0x7f;
+	ccpacket_set_pan_speed(pkt, pan);
+	pkt->tilt = tilt;
 }
 
 /*
@@ -326,7 +329,8 @@ static inline void encode_receiver(uint8_t *mess, const struct ccpacket *pkt) {
  * encode_pan_tilt	Encode a pan/tilt command.
  */
 static void encode_pan_tilt(uint8_t *mess, struct ccpacket *pkt) {
-	if(pkt->pan) {
+	int pan = ccpacket_get_pan_speed(pkt);
+	if(pan) {
 		if(pkt->command & CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
 		else if(pkt->command & CC_PAN_RIGHT)
@@ -430,7 +434,7 @@ static int vicon_encode_speed(int speed) {
  * encode_speeds	Encode the pan and tilt speeds.
  */
 static void encode_speeds(uint8_t *mess, struct ccpacket *pkt) {
-	int pan = vicon_encode_speed(pkt->pan);
+	int pan = vicon_encode_speed(ccpacket_get_pan_speed(pkt));
 	int tilt = vicon_encode_speed(pkt->tilt);
 
 	mess[6] = (pan >> 7) & 0x0f;
@@ -473,7 +477,7 @@ static void encode_extended_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 		encode_toggles(mess, pkt);
 		encode_aux(mess, pkt);
 		mess[7] |= pkt->preset & 0x7f;
-		mess[8] |= pkt->pan & 0x7f;
+		mess[8] |= ccpacket_get_pan_speed(pkt) & 0x7f;
 		mess[9] |= pkt->tilt & 0x7f;
 	}
 }
@@ -527,9 +531,10 @@ static void encode_status(struct ccwriter *wtr, struct ccpacket *pkt) {
  * is_extended_preset	Test if a command is an extended preset.
  */
 static inline bool is_extended_preset(struct ccpacket *pkt) {
-	if(pkt->command & (CC_RECALL | CC_STORE))
-		return (pkt->preset > 15) || pkt->pan || pkt->tilt;
-	else
+	if(pkt->command & (CC_RECALL | CC_STORE)) {
+		int pan = ccpacket_get_pan_speed(pkt);
+		return (pkt->preset > 15) || pan || pkt->tilt;
+	} else
 		return false;
 }
 

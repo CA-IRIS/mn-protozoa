@@ -111,13 +111,13 @@ static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 	int pan = decode_speed(mess[4]);
 	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
 		pkt->command |= CC_PAN_RIGHT;
-		pkt->pan = pan;
+		ccpacket_set_pan_speed(pkt, pan);
 	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
 		pkt->command |= CC_PAN_LEFT;
-		pkt->pan = pan;
+		ccpacket_set_pan_speed(pkt, pan);
 	} else {
 		pkt->command |= CC_PAN_LEFT;
-		pkt->pan = 0;
+		ccpacket_set_pan_speed(pkt, 0);
 	}
 }
 
@@ -353,13 +353,23 @@ static int pelco_d_encode_speed(int speed) {
 		return TURBO_SPEED - 1;
 }
 
+/** Encode pan speed.
+ *
+ * @param speed		Protocol independent speed (0 - SPEED_MAX).
+ * @return Pan speed for Pelco-D protocol.
+ */
+static int pelco_d_encode_pan_speed(int speed) {
+	if(speed > SPEED_MAX - 8)
+		return TURBO_SPEED;
+	else
+		return pelco_d_encode_speed(speed);
+}
+
 /*
  * encode_pan		Encode the pan speed and command.
  */
 static void encode_pan(uint8_t *mess, struct ccpacket *pkt) {
-	int pan = pelco_d_encode_speed(pkt->pan);
-	if(pkt->pan > SPEED_MAX - 8)
-		pan = TURBO_SPEED;
+	int pan = pelco_d_encode_pan_speed(ccpacket_get_pan_speed(pkt));
 	mess[4] = pan;
 	if(pan) {
 		if(pkt->command & CC_PAN_LEFT)

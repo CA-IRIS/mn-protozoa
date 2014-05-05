@@ -91,6 +91,9 @@ struct ccpacket {
 void ccpacket_init(struct ccpacket *pkt);
 void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);
+void ccpacket_set_pan_speed(struct ccpacket *self, int speed);
+int ccpacket_get_pan_speed(const struct ccpacket *self);
+bool ccpacket_has_pan(const struct ccpacket *self);
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
 bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout);
 void ccpacket_store_preset(struct ccpacket *pkt, int p_num);
