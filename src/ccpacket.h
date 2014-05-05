@@ -92,6 +92,7 @@ void ccpacket_init(struct ccpacket *pkt);
 void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
+bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout);
 void ccpacket_store_preset(struct ccpacket *pkt, int p_num);
 void ccpacket_clear(struct ccpacket *pkt);
 bool ccpacket_is_stop(struct ccpacket *pkt);

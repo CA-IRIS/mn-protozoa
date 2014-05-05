@@ -174,7 +174,7 @@ static void ccwriter_check_deferred(struct ccwriter *wtr, struct ccpacket *pkt,
 			return;
 		} else
 			dpkt->n_cnt = 0;
-	} else if(time_from_now(&pkt->expire) > wtr->timeout) {
+	} else if(ccpacket_is_expired(pkt, wtr->timeout)) {
 		defer_packet(wtr->defer, dpkt, pkt, wtr->timeout);
 		return;
 	}

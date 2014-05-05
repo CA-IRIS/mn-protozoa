@@ -60,6 +60,16 @@ void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout) {
 	timeval_adjust(&pkt->expire, timeout);
 }
 
+/** Check is packet is expired.
+ *
+ * @param self		Camera control packet.
+ * @param timeout	Timeout in ms.
+ * @return true if packet is expired.
+ */
+bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout) {
+	return time_from_now(&self->expire) > timeout;
+}
+
 /*
  * ccpacket_store_preset	Decode a store preset command, replacing
  *				predefined presets with menu commands.
