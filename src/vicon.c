@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,11 +64,15 @@ enum vicon_bit_t {
 	BIT_STAT_AUX_SET_2 = 58,
 };
 
-/*
- * decode_receiver	Decode the receiver address.
+/**
+ * Decode the receiver address.
+ *
+ * @param pkt		Packet.
+ * @param mess		Message buffer.
  */
-static inline int decode_receiver(uint8_t *mess) {
-	return ((mess[0] & 0x0f) << 4) | (mess[1] & 0x0f);
+static inline void decode_receiver(struct ccpacket *pkt, uint8_t *mess) {
+	int receiver = ((mess[0] & 0x0f) << 4) | (mess[1] & 0x0f);
+	ccpacket_set_receiver(pkt, receiver);
 }
 
 /*
@@ -225,7 +229,7 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *rdr,
 {
 	if(buffer_available(rxbuf) < SIZE_EXTENDED)
 		return DECODE_DONE;
-	rdr->packet.receiver = decode_receiver(mess);
+	decode_receiver(&rdr->packet, mess);
 	decode_pan(&rdr->packet, mess);
 	decode_tilt(&rdr->packet, mess);
 	decode_lens(&rdr->packet, mess);
@@ -252,7 +256,7 @@ static inline enum decode_t vicon_decode_command(struct ccreader *rdr,
 {
 	if(buffer_available(rxbuf) < SIZE_COMMAND)
 		return DECODE_DONE;
-	rdr->packet.receiver = decode_receiver(mess);
+	decode_receiver(&rdr->packet, mess);
 	decode_pan(&rdr->packet, mess);
 	decode_tilt(&rdr->packet, mess);
 	decode_lens(&rdr->packet, mess);
@@ -272,7 +276,7 @@ static inline enum decode_t vicon_decode_status(struct ccreader *rdr,
 {
 	if(buffer_available(rxbuf) < SIZE_STATUS)
 		return DECODE_DONE;
-	rdr->packet.receiver = decode_receiver(mess);
+	decode_receiver(&rdr->packet, mess);
 	rdr->packet.status = STATUS_REQUEST;
 	buffer_consume(rxbuf, SIZE_STATUS);
 	ccreader_process_packet(rdr);
@@ -309,10 +313,11 @@ void vicon_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 	}
 }
 
-/*
- * encode_receiver	Encode the receiver address.
+/**
+ * Encode the receiver address.
  */
-static inline void encode_receiver(uint8_t *mess, int receiver) {
+static inline void encode_receiver(uint8_t *mess, const struct ccpacket *pkt) {
+	int receiver = ccpacket_get_receiver(pkt);
 	mess[0] = FLAG | ((receiver >> 4) & 0x0f);
 	mess[1] = receiver & 0x0f;
 }
@@ -404,7 +409,7 @@ static void encode_preset(uint8_t *mess, struct ccpacket *pkt) {
 static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_COMMAND);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_COMMAND);
 		encode_pan_tilt(mess, pkt);
 		encode_lens(mess, pkt);
@@ -440,7 +445,7 @@ static void encode_speeds(uint8_t *mess, struct ccpacket *pkt) {
 static void encode_extended_speed(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_EXTENDED);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		encode_pan_tilt(mess, pkt);
@@ -458,7 +463,7 @@ static void encode_extended_speed(struct ccwriter *wtr, struct ccpacket *pkt) {
 static void encode_extended_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_EXTENDED);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_REQUEST);
@@ -481,7 +486,7 @@ static inline void encode_simple_status(struct ccwriter *wtr,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_STATUS);
 	if(mess)
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 }
 
 /*
@@ -492,7 +497,7 @@ static inline void encode_extended_status(struct ccwriter *wtr,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_EXTENDED);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_STATUS);
@@ -554,7 +559,8 @@ static inline void adjust_menu_commands(struct ccpacket *pkt) {
  * vicon_do_write	Write a packet in vicon protocol.
  */
 unsigned int vicon_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
-	if(pkt->receiver < 1 || pkt->receiver > VICON_MAX_ADDRESS)
+	int receiver = ccpacket_get_receiver(pkt);
+	if(receiver < 1 || receiver > VICON_MAX_ADDRESS)
 		return 0;
 	adjust_menu_commands(pkt);
 	if(pkt->status)

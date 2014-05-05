@@ -33,6 +33,25 @@ void ccpacket_init(struct ccpacket *pkt) {
 	ccpacket_clear(pkt);
 }
 
+/**
+ * Set receiver for packet.
+ *
+ * @param self		Packet object.
+ * @param receiver	Receiver address.
+ */
+void ccpacket_set_receiver(struct ccpacket *self, int receiver) {
+	self->receiver = receiver;
+}
+
+/**
+ * Get receiver for packet.
+ *
+ * @return Receiver address.
+ */
+int ccpacket_get_receiver(const struct ccpacket *self) {
+	return self->receiver;
+}
+
 /*
  * ccpacket_set_timeout	Set the timeout for a camera control packet.
  */

@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2011  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -247,9 +247,9 @@ static inline void decode_packet(struct ccpacket *pkt, uint8_t *mess) {
  */
 static void manchester_decode_packet(struct ccreader *rdr, uint8_t *mess) {
 	int receiver = decode_receiver(mess);
-	if(rdr->packet.receiver != receiver)
+	if(ccpacket_get_receiver(&rdr->packet) != receiver)
 		ccreader_process_packet(rdr);
-	rdr->packet.receiver = receiver;
+	ccpacket_set_receiver(&rdr->packet, receiver);
 	decode_packet(&rdr->packet, mess);
 }
 
@@ -287,8 +287,8 @@ void manchester_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 /*
  * encode_receiver		Encode the receiver address.
  */
-static inline void encode_receiver(uint8_t *mess, int receiver) {
-	int rdr = receiver - 1;
+static inline void encode_receiver(uint8_t *mess, const struct ccpacket *pkt) {
+	int rdr = ccpacket_get_receiver(pkt) - 1;
 	mess[0] = FLAG | ((rdr >> 6) & 0x0f);
 	mess[1] = (rdr >> 5) & 0x01;
 	mess[2] = (rdr & 0x1f) << 2;
@@ -302,7 +302,7 @@ static void encode_pan_tilt_command(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		mess[1] |= (cmnd << 4) | (speed << 1);
 		mess[2] |= PT_COMMAND;
 	}
@@ -316,7 +316,7 @@ static void encode_lens_function(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		mess[1] |= (func << 1) | (EX_LENS << 4);
 	}
 }
@@ -329,7 +329,7 @@ static void encode_aux_function(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		mess[1] |= (aux << 1) | (EX_AUX << 4);
 	}
 }
@@ -434,7 +434,7 @@ static void encode_recall_function(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		mess[1] |= (preset << 1) | (EX_RECALL << 4);
 	}
 }
@@ -447,7 +447,7 @@ static void encode_store_function(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		mess[1] |= (preset << 1) | (EX_STORE << 4);
 	}
 }
@@ -469,7 +469,8 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
  * manchester_do_write	Write a packet in manchester protocol.
  */
 unsigned int manchester_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
-	if(pkt->receiver < 1 || pkt->receiver > MANCHESTER_MAX_ADDRESS)
+	int receiver = ccpacket_get_receiver(pkt);
+	if(receiver < 1 || receiver > MANCHESTER_MAX_ADDRESS)
 		return 0;
 	if(pkt->pan)
 		encode_pan(wtr, pkt);

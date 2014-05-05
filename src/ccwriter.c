@@ -186,7 +186,8 @@ static void ccwriter_check_deferred(struct ccwriter *wtr, struct ccpacket *pkt,
  */
 static int ccwriter_do_write_(struct ccwriter *wtr, struct ccpacket *pkt) {
 	unsigned int c;
-	struct deferred_pkt *dpkt = wtr->deferred + pkt->receiver - 1;
+	struct deferred_pkt *dpkt =
+		wtr->deferred + ccpacket_get_receiver(pkt) - 1;
 
 	/* If it is too soon after the previous packet, defer until later */
 	if(ccwriter_too_soon(wtr, dpkt)) {
@@ -206,7 +207,8 @@ static int ccwriter_do_write_(struct ccwriter *wtr, struct ccpacket *pkt) {
  * ccwriter_do_write	Process one packet for the writer.
  */
 int ccwriter_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
-	if(pkt->receiver > 0 && pkt->receiver <= wtr->n_rcv)
+	int receiver = ccpacket_get_receiver(pkt);
+	if(receiver > 0 && receiver <= wtr->n_rcv)
 		return ccwriter_do_write_(wtr, pkt);
 	else
 		return 0;

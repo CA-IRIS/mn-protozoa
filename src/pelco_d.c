@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2006-2012  Minnesota Department of Transportation
+ * Copyright (C) 2006-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,11 +83,14 @@ static uint8_t calculate_checksum(uint8_t *mess) {
 	return checksum;
 }
 
-/*
- * decode_receiver	Decode the receiver address from a pelco_d packet.
+/**
+ * Decode the receiver address from a pelco_d packet.
+ *
+ * @param pkt		Packet.
+ * @param mess		Message buffer.
  */
-static inline int decode_receiver(uint8_t *mess) {
-	return mess[1];
+static inline void decode_receiver(struct ccpacket *pkt, uint8_t *mess) {
+	ccpacket_set_receiver(pkt, mess[1]);
 }
 
 /*
@@ -176,7 +179,7 @@ static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 static inline enum decode_t pelco_decode_command(struct ccreader *rdr,
 	uint8_t *mess)
 {
-	rdr->packet.receiver = decode_receiver(mess);
+	decode_receiver(&rdr->packet, mess);
 	decode_pan(&rdr->packet, mess);
 	decode_tilt(&rdr->packet, mess);
 	decode_lens(&rdr->packet, mess);
@@ -246,7 +249,7 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 static inline enum decode_t pelco_decode_extended(struct ccreader *rdr,
 	uint8_t *mess)
 {
-	rdr->packet.receiver = decode_receiver(mess);
+	decode_receiver(&rdr->packet, mess);
 	int ex = mess[3] >> 1 & 0x1f;
 	int p0 = mess[5];
 	int p1 = mess[4];
@@ -333,9 +336,9 @@ void pelco_d_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 /*
  * encode_receiver	Encode the receiver address.
  */
-static inline void encode_receiver(uint8_t *mess, int receiver) {
+static inline void encode_receiver(uint8_t *mess, const struct ccpacket *pkt) {
 	mess[0] = FLAG;
-	mess[1] = receiver;
+	mess[1] = ccpacket_get_receiver(pkt);
 }
 
 /*
@@ -433,7 +436,7 @@ static inline void encode_checksum(uint8_t *mess) {
 static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		encode_pan(mess, pkt);
 		encode_tilt(mess, pkt);
 		encode_lens(mess, pkt);
@@ -448,7 +451,7 @@ static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
 static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_EXTENDED);
 		if(pkt->command & CC_RECALL)
 			mess[3] |= EX_RECALL << 1;
@@ -467,7 +470,7 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if(mess) {
-		encode_receiver(mess, pkt->receiver);
+		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_EXTENDED);
 		/* FIXME: other protocols don't send an AUX_CLEAR ... */
 		if(pkt->aux & AUX_CLEAR)
@@ -514,7 +517,8 @@ static inline void adjust_menu_commands(struct ccpacket *pkt) {
 unsigned int pelco_d_do_write_cb(struct ccwriter *wtr, struct ccpacket *pkt,
 	ccwriter_cb *prepare_writer)
 {
-	if(pkt->receiver < 1 || pkt->receiver > PELCO_D_MAX_ADDRESS)
+	int receiver = ccpacket_get_receiver(pkt);
+	if(receiver < 1 || receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
 	adjust_menu_commands(pkt);
 	if(ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||

@@ -86,13 +86,15 @@ static void ccnode_set_shift(struct ccnode *node, const char *shift) {
 }
 
 void ccreader_previous_camera(struct ccreader *rdr) {
-	if(rdr->packet.receiver > 0)
-		rdr->packet.receiver--;
+	int receiver = ccpacket_get_receiver(&rdr->packet);
+	if(receiver > 0)
+		ccpacket_set_receiver(&rdr->packet, receiver - 1);
 }
 
 void ccreader_next_camera(struct ccreader *rdr) {
-	if(rdr->packet.receiver < 1024)
-		rdr->packet.receiver++;
+	int receiver = ccpacket_get_receiver(&rdr->packet);
+	if(receiver < 1024)
+		ccpacket_set_receiver(&rdr->packet, receiver + 1);
 }
 
 /*
@@ -134,7 +136,7 @@ void ccreader_add_writer(struct ccreader *rdr, struct ccnode *node,
 	ccnode_set_shift(node, shift);
 	node->next = rdr->head;
 	rdr->head = node;
-	rdr->packet.receiver = node->range_first;
+	ccpacket_set_receiver(&rdr->packet, node->range_first);
 }
 
 /*
@@ -161,15 +163,17 @@ static int ccnode_get_receiver(const struct ccnode *node, int receiver) {
 static unsigned int ccreader_do_writers(struct ccreader *rdr) {
 	unsigned int res = 0;
 	struct ccpacket *pkt = &rdr->packet;
-	const int receiver = pkt->receiver;	/* save "true" receiver */
+	const int receiver = ccpacket_get_receiver(pkt);  /* "true" receiver */
 	struct ccnode *node = rdr->head;
 	while(node) {
-		pkt->receiver = ccnode_get_receiver(node, receiver);
-		if(pkt->receiver)
+		int r = ccnode_get_receiver(node, receiver);
+		if(r) {
+			ccpacket_set_receiver(pkt, r);
 			res += ccwriter_do_write(node->writer, pkt);
+		}
 		node = node->next;
 	}
-	pkt->receiver = receiver;	/* restore "true" receiver */
+	ccpacket_set_receiver(pkt, receiver);	/* restore "true" receiver */
 	return res;
 }
 
