@@ -91,7 +91,7 @@ void ptz_stats_count(struct ccpacket *pkt) {
 			stats.n_status++;
 		if (ccpacket_has_pan(pkt))
 			stats.n_pan++;
-		if (pkt->command & (CC_TILT_UP | CC_TILT_DOWN) && pkt->tilt)
+		if (ccpacket_has_tilt(pkt))
 			stats.n_tilt++;
 		if (pkt->zoom)
 			stats.n_zoom++;

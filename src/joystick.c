@@ -102,7 +102,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 				pkt->command |= CC_TILT_UP;
 			if(speed >= 0)
 				pkt->command |= CC_TILT_DOWN;
-			pkt->tilt = remap_speed(speed);
+			ccpacket_set_tilt_speed(pkt, remap_speed(speed));
 			break;
 		case JAXIS_ZOOM:
 			if(speed < 0)

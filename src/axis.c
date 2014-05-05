@@ -91,7 +91,7 @@ static void encode_pan(struct ccpacket *pkt, char *mess) {
 static void encode_tilt(struct ccpacket *pkt, char *mess) {
 	char speed_str[8];
 
-	int speed = axis_encode_speed(pkt->tilt);
+	int speed = axis_encode_speed(ccpacket_get_tilt_speed(pkt));
 	if(pkt->command & CC_TILT_DOWN)
 		speed = -speed;
 	if(snprintf(speed_str, 8, "%d,", speed) > 0)
@@ -119,7 +119,7 @@ static bool encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *pkt,
 			encode_pan(pkt, mess);
 		else
 			strcat(mess, "0,");
-		if(pkt->tilt)
+		if(ccpacket_get_tilt_speed(pkt))
 			encode_tilt(pkt, mess);
 		else
 			strcat(mess, "0");

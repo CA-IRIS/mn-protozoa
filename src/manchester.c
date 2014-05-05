@@ -140,11 +140,11 @@ static inline void decode_pan_tilt(struct ccpacket *pkt, enum pt_command_t cmnd,
 		break;
 	case TILT_DOWN:
 		pkt->command |= CC_TILT_DOWN;
-		pkt->tilt = speed;
+		ccpacket_set_tilt_speed(pkt, speed);
 		break;
 	case TILT_UP:
 		pkt->command |= CC_TILT_UP;
-		pkt->tilt = speed;
+		ccpacket_set_tilt_speed(pkt, speed);
 		break;
 	}
 }
@@ -175,7 +175,7 @@ static inline void decode_lens(struct ccpacket *pkt, enum lens_t extra) {
 	case XL_TILT_DOWN:
 		/* Weird special case for full down */
 		pkt->command |= CC_TILT_DOWN;
-		pkt->tilt = SPEED_MAX;
+		ccpacket_set_tilt_speed(pkt, SPEED_MAX);
 		break;
 	case XL_PAN_LEFT:
 		/* Weird special case for full left */
@@ -192,7 +192,7 @@ static inline void decode_aux(struct ccpacket *pkt, int extra) {
 	if(extra == EX_AUX_FULL_UP) {
 		/* Weird special case for full up */
 		pkt->command |= CC_TILT_UP;
-		pkt->tilt = SPEED_MAX;
+		ccpacket_set_tilt_speed(pkt, SPEED_MAX);
 	} else if(extra == EX_AUX_FULL_RIGHT) {
 		/** Weird special case for full right */
 		pkt->command |= CC_PAN_RIGHT;
@@ -369,7 +369,7 @@ static void encode_pan(struct ccwriter *wtr, struct ccpacket *pkt) {
  * encode_tilt		Encode a tilt command.
  */
 static void encode_tilt(struct ccwriter *wtr, struct ccpacket *pkt) {
-	int speed = manchester_encode_speed(pkt->tilt);
+	int speed = manchester_encode_speed(ccpacket_get_tilt_speed(pkt));
 	if(pkt->command & CC_TILT_DOWN) {
 		if(speed == SPEED_FULL)
 			encode_lens_function(wtr, pkt, XL_TILT_DOWN);
@@ -474,7 +474,7 @@ unsigned int manchester_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 		return 0;
 	if(ccpacket_get_pan_speed(pkt))
 		encode_pan(wtr, pkt);
-	if(pkt->tilt)
+	if(ccpacket_get_tilt_speed(pkt))
 		encode_tilt(wtr, pkt);
 	encode_zoom(wtr, pkt);
 	encode_focus(wtr, pkt);

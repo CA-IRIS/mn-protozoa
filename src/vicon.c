@@ -111,13 +111,13 @@ static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_TILT_UP)) {
 		pkt->command |= CC_TILT_UP;
-		pkt->tilt = SPEED_MAX;
+		ccpacket_set_tilt_speed(pkt, SPEED_MAX);
 	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
 		pkt->command |= CC_TILT_DOWN;
-		pkt->tilt = SPEED_MAX;
+		ccpacket_set_tilt_speed(pkt, SPEED_MAX);
 	} else {
 		pkt->command |= CC_TILT_DOWN;
-		pkt->tilt = 0;
+		ccpacket_set_tilt_speed(pkt, 0);
 	}
 }
 
@@ -189,8 +189,9 @@ static inline void decode_preset(struct ccpacket *pkt, uint8_t *mess) {
  */
 static inline void decode_ex_speed(struct ccpacket *pkt, uint8_t *mess) {
 	int pan = ((mess[6] & 0x0f) << 7) | (mess[7] & 0x7f);
-	pkt->tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x7f);
+	int tilt = ((mess[8] & 0x0f) << 7) | (mess[9] & 0x7f);
 	ccpacket_set_pan_speed(pkt, pan);
+	ccpacket_set_tilt_speed(pkt, tilt);
 }
 
 /*
@@ -221,7 +222,7 @@ static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
 		pkt->preset = p_num;
 	}
 	ccpacket_set_pan_speed(pkt, pan);
-	pkt->tilt = tilt;
+	ccpacket_set_tilt_speed(pkt, tilt);
 }
 
 /*
@@ -329,14 +330,13 @@ static inline void encode_receiver(uint8_t *mess, const struct ccpacket *pkt) {
  * encode_pan_tilt	Encode a pan/tilt command.
  */
 static void encode_pan_tilt(uint8_t *mess, struct ccpacket *pkt) {
-	int pan = ccpacket_get_pan_speed(pkt);
-	if(pan) {
+	if(ccpacket_has_pan(pkt)) {
 		if(pkt->command & CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
 		else if(pkt->command & CC_PAN_RIGHT)
 			bit_set(mess, BIT_PAN_RIGHT);
 	}
-	if(pkt->tilt) {
+	if(ccpacket_has_tilt(pkt)) {
 		if(pkt->command & CC_TILT_UP)
 			bit_set(mess, BIT_TILT_UP);
 		else if(pkt->command & CC_TILT_DOWN)
@@ -435,7 +435,7 @@ static int vicon_encode_speed(int speed) {
  */
 static void encode_speeds(uint8_t *mess, struct ccpacket *pkt) {
 	int pan = vicon_encode_speed(ccpacket_get_pan_speed(pkt));
-	int tilt = vicon_encode_speed(pkt->tilt);
+	int tilt = vicon_encode_speed(ccpacket_get_tilt_speed(pkt));
 
 	mess[6] = (pan >> 7) & 0x0f;
 	mess[7] = pan & 0x7f;
@@ -478,7 +478,7 @@ static void encode_extended_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 		encode_aux(mess, pkt);
 		mess[7] |= pkt->preset & 0x7f;
 		mess[8] |= ccpacket_get_pan_speed(pkt) & 0x7f;
-		mess[9] |= pkt->tilt & 0x7f;
+		mess[9] |= ccpacket_get_tilt_speed(pkt) & 0x7f;
 	}
 }
 
@@ -533,7 +533,8 @@ static void encode_status(struct ccwriter *wtr, struct ccpacket *pkt) {
 static inline bool is_extended_preset(struct ccpacket *pkt) {
 	if(pkt->command & (CC_RECALL | CC_STORE)) {
 		int pan = ccpacket_get_pan_speed(pkt);
-		return (pkt->preset > 15) || pan || pkt->tilt;
+		int tilt = ccpacket_get_tilt_speed(pkt);
+		return (pkt->preset > 15) || pan || tilt;
 	} else
 		return false;
 }

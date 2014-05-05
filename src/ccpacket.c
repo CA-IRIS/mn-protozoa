@@ -69,6 +69,26 @@ bool ccpacket_has_pan(const struct ccpacket *self) {
 	return (self->command & CC_PAN) && (self->pan);
 }
 
+/** Set tilt speed.
+ *
+ * @param speed		Tilt speed.
+ */
+void ccpacket_set_tilt_speed(struct ccpacket *self, int speed) {
+	self->tilt = speed;
+}
+
+/** Get tilt speed.
+ */
+int ccpacket_get_tilt_speed(const struct ccpacket *self) {
+	return self->tilt;
+}
+
+/** Check if packet has tilt.
+ */
+bool ccpacket_has_tilt(const struct ccpacket *self) {
+	return (self->command & CC_TILT) && (self->tilt);
+}
+
 /*
  * ccpacket_set_timeout	Set the timeout for a camera control packet.
  */

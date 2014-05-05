@@ -128,13 +128,13 @@ static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
 	int tilt = decode_speed(mess[5]);
 	if(bit_is_set(mess, BIT_TILT_UP)) {
 		pkt->command |= CC_TILT_UP;
-		pkt->tilt = tilt;
+		ccpacket_set_tilt_speed(pkt, tilt);
 	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
 		pkt->command |= CC_TILT_DOWN;
-		pkt->tilt = tilt;
+		ccpacket_set_tilt_speed(pkt, tilt);
 	} else {
 		pkt->command |= CC_TILT_DOWN;
-		pkt->tilt = 0;
+		ccpacket_set_tilt_speed(pkt, 0);
 	}
 }
 
@@ -385,7 +385,7 @@ static void encode_pan(uint8_t *mess, struct ccpacket *pkt) {
  * encode_tilt		Encode the tilt speed and command.
  */
 static void encode_tilt(uint8_t *mess, struct ccpacket *pkt) {
-	int tilt = pelco_d_encode_speed(pkt->tilt);
+	int tilt = pelco_d_encode_speed(ccpacket_get_tilt_speed(pkt));
 	mess[5] = tilt;
 	if(tilt) {
 		if(pkt->command & CC_TILT_UP)
