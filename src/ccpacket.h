@@ -89,6 +89,7 @@ struct ccpacket {
 };
 
 void ccpacket_init(struct ccpacket *pkt);
+void ccpacket_clear(struct ccpacket *pkt);
 void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);
 void ccpacket_set_status(struct ccpacket *self, enum status_t s);
@@ -101,12 +102,11 @@ int ccpacket_get_tilt_speed(const struct ccpacket *self);
 bool ccpacket_has_tilt(const struct ccpacket *self);
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
 bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout);
+bool ccpacket_has_preset(const struct ccpacket *pkt);
 void ccpacket_store_preset(struct ccpacket *pkt, int p_num);
-void ccpacket_clear(struct ccpacket *pkt);
 bool ccpacket_is_stop(struct ccpacket *pkt);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_aux(struct ccpacket *pkt);
-bool ccpacket_has_preset(struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);
 bool ccpacket_has_power(const struct ccpacket *pkt);
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,

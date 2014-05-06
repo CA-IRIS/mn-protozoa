@@ -25,12 +25,26 @@ enum special_presets {
 	MENU_CANCEL_PRESET = 79,
 };
 
-/*
- * ccpacket_init	Initialize a new camera control packet.
+/** Initialize a camera control packet.
  */
 void ccpacket_init(struct ccpacket *pkt) {
 	timeval_set_now(&pkt->expire);
 	ccpacket_clear(pkt);
+}
+
+/** Clear the camera control packet.
+ */
+void ccpacket_clear(struct ccpacket *pkt) {
+	pkt->receiver = 0;
+	pkt->status = STATUS_NONE;
+	pkt->command = 0;
+	pkt->pan = 0;
+	pkt->tilt = 0;
+	pkt->zoom = ZOOM_NONE;
+	pkt->focus = FOCUS_NONE;
+	pkt->iris = IRIS_NONE;
+	pkt->aux = 0;
+	pkt->preset = 0;
 }
 
 /** Set receiver for packet.
@@ -123,9 +137,14 @@ bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout) {
 	return time_from_now(&self->expire) > timeout;
 }
 
-/*
- * ccpacket_store_preset	Decode a store preset command, replacing
- *				predefined presets with menu commands.
+/** Test if the packet has a preset command.
+ */
+bool ccpacket_has_preset(const struct ccpacket *pkt) {
+	return pkt->command & CC_PRESET;
+}
+
+/** Decode a store preset command.  Predefined presets are replaced with menu
+ * commands.
  */
 void ccpacket_store_preset(struct ccpacket *pkt, int p_num) {
 	switch(p_num) {
@@ -142,22 +161,6 @@ void ccpacket_store_preset(struct ccpacket *pkt, int p_num) {
 		pkt->command |= CC_STORE;
 		pkt->preset = p_num;
 	}
-}
-
-/*
- * ccpacket_clear	Clear the camera control packet.
- */
-void ccpacket_clear(struct ccpacket *pkt) {
-	pkt->receiver = 0;
-	pkt->status = STATUS_NONE;
-	pkt->command = 0;
-	pkt->pan = 0;
-	pkt->tilt = 0;
-	pkt->zoom = ZOOM_NONE;
-	pkt->focus = FOCUS_NONE;
-	pkt->iris = IRIS_NONE;
-	pkt->aux = 0;
-	pkt->preset = 0;
 }
 
 /*
@@ -196,13 +199,6 @@ bool ccpacket_has_aux(struct ccpacket *pkt) {
 		return true;
 	else
 		return false;
-}
-
-/*
- * ccpacket_has_preset	Test if the packet has a preset command.
- */
-bool ccpacket_has_preset(struct ccpacket *pkt) {
-	return pkt->command & CC_PRESET;
 }
 
 /*
