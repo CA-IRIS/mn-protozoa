@@ -87,7 +87,7 @@ static void ptz_stats_display(void) {
 void ptz_stats_count(struct ccpacket *pkt) {
 	if (stats.log) {
 		stats.n_packets++;
-		if (pkt->status)
+		if (ccpacket_get_status(pkt))
 			stats.n_status++;
 		if (ccpacket_has_pan(pkt))
 			stats.n_pan++;

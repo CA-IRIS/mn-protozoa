@@ -49,6 +49,22 @@ int ccpacket_get_receiver(const struct ccpacket *self) {
 	return self->receiver;
 }
 
+/** Set status request.
+ *
+ * @param s		Status request.
+ */
+void ccpacket_set_status(struct ccpacket *self, enum status_t s) {
+	self->status = s;
+}
+
+/** Get status request.
+ *
+ * @return Status request.
+ */
+enum status_t ccpacket_get_status(const struct ccpacket *self) {
+	return self->status;
+}
+
 /** Set pan speed.
  *
  * @param speed		Pan speed.

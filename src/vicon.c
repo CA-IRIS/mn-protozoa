@@ -198,14 +198,15 @@ static inline void decode_ex_speed(struct ccpacket *pkt, uint8_t *mess) {
  * decode_ex_status	Decode extended status functions.
  */
 static inline void decode_ex_status(struct ccpacket *pkt, uint8_t *mess) {
-	pkt->status = STATUS_REQUEST;
+	enum status_t s = STATUS_REQUEST;
 	if(bit_is_set(mess, BIT_STAT_SECTOR))
-		pkt->status |= STATUS_SECTOR;
+		s |= STATUS_SECTOR;
 	if(bit_is_set(mess, BIT_STAT_PRESET))
-		pkt->status |= STATUS_PRESET;
+		s |= STATUS_PRESET;
 	if(bit_is_set(mess, BIT_STAT_V15UVS) &&
 	   bit_is_set(mess, BIT_STAT_AUX_SET_2))
-		pkt->status |= STATUS_AUX_SET_2;
+		s |= STATUS_AUX_SET_2;
+	ccpacket_set_status(pkt, s);
 }
 
 /*
@@ -281,7 +282,7 @@ static inline enum decode_t vicon_decode_status(struct ccreader *rdr,
 	if(buffer_available(rxbuf) < SIZE_STATUS)
 		return DECODE_DONE;
 	decode_receiver(&rdr->packet, mess);
-	rdr->packet.status = STATUS_REQUEST;
+	ccpacket_set_status(&rdr->packet, STATUS_REQUEST);
 	buffer_consume(rxbuf, SIZE_STATUS);
 	ccreader_process_packet(rdr);
 	return DECODE_MORE;
@@ -501,16 +502,17 @@ static inline void encode_extended_status(struct ccwriter *wtr,
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_EXTENDED);
 	if(mess) {
+		enum status_t s = ccpacket_get_status(pkt);
 		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_STATUS);
 		bit_set(mess, BIT_EX_REQUEST);
-		if(pkt->status & STATUS_SECTOR)
+		if(s & STATUS_SECTOR)
 			bit_set(mess, BIT_STAT_SECTOR);
-		if(pkt->status & STATUS_PRESET)
+		if(s & STATUS_PRESET)
 			bit_set(mess, BIT_STAT_PRESET);
-		if(pkt->status & STATUS_AUX_SET_2) {
+		if(s & STATUS_AUX_SET_2) {
 			bit_set(mess, BIT_STAT_V15UVS);
 			bit_set(mess, BIT_STAT_AUX_SET_2);
 		}
@@ -521,7 +523,8 @@ static inline void encode_extended_status(struct ccwriter *wtr,
  * encode_status	Encode a status message.
  */
 static void encode_status(struct ccwriter *wtr, struct ccpacket *pkt) {
-	if(pkt->status & STATUS_EXTENDED)
+	enum status_t s = ccpacket_get_status(pkt);
+	if(s & STATUS_EXTENDED)
 		encode_extended_status(wtr, pkt);
 	else
 		encode_simple_status(wtr, pkt);
@@ -569,7 +572,7 @@ unsigned int vicon_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(receiver < 1 || receiver > VICON_MAX_ADDRESS)
 		return 0;
 	adjust_menu_commands(pkt);
-	if(pkt->status)
+	if(ccpacket_get_status(pkt))
 		encode_status(wtr, pkt);
 	else if(is_extended_preset(pkt))
 		encode_extended_preset(wtr, pkt);

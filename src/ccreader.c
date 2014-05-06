@@ -188,7 +188,7 @@ unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	unsigned int res = 0;
 	if(rdr->log->packet)
 		ccpacket_log(pkt, rdr->log, "IN", rdr->name);
-	if(pkt->status)
+	if(ccpacket_get_status(pkt))
 		ccpacket_drop(pkt);
 	else {
 		ccpacket_set_timeout(pkt, rdr->timeout);

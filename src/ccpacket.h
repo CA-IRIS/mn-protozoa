@@ -91,6 +91,8 @@ struct ccpacket {
 void ccpacket_init(struct ccpacket *pkt);
 void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);
+void ccpacket_set_status(struct ccpacket *self, enum status_t s);
+enum status_t ccpacket_get_status(const struct ccpacket *self);
 void ccpacket_set_pan_speed(struct ccpacket *self, int speed);
 int ccpacket_get_pan_speed(const struct ccpacket *self);
 bool ccpacket_has_pan(const struct ccpacket *self);
