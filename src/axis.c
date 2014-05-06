@@ -233,7 +233,7 @@ static bool encode_preset(struct ccwriter *wtr, struct ccpacket *pkt,
 		strcpy(mess, "remove");
 	}
 	strcat(mess, "serverpresetname=");
-	sprintf(num, "Pos%d", pkt->preset);
+	sprintf(num, "Pos%d", ccpacket_get_preset(pkt));
 	strcat(mess, num);
 	axis_add_to_buffer(wtr, mess);
 	return somein;

@@ -243,12 +243,10 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 		ccpacket_store_preset(pkt, p0);
 		break;
 	case EX_RECALL:
-		pkt->command |= CC_RECALL;
-		pkt->preset = p0;
+		ccpacket_recall_preset(pkt, p0);
 		break;
 	case EX_CLEAR:
-		pkt->command |= CC_CLEAR;
-		pkt->preset = p0;
+		ccpacket_clear_preset(pkt, p0);
 		break;
 	case EX_AUX_SET:
 		pkt->aux = decode_aux(p0);
@@ -488,7 +486,7 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 			mess[3] |= EX_STORE << 1;
 		else if(pkt->command & CC_CLEAR)
 			mess[3] |= EX_CLEAR << 1;
-		mess[5] = pkt->preset;
+		mess[5] = ccpacket_get_preset(pkt);
 		encode_checksum(mess);
 	}
 }
@@ -531,10 +529,9 @@ static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
  * adjust_menu_commands	Adjust menu commands for pelco d protocol.
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
-	if(pkt->command & CC_MENU_OPEN) {
-		pkt->command |= CC_STORE;
-		pkt->preset = PELCO_PRESET_MENU_OPEN;
-	} else if(pkt->command & CC_MENU_ENTER)
+	if(pkt->command & CC_MENU_OPEN)
+		ccpacket_store_preset(pkt, PELCO_PRESET_MENU_OPEN);
+	else if(pkt->command & CC_MENU_ENTER)
 		pkt->iris = IRIS_OPEN;
 	else if(pkt->command & CC_MENU_CANCEL)
 		pkt->iris = IRIS_CLOSE;

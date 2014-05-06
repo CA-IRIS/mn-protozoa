@@ -177,10 +177,9 @@ static inline void decode_aux(struct ccpacket *pkt, uint8_t *mess) {
  */
 static inline void decode_preset(struct ccpacket *pkt, uint8_t *mess) {
 	int p_num = mess[5] & 0x0f;
-	if(bit_is_set(mess, BIT_RECALL)) {
-		pkt->command = CC_RECALL;
-		pkt->preset = p_num;
-	} else if(bit_is_set(mess, BIT_STORE))
+	if(bit_is_set(mess, BIT_RECALL))
+		ccpacket_recall_preset(pkt, p_num);
+	else if(bit_is_set(mess, BIT_STORE))
 		ccpacket_store_preset(pkt, p_num);
 }
 
@@ -218,10 +217,8 @@ static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
 	int tilt = mess[9] & 0x7f;
 	if(bit_is_set(mess, BIT_EX_STORE))
 		ccpacket_store_preset(pkt, p_num);
-	else {
-		pkt->command = CC_RECALL;
-		pkt->preset = p_num;
-	}
+	else
+		ccpacket_recall_preset(pkt, p_num);
 	ccpacket_set_pan_speed(pkt, pan);
 	ccpacket_set_tilt_speed(pkt, tilt);
 }
@@ -405,7 +402,7 @@ static void encode_preset(uint8_t *mess, struct ccpacket *pkt) {
 		bit_set(mess, BIT_RECALL);
 	else if(pkt->command & CC_STORE)
 		bit_set(mess, BIT_STORE);
-	mess[5] |= pkt->preset & 0x0f;
+	mess[5] |= ccpacket_get_preset(pkt) & 0x0f;
 }
 
 /*
@@ -477,7 +474,7 @@ static void encode_extended_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 		encode_lens(mess, pkt);
 		encode_toggles(mess, pkt);
 		encode_aux(mess, pkt);
-		mess[7] |= pkt->preset & 0x7f;
+		mess[7] |= ccpacket_get_preset(pkt) & 0x7f;
 		mess[8] |= ccpacket_get_pan_speed(pkt) & 0x7f;
 		mess[9] |= ccpacket_get_tilt_speed(pkt) & 0x7f;
 	}
@@ -537,7 +534,7 @@ static inline bool is_extended_preset(struct ccpacket *pkt) {
 	if(pkt->command & (CC_RECALL | CC_STORE)) {
 		int pan = ccpacket_get_pan_speed(pkt);
 		int tilt = ccpacket_get_tilt_speed(pkt);
-		return (pkt->preset > 15) || pan || tilt;
+		return (ccpacket_get_preset(pkt) > 15) || pan || tilt;
 	} else
 		return false;
 }
@@ -555,10 +552,9 @@ static inline bool is_extended_speed(struct ccpacket *pkt) {
  * adjust_menu_commands	Adjust menu commands for vicon protocol.
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
-	if(pkt->command & CC_MENU_OPEN) {
-		pkt->command |= CC_STORE;
-		pkt->preset = VICON_PRESET_MENU_OPEN;
-	} else if(pkt->command & CC_MENU_ENTER)
+	if(pkt->command & CC_MENU_OPEN)
+		ccpacket_store_preset(pkt, VICON_PRESET_MENU_OPEN);
+	else if(pkt->command & CC_MENU_ENTER)
 		pkt->command |= CC_AUTO_PAN;
 	else if(pkt->command & CC_MENU_CANCEL)
 		pkt->command |= CC_AUTO_IRIS;

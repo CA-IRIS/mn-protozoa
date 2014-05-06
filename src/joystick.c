@@ -174,42 +174,34 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 				pkt->aux = AUX_NONE;
 			return true;
 		case JBUTTON_PRESET_1:
-			pkt->command ^= pkt->command & CC_PRESET;
-			pkt->preset = 1;
 			if(pressed)
-				pkt->command |= CC_RECALL;
+				ccpacket_recall_preset(pkt, 1);
 			else if(moved)
-				pkt->command |= CC_STORE;
+				ccpacket_store_preset(pkt, 1);
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_2:
-			pkt->command ^= pkt->command & CC_PRESET;
-			pkt->preset = 2;
 			if(pressed)
-				pkt->command |= CC_RECALL;
+				ccpacket_recall_preset(pkt, 2);
 			else if(moved)
-				pkt->command |= CC_STORE;
+				ccpacket_store_preset(pkt, 2);
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_3:
-			pkt->command ^= pkt->command & CC_PRESET;
-			pkt->preset = 3;
 			if(pressed)
-				pkt->command |= CC_RECALL;
+				ccpacket_recall_preset(pkt, 3);
 			else if(moved)
-				pkt->command |= CC_STORE;
+				ccpacket_store_preset(pkt, 3);
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_4:
-			pkt->command ^= pkt->command & CC_PRESET;
-			pkt->preset = 4;
 			if(pressed)
-				pkt->command |= CC_RECALL;
+				ccpacket_recall_preset(pkt, 4);
 			else if(moved)
-				pkt->command |= CC_STORE;
+				ccpacket_store_preset(pkt, 4);
 			else
 				break;
 			return true;
@@ -222,7 +214,7 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 				ccreader_next_camera(rdr);
 			break;
 	}
-	pkt->preset = 0;
+	ccpacket_recall_preset(pkt, 0);
 	return false;
 }
 
@@ -261,5 +253,5 @@ void joystick_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 		c += joystick_read_message(rdr, rxbuf);
 	if(c)
 		ccreader_process_packet_no_clear(rdr);
-	rdr->packet.preset = 0;
+	ccpacket_recall_preset(&rdr->packet, 0);
 }

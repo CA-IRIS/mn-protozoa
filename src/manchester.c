@@ -205,8 +205,7 @@ static inline void decode_aux(struct ccpacket *pkt, int extra) {
  * decode_recall	Decode a preset recall command.
  */
 static inline void decode_recall(struct ccpacket *pkt, int extra) {
-	pkt->command |= CC_RECALL;
-	pkt->preset = extra + 1;
+	ccpacket_recall_preset(pkt, extra + 1);
 }
 
 /*
@@ -456,7 +455,7 @@ static void encode_store_function(struct ccwriter *wtr, struct ccpacket *pkt,
  * encode_preset	Encode a preset command.
  */
 static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
-	int preset = pkt->preset;
+	int preset = ccpacket_get_preset(pkt);
 	if(preset < 1 || preset > 8)
 		return;
 	if(pkt->command & CC_RECALL)

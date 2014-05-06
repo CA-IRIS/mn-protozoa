@@ -129,7 +129,6 @@ void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout) {
 
 /** Check is packet is expired.
  *
- * @param self		Camera control packet.
  * @param timeout	Timeout in ms.
  * @return true if packet is expired.
  */
@@ -139,28 +138,54 @@ bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout) {
 
 /** Test if the packet has a preset command.
  */
-bool ccpacket_has_preset(const struct ccpacket *pkt) {
-	return pkt->command & CC_PRESET;
+bool ccpacket_has_preset(const struct ccpacket *self) {
+	return self->command & CC_PRESET;
 }
 
 /** Decode a store preset command.  Predefined presets are replaced with menu
  * commands.
  */
-void ccpacket_store_preset(struct ccpacket *pkt, int p_num) {
+void ccpacket_store_preset(struct ccpacket *self, int p_num) {
+	self->command ^= self->command & CC_PRESET;
 	switch(p_num) {
 	case MENU_OPEN_PRESET:
-		pkt->command |= CC_MENU_OPEN;
+		self->command |= CC_MENU_OPEN;
 		break;
 	case MENU_ENTER_PRESET:
-		pkt->command |= CC_MENU_ENTER;
+		self->command |= CC_MENU_ENTER;
 		break;
 	case MENU_CANCEL_PRESET:
-		pkt->command |= CC_MENU_CANCEL;
+		self->command |= CC_MENU_CANCEL;
 		break;
 	default:
-		pkt->command |= CC_STORE;
-		pkt->preset = p_num;
+		if(p_num > 0)
+			self->command |= CC_STORE;
+		self->preset = p_num;
 	}
+}
+
+/** Recall a preset.
+ */
+void ccpacket_recall_preset(struct ccpacket *self, int p_num) {
+	self->command ^= self->command & CC_PRESET;
+	if(p_num > 0)
+		self->command |= CC_RECALL;
+	self->preset = p_num;
+}
+
+/** Clear a preset.
+ */
+void ccpacket_clear_preset(struct ccpacket *self, int p_num) {
+	self->command ^= self->command & CC_PRESET;
+	if(p_num > 0)
+		self->command |= CC_CLEAR;
+	self->preset = p_num;
+}
+
+/** Get the preset number.
+ */
+int ccpacket_get_preset(const struct ccpacket *self) {
+	return self->preset;
 }
 
 /*
