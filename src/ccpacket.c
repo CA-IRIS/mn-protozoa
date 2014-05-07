@@ -40,7 +40,7 @@ void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->command = 0;
 	pkt->pan = 0;
 	pkt->tilt = 0;
-	pkt->zoom = ZOOM_NONE;
+	pkt->lens = 0;
 	pkt->focus = FOCUS_NONE;
 	pkt->iris = IRIS_NONE;
 	pkt->aux = 0;
@@ -195,11 +195,36 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	return (pkt->command | CC_PAN_TILT) == CC_PAN_TILT &&
 	       pkt->pan == 0 &&
 	       pkt->tilt == 0 &&
-	       pkt->zoom == ZOOM_NONE &&
+	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
 	       pkt->focus == FOCUS_NONE &&
 	       pkt->iris == IRIS_NONE &&
 	       pkt->aux == 0 &&
 	       pkt->status == STATUS_NONE;
+}
+
+/** Get a valid zoom */
+static enum lens_t ccpacket_zoom(enum lens_t z) {
+	switch(z & CC_ZOOM) {
+	case CC_ZOOM_IN:
+	case CC_ZOOM_OUT:
+		return z;
+	default:
+		return CC_ZOOM_STOP;
+	}
+}
+
+/** Set the zoom mode.
+ *
+ * @param z		Zoom mode
+ */
+void ccpacket_set_zoom(struct ccpacket *self, enum lens_t z) {
+	self->lens = ccpacket_zoom(z) | (self->lens & ~CC_ZOOM);
+}
+
+/** Get the zoom mode.
+ */
+enum lens_t ccpacket_get_zoom(const struct ccpacket *self) {
+	return ccpacket_zoom(self->lens);
 }
 
 /*
@@ -209,11 +234,10 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
  * return: True if command is present; false otherwise
  */
 bool ccpacket_has_command(const struct ccpacket *pkt) {
-	if(pkt->command & CC_PAN_TILT)
-		return true;
-	if(pkt->zoom || pkt->focus || pkt->iris)
-		return true;
-	return false;
+	return (pkt->command & CC_PAN_TILT) ||
+	       (ccpacket_get_zoom(pkt) != CC_ZOOM_STOP) ||
+	       (pkt->focus) ||
+	       (pkt->iris);
 }
 
 /*
@@ -280,8 +304,11 @@ static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
-	if(pkt->zoom)
-		log_printf(log, " zoom: %d", pkt->zoom);
+	enum lens_t z = ccpacket_get_zoom(pkt);
+	if(z == CC_ZOOM_IN)
+		log_printf(log, " zoom IN");
+	if(z == CC_ZOOM_OUT)
+		log_printf(log, " zoom OUT");
 	if(pkt->focus)
 		log_printf(log, " focus: %d", pkt->focus);
 	if(pkt->iris)

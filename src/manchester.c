@@ -155,10 +155,10 @@ static inline void decode_pan_tilt(struct ccpacket *pkt, enum pt_command_t cmnd,
 static inline void decode_lens(struct ccpacket *pkt, enum xl_lens_t extra) {
 	switch(extra) {
 	case XL_ZOOM_IN:
-		pkt->zoom = ZOOM_IN;
+		ccpacket_set_zoom(pkt, CC_ZOOM_IN);
 		break;
 	case XL_ZOOM_OUT:
-		pkt->zoom = ZOOM_OUT;
+		ccpacket_set_zoom(pkt, CC_ZOOM_OUT);
 		break;
 	case XL_FOCUS_FAR:
 		pkt->focus = FOCUS_FAR;
@@ -386,9 +386,9 @@ static void encode_tilt(struct ccwriter *wtr, struct ccpacket *pkt) {
  * encode_zoom		Encode a zoom command.
  */
 static inline void encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt) {
-	if(pkt->zoom < 0)
+	if(ccpacket_get_zoom(pkt) == CC_ZOOM_OUT)
 		encode_lens_function(wtr, pkt, XL_ZOOM_OUT);
-	else if(pkt->zoom > 0)
+	else if(ccpacket_get_zoom(pkt) == CC_ZOOM_IN)
 		encode_lens_function(wtr, pkt, XL_ZOOM_IN);
 }
 

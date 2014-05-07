@@ -37,13 +37,25 @@ enum command_t {
 	CC_MENU_CANCEL = 1 << 16,
 };
 
-#define SPEED_MAX ((1 << 11) - 1)
-
-enum zoom_t {
-	ZOOM_OUT = -1,
-	ZOOM_NONE = 0,
-	ZOOM_IN = 1,
+enum lens_t {
+	CC_ZOOM_STOP = 1 << 0,
+	CC_ZOOM_IN = 1 << 1,
+	CC_ZOOM_OUT = 1 << 2,
+	CC_ZOOM = CC_ZOOM_STOP | CC_ZOOM_IN | CC_ZOOM_OUT,
+	CC_FOCUS_STOP = 1 << 3,
+	CC_FOCUS_NEAR = 1 << 4,
+	CC_FOCUS_FAR = 1 << 5,
+	CC_FOCUS_AUTO = 1 << 6,
+	CC_FOCUS = CC_FOCUS_STOP | CC_FOCUS_NEAR | CC_FOCUS_FAR | CC_FOCUS_AUTO,
+	CC_IRIS_STOP = 1 << 7,
+	CC_IRIS_CLOSE = 1 << 8,
+	CC_IRIS_OPEN = 1 << 9,
+	CC_IRIS_AUTO = 1 << 10,
+	CC_IRIS = CC_IRIS_STOP | CC_IRIS_CLOSE | CC_IRIS_OPEN | CC_IRIS_AUTO,
+	CC_LENS_SPEED_ = 1 << 11,
 };
+
+#define SPEED_MAX ((1 << 11) - 1)
 
 enum focus_t {
 	FOCUS_NEAR = -1,
@@ -80,7 +92,7 @@ struct ccpacket {
 	enum command_t	command;	/* bitmask of commands */
 	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
 	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
-	enum zoom_t	zoom;		/* -1 (out), 0, or 1 (in) */
+	enum lens_t	lens;		/* bitmask of lens functions */
 	enum focus_t	focus;		/* -1 (near), 0, or 1 (far) */
 	enum iris_t	iris;		/* -1 (close), 0, or 1 (open) */
 	enum aux_t	aux;		/* bitmask of aux functions */
@@ -108,6 +120,8 @@ void ccpacket_recall_preset(struct ccpacket *self, int p_num);
 void ccpacket_clear_preset(struct ccpacket *self, int p_num);
 int ccpacket_get_preset(const struct ccpacket *self);
 bool ccpacket_is_stop(struct ccpacket *pkt);
+void ccpacket_set_zoom(struct ccpacket *self, enum lens_t z);
+enum lens_t ccpacket_get_zoom(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_aux(struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);

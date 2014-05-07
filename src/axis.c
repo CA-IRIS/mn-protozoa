@@ -179,10 +179,10 @@ static bool encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	char mess[32];
 	strcpy(mess, "continuouszoommove=");
-	if(pkt->zoom == ZOOM_IN) {
+	if(ccpacket_get_zoom(pkt) == CC_ZOOM_IN) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, default_speed);
-	} else if(pkt->zoom == ZOOM_OUT) {
+	} else if(ccpacket_get_zoom(pkt) == CC_ZOOM_OUT) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);
