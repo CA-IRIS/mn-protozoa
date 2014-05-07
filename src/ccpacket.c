@@ -83,12 +83,48 @@ enum status_t ccpacket_get_status(const struct ccpacket *self) {
 	return ccpacket_status(self->status);
 }
 
+/** Clamp speed value */
+static int clamp_speed(int speed) {
+	if (speed < 0)
+		return 0;
+	else if (speed > SPEED_MAX)
+		return SPEED_MAX;
+	else
+		return speed;
+}
+
+/** Get a valid pan mode */
+static enum command_t ccpacket_pan(enum command_t pm) {
+	enum command_t p = pm & CC_PAN;
+	switch(p) {
+	case CC_PAN_LEFT:
+	case CC_PAN_RIGHT:
+		return p;
+	default:
+		return CC_PAN_STOP;
+	}
+}
+
+/** Set pan mode and speed.
+ */
+void ccpacket_set_pan(struct ccpacket *self, enum command_t pm, int speed) {
+	enum command_t command = self->command & ~CC_PAN;
+	self->command = command | ccpacket_pan(pm);
+	ccpacket_set_pan_speed(self, speed);
+}
+
+/** Get pan mode.
+ */
+enum command_t ccpacket_get_pan_mode(const struct ccpacket *self) {
+	return ccpacket_pan(self->command);
+}
+
 /** Set pan speed.
  *
  * @param speed		Pan speed.
  */
 void ccpacket_set_pan_speed(struct ccpacket *self, int speed) {
-	self->pan = speed;
+	self->pan = clamp_speed(speed);
 }
 
 /** Get pan speed.
@@ -100,7 +136,7 @@ int ccpacket_get_pan_speed(const struct ccpacket *self) {
 /** Check if packet has pan.
  */
 bool ccpacket_has_pan(const struct ccpacket *self) {
-	return (self->command & CC_PAN) && (self->pan);
+	return ccpacket_get_pan_mode(self) && self->pan;
 }
 
 /** Set tilt speed.
@@ -329,7 +365,8 @@ enum lens_t ccpacket_get_lens(const struct ccpacket *self) {
  * return: True if command is present; false otherwise
  */
 bool ccpacket_has_command(const struct ccpacket *pkt) {
-	return (pkt->command & CC_PAN_TILT) ||
+	return (ccpacket_get_pan_mode(pkt) != CC_PAN_STOP) ||
+	       (pkt->command & CC_PAN_TILT) ||
 	       (ccpacket_get_zoom(pkt) != CC_ZOOM_STOP) ||
 	       (ccpacket_get_focus(pkt) != CC_FOCUS_STOP) ||
 	       (ccpacket_get_iris(pkt) != CC_IRIS_STOP);
@@ -371,11 +408,11 @@ bool ccpacket_has_power(const struct ccpacket *pkt) {
  * log: message logger
  */
 static inline void ccpacket_log_pan(struct ccpacket *pkt, struct log *log) {
-	if(pkt->pan == 0)
+	if (pkt->pan == 0)
 		log_printf(log, " pan: 0");
-	else if(pkt->command & CC_PAN_LEFT)
+	else if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT)
 		log_printf(log, " pan left: %d", pkt->pan);
-	else if(pkt->command & CC_PAN_RIGHT)
+	else if (ccpacket_get_pan_mode(pkt) == CC_PAN_RIGHT)
 		log_printf(log, " pan right: %d", pkt->pan);
 }
 

@@ -109,16 +109,12 @@ static inline int decode_speed(uint8_t val) {
  */
 static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
 	int pan = decode_speed(mess[4]);
-	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
-		pkt->command |= CC_PAN_RIGHT;
-		ccpacket_set_pan_speed(pkt, pan);
-	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
-		pkt->command |= CC_PAN_LEFT;
-		ccpacket_set_pan_speed(pkt, pan);
-	} else {
-		pkt->command |= CC_PAN_LEFT;
-		ccpacket_set_pan_speed(pkt, 0);
-	}
+	if (bit_is_set(mess, BIT_PAN_RIGHT))
+		ccpacket_set_pan(pkt, CC_PAN_RIGHT, pan);
+	else if (bit_is_set(mess, BIT_PAN_LEFT))
+		ccpacket_set_pan(pkt, CC_PAN_LEFT, pan);
+	else
+		ccpacket_set_pan(pkt, CC_PAN_LEFT, 0);
 }
 
 /*
@@ -369,10 +365,10 @@ static int pelco_d_encode_pan_speed(int speed) {
 static void encode_pan(uint8_t *mess, struct ccpacket *pkt) {
 	int pan = pelco_d_encode_pan_speed(ccpacket_get_pan_speed(pkt));
 	mess[4] = pan;
-	if(pan) {
-		if(pkt->command & CC_PAN_LEFT)
+	if (pan) {
+		if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
-		else if(pkt->command & CC_PAN_RIGHT)
+		else if (ccpacket_get_pan_mode(pkt) == CC_PAN_RIGHT)
 			bit_set(mess, BIT_PAN_RIGHT);
 		else
 			mess[4] = 0;

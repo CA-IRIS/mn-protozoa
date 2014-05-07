@@ -131,12 +131,10 @@ static inline void decode_pan_tilt(struct ccpacket *pkt, enum pt_command_t cmnd,
 {
 	switch(cmnd) {
 	case PAN_LEFT:
-		pkt->command |= CC_PAN_LEFT;
-		ccpacket_set_pan_speed(pkt, speed);
+		ccpacket_set_pan(pkt, CC_PAN_LEFT, speed);
 		break;
 	case PAN_RIGHT:
-		pkt->command |= CC_PAN_RIGHT;
-		ccpacket_set_pan_speed(pkt, speed);
+		ccpacket_set_pan(pkt, CC_PAN_RIGHT, speed);
 		break;
 	case TILT_DOWN:
 		pkt->command |= CC_TILT_DOWN;
@@ -179,8 +177,7 @@ static inline void decode_lens(struct ccpacket *pkt, enum xl_lens_t extra) {
 		break;
 	case XL_PAN_LEFT:
 		/* Weird special case for full left */
-		pkt->command |= CC_PAN_LEFT;
-		ccpacket_set_pan_speed(pkt, SPEED_MAX);
+		ccpacket_set_pan(pkt, CC_PAN_LEFT, SPEED_MAX);
 		break;
 	}
 }
@@ -195,8 +192,7 @@ static inline void decode_aux(struct ccpacket *pkt, int extra) {
 		ccpacket_set_tilt_speed(pkt, SPEED_MAX);
 	} else if(extra == EX_AUX_FULL_RIGHT) {
 		/** Weird special case for full right */
-		pkt->command |= CC_PAN_RIGHT;
-		ccpacket_set_pan_speed(pkt, SPEED_MAX);
+		ccpacket_set_pan(pkt, CC_PAN_RIGHT, SPEED_MAX);
 	} else
 		pkt->aux |= AUX_LUT[extra];
 }
@@ -351,13 +347,13 @@ static int manchester_encode_speed(int speed) {
  */
 static void encode_pan(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int speed = manchester_encode_speed(ccpacket_get_pan_speed(pkt));
-	if(pkt->command & CC_PAN_LEFT) {
-		if(speed == SPEED_FULL)
+	if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT) {
+		if (speed == SPEED_FULL)
 			encode_lens_function(wtr, pkt, XL_PAN_LEFT);
 		else
 			encode_pan_tilt_command(wtr, pkt, PAN_LEFT, speed);
-	} else if(pkt->command & CC_PAN_RIGHT) {
-		if(speed == SPEED_FULL)
+	} else if (ccpacket_get_pan_mode(pkt) == CC_PAN_RIGHT) {
+		if (speed == SPEED_FULL)
 			encode_aux_function(wtr, pkt, EX_AUX_FULL_RIGHT);
 		else
 			encode_pan_tilt_command(wtr, pkt, PAN_RIGHT, speed);

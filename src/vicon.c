@@ -93,16 +93,12 @@ static inline bool is_extended_command(uint8_t *mess) {
  * decode_pan		Decode the pan speed (and command).
  */
 static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
-	if(bit_is_set(mess, BIT_PAN_RIGHT)) {
-		pkt->command |= CC_PAN_RIGHT;
-		ccpacket_set_pan_speed(pkt, SPEED_MAX);
-	} else if(bit_is_set(mess, BIT_PAN_LEFT)) {
-		pkt->command |= CC_PAN_LEFT;
-		ccpacket_set_pan_speed(pkt, SPEED_MAX);
-	} else {
-		pkt->command |= CC_PAN_LEFT;
-		ccpacket_set_pan_speed(pkt, 0);
-	}
+	if (bit_is_set(mess, BIT_PAN_RIGHT))
+		ccpacket_set_pan(pkt, CC_PAN_RIGHT, SPEED_MAX);
+	else if (bit_is_set(mess, BIT_PAN_LEFT))
+		ccpacket_set_pan(pkt, CC_PAN_LEFT, SPEED_MAX);
+	else
+		ccpacket_set_pan(pkt, CC_PAN_LEFT, 0);
 }
 
 /*
@@ -329,9 +325,9 @@ static inline void encode_receiver(uint8_t *mess, const struct ccpacket *pkt) {
  */
 static void encode_pan_tilt(uint8_t *mess, struct ccpacket *pkt) {
 	if(ccpacket_has_pan(pkt)) {
-		if(pkt->command & CC_PAN_LEFT)
+		if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
-		else if(pkt->command & CC_PAN_RIGHT)
+		else if (ccpacket_get_pan_mode(pkt) == CC_PAN_RIGHT)
 			bit_set(mess, BIT_PAN_RIGHT);
 	}
 	if(ccpacket_has_tilt(pkt)) {

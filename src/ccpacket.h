@@ -14,6 +14,7 @@ enum status_t {
 };
 
 enum command_t {
+	CC_PAN_STOP = 0,
 	CC_PAN_LEFT = 1 << 0,
 	CC_PAN_RIGHT = 1 << 1,
 	CC_PAN = (CC_PAN_LEFT | CC_PAN_RIGHT),
@@ -93,6 +94,8 @@ void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);
 void ccpacket_set_status(struct ccpacket *self, enum status_t s);
 enum status_t ccpacket_get_status(const struct ccpacket *self);
+void ccpacket_set_pan(struct ccpacket *self, enum command_t pm, int speed);
+enum command_t ccpacket_get_pan_mode(const struct ccpacket *self);
 void ccpacket_set_pan_speed(struct ccpacket *self, int speed);
 int ccpacket_get_pan_speed(const struct ccpacket *self);
 bool ccpacket_has_pan(const struct ccpacket *self);

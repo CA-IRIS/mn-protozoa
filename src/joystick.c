@@ -80,6 +80,12 @@ static inline int remap_speed(int value) {
 	return remap_int(value, JSPEED_MAX, SPEED_MAX);
 }
 
+/** Decode pan mode.
+ */
+static enum command_t decode_pan_mode(short speed) {
+	return speed <= 0 ? CC_PAN_LEFT : CC_PAN_RIGHT;
+}
+
 /*
  * decode_pan_tilt_zoom		Decode a pan/tilt/zoom event.
  */
@@ -89,12 +95,8 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 
 	switch(number) {
 		case JAXIS_PAN:
-			pkt->command &= ~CC_PAN;
-			if(speed <= 0)
-				pkt->command |= CC_PAN_LEFT;
-			if(speed > 0)
-				pkt->command |= CC_PAN_RIGHT;
-			ccpacket_set_pan_speed(pkt, remap_speed(speed));
+			ccpacket_set_pan(pkt, decode_pan_mode(speed),
+				remap_speed(speed));
 			break;
 		case JAXIS_TILT:
 			pkt->command &= ~CC_TILT;

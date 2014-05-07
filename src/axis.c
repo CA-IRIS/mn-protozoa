@@ -74,9 +74,9 @@ static void encode_pan(struct ccpacket *pkt, char *mess) {
 	char speed_str[8];
 
 	int speed = axis_encode_speed(ccpacket_get_pan_speed(pkt));
-	if(pkt->command & CC_PAN_LEFT)
+	if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT)
 		speed = -speed;
-	if(snprintf(speed_str, 8, "%d,", speed) > 0)
+	if (snprintf(speed_str, 8, "%d,", speed) > 0)
 		strcat(mess, speed_str);
 	else
 		strcat(mess, "0,");
