@@ -100,7 +100,7 @@ void ptz_stats_count(struct ccpacket *pkt) {
 			stats.n_lens++;
 		if (pkt->aux)
 			stats.n_aux++;
-		if (pkt->command & (CC_RECALL | CC_STORE))
+		if (ccpacket_get_preset_mode(pkt))
 			stats.n_preset++;
 		if ((stats.n_packets % 100) == 0)
 			ptz_stats_display();

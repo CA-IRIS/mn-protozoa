@@ -478,15 +478,16 @@ static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
 static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
+		enum command_t pm = ccpacket_get_preset_mode(pkt);
 		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_EXTENDED);
-		if(pkt->command & CC_RECALL)
+		if (pm == CC_PRESET_RECALL)
 			mess[3] |= EX_RECALL << 1;
-		else if(pkt->command & CC_STORE)
+		else if (pm == CC_PRESET_STORE)
 			mess[3] |= EX_STORE << 1;
-		else if(pkt->command & CC_CLEAR)
+		else if (pm == CC_PRESET_CLEAR)
 			mess[3] |= EX_CLEAR << 1;
-		mess[5] = ccpacket_get_preset(pkt);
+		mess[5] = ccpacket_get_preset_number(pkt);
 		encode_checksum(mess);
 	}
 }
@@ -550,7 +551,7 @@ unsigned int pelco_p_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	{
 		encode_command(wtr, pkt);
 	}
-	if(ccpacket_has_preset(pkt))
+	if (ccpacket_get_preset_mode(pkt))
 		encode_preset(wtr, pkt);
 	if(ccpacket_has_aux(pkt))
 		encode_aux(wtr, pkt);

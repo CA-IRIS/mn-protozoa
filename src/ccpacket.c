@@ -140,12 +140,6 @@ bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout) {
 	return time_from_now(&self->expire) > timeout;
 }
 
-/** Test if the packet has a preset command.
- */
-bool ccpacket_has_preset(const struct ccpacket *self) {
-	return self->command & CC_PRESET;
-}
-
 /** Decode a store preset command.  Predefined presets are replaced with menu
  * commands.
  */
@@ -163,7 +157,7 @@ void ccpacket_store_preset(struct ccpacket *self, int p_num) {
 		break;
 	default:
 		if(p_num > 0)
-			self->command |= CC_STORE;
+			self->command |= CC_PRESET_STORE;
 		self->preset = p_num;
 	}
 }
@@ -173,7 +167,7 @@ void ccpacket_store_preset(struct ccpacket *self, int p_num) {
 void ccpacket_recall_preset(struct ccpacket *self, int p_num) {
 	self->command &= ~CC_PRESET;
 	if(p_num > 0)
-		self->command |= CC_RECALL;
+		self->command |= CC_PRESET_RECALL;
 	self->preset = p_num;
 }
 
@@ -182,13 +176,32 @@ void ccpacket_recall_preset(struct ccpacket *self, int p_num) {
 void ccpacket_clear_preset(struct ccpacket *self, int p_num) {
 	self->command &= ~CC_PRESET;
 	if(p_num > 0)
-		self->command |= CC_CLEAR;
+		self->command |= CC_PRESET_CLEAR;
 	self->preset = p_num;
+}
+
+/** Get a valid preset mode */
+static enum command_t ccpacket_preset(enum command_t pm) {
+	enum command_t p = pm & CC_PRESET;
+	switch(p) {
+	case CC_PRESET_RECALL:
+	case CC_PRESET_STORE:
+	case CC_PRESET_CLEAR:
+		return p;
+	default:
+		return CC_PRESET_NONE;
+	}
+}
+
+/** Get the preset mode.
+ */
+enum command_t ccpacket_get_preset_mode(const struct ccpacket *self) {
+	return ccpacket_preset(self->command);
 }
 
 /** Get the preset number.
  */
-int ccpacket_get_preset(const struct ccpacket *self) {
+int ccpacket_get_preset_number(const struct ccpacket *self) {
 	return self->preset;
 }
 
@@ -418,11 +431,12 @@ static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
-	if(pkt->command & CC_RECALL)
+	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	if (pm == CC_PRESET_RECALL)
 		log_printf(log, " recall");
-	else if(pkt->command & CC_STORE)
+	else if (pm == CC_PRESET_STORE)
 		log_printf(log, " store");
-	else if(pkt->command & CC_CLEAR)
+	else if (pm == CC_PRESET_CLEAR)
 		log_printf(log, " clear");
 	log_printf(log, " preset: %d", pkt->preset);
 }

@@ -398,11 +398,12 @@ static void encode_aux(uint8_t *mess, struct ccpacket *pkt) {
  * encode_preset	Encode preset functions.
  */
 static void encode_preset(uint8_t *mess, struct ccpacket *pkt) {
-	if(pkt->command & CC_RECALL)
+	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	if (pm == CC_PRESET_RECALL)
 		bit_set(mess, BIT_RECALL);
-	else if(pkt->command & CC_STORE)
+	else if (pm == CC_PRESET_STORE)
 		bit_set(mess, BIT_STORE);
-	mess[5] |= ccpacket_get_preset(pkt) & 0x0f;
+	mess[5] |= ccpacket_get_preset_number(pkt) & 0x0f;
 }
 
 /*
@@ -469,12 +470,12 @@ static void encode_extended_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 		bit_set(mess, BIT_COMMAND);
 		bit_set(mess, BIT_EXTENDED);
 		bit_set(mess, BIT_EX_REQUEST);
-		if(pkt->command & CC_STORE)
+		if (ccpacket_get_preset_mode(pkt) == CC_PRESET_STORE)
 			bit_set(mess, BIT_EX_STORE);
 		encode_lens(mess, pkt);
 		encode_toggles(mess, pkt);
 		encode_aux(mess, pkt);
-		mess[7] |= ccpacket_get_preset(pkt) & 0x7f;
+		mess[7] |= ccpacket_get_preset_number(pkt) & 0x7f;
 		mess[8] |= ccpacket_get_pan_speed(pkt) & 0x7f;
 		mess[9] |= ccpacket_get_tilt_speed(pkt) & 0x7f;
 	}
@@ -531,10 +532,11 @@ static void encode_status(struct ccwriter *wtr, struct ccpacket *pkt) {
  * is_extended_preset	Test if a command is an extended preset.
  */
 static inline bool is_extended_preset(struct ccpacket *pkt) {
-	if(pkt->command & (CC_RECALL | CC_STORE)) {
+	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	if(pm == CC_PRESET_RECALL || pm == CC_PRESET_STORE) {
 		int pan = ccpacket_get_pan_speed(pkt);
 		int tilt = ccpacket_get_tilt_speed(pkt);
-		return (ccpacket_get_preset(pkt) > 15) || pan || tilt;
+		return (ccpacket_get_preset_number(pkt) > 15) || pan || tilt;
 	} else
 		return false;
 }

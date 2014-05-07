@@ -89,7 +89,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 
 	switch(number) {
 		case JAXIS_PAN:
-			pkt->command ^= pkt->command & CC_PAN;
+			pkt->command &= ~CC_PAN;
 			if(speed <= 0)
 				pkt->command |= CC_PAN_LEFT;
 			if(speed > 0)
@@ -97,7 +97,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 			ccpacket_set_pan_speed(pkt, remap_speed(speed));
 			break;
 		case JAXIS_TILT:
-			pkt->command ^= pkt->command & CC_TILT;
+			pkt->command &= ~CC_TILT;
 			if(speed < 0)
 				pkt->command |= CC_TILT_UP;
 			if(speed >= 0)
@@ -113,7 +113,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 				ccpacket_set_zoom(pkt, CC_ZOOM_STOP);
 			break;
 	}
-	pkt->command ^= pkt->command & CC_PRESET;
+	pkt->command &= ~CC_PRESET;
 	return true;
 }
 
@@ -122,7 +122,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
  *			was pressed.
  */
 static bool moved_since_pressed(struct ccpacket *pkt) {
-	return (pkt->command & CC_RECALL) == 0;
+	return ccpacket_get_preset_mode(pkt) != CC_PRESET_RECALL;
 }
 
 /*
@@ -134,7 +134,7 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 	bool pressed = decode_pressed(mess);
 	bool moved = moved_since_pressed(pkt);
 
-	pkt->command ^= pkt->command & CC_PAN_TILT;
+	pkt->command &= ~CC_PAN_TILT;
 
 	switch(number) {
 		case JBUTTON_FOCUS_NEAR:

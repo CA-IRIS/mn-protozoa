@@ -21,10 +21,11 @@ enum command_t {
 	CC_TILT_DOWN = 1 << 3,
 	CC_TILT = (CC_TILT_UP | CC_TILT_DOWN),
 	CC_PAN_TILT = (CC_PAN | CC_TILT),
-	CC_RECALL = 1 << 4,
-	CC_STORE = 1 << 5,
-	CC_CLEAR = 1 << 6,
-	CC_PRESET = (CC_RECALL | CC_STORE | CC_CLEAR),
+	CC_PRESET_NONE = 0,
+	CC_PRESET_RECALL = 1 << 4,
+	CC_PRESET_STORE = 1 << 5,
+	CC_PRESET_CLEAR = 1 << 6,
+	CC_PRESET = CC_PRESET_RECALL | CC_PRESET_STORE | CC_PRESET_CLEAR,
 	CC_AUTO_PAN = 1 << 8,
 	CC_MANUAL_PAN = 1 << 9,
 	CC_ACK_ALARM = 1 << 11,
@@ -100,11 +101,11 @@ int ccpacket_get_tilt_speed(const struct ccpacket *self);
 bool ccpacket_has_tilt(const struct ccpacket *self);
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
 bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout);
-bool ccpacket_has_preset(const struct ccpacket *self);
 void ccpacket_store_preset(struct ccpacket *self, int p_num);
 void ccpacket_recall_preset(struct ccpacket *self, int p_num);
 void ccpacket_clear_preset(struct ccpacket *self, int p_num);
-int ccpacket_get_preset(const struct ccpacket *self);
+enum command_t ccpacket_get_preset_mode(const struct ccpacket *self);
+int ccpacket_get_preset_number(const struct ccpacket *self);
 bool ccpacket_is_stop(struct ccpacket *pkt);
 void ccpacket_set_zoom(struct ccpacket *self, enum lens_t zm);
 enum lens_t ccpacket_get_zoom(const struct ccpacket *self);

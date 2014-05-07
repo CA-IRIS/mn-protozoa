@@ -222,18 +222,19 @@ static bool encode_preset(struct ccwriter *wtr, struct ccpacket *pkt,
 	char num[16];
 	char mess[32];
 
-	if(pkt->command & CC_RECALL) {
+	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	if (pm == CC_PRESET_RECALL) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcpy(mess, "goto");
-	} else if(pkt->command & CC_STORE) {
+	} else if (pm == CC_PRESET_STORE) {
 		somein = axis_prepare_buffer(wtr, somein, true);
 		strcpy(mess, "set");
-	} else if(pkt->command & CC_CLEAR) {
+	} else if (pm == CC_PRESET_CLEAR) {
 		somein = axis_prepare_buffer(wtr, somein, true);
 		strcpy(mess, "remove");
 	}
 	strcat(mess, "serverpresetname=");
-	sprintf(num, "Pos%d", ccpacket_get_preset(pkt));
+	sprintf(num, "Pos%d", ccpacket_get_preset_number(pkt));
 	strcat(mess, num);
 	axis_add_to_buffer(wtr, mess);
 	return somein;
@@ -251,7 +252,7 @@ unsigned int axis_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 		log_println(wtr->chn->log, "axis: dropping packet(s)");
 		buffer_clear(&wtr->chn->txbuf);
 	}
-	if(ccpacket_has_preset(pkt))
+	if (ccpacket_get_preset_mode(pkt))
 		somein = encode_preset(wtr, pkt, somein);
 	else if(ccpacket_has_command(pkt))
 		somein = encode_command(wtr, pkt, somein);

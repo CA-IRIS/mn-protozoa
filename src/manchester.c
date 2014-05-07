@@ -455,12 +455,12 @@ static void encode_store_function(struct ccwriter *wtr, struct ccpacket *pkt,
  * encode_preset	Encode a preset command.
  */
 static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
-	int preset = ccpacket_get_preset(pkt);
-	if(preset < 1 || preset > 8)
+	int preset = ccpacket_get_preset_number(pkt);
+	if (preset < 1 || preset > 8)
 		return;
-	if(pkt->command & CC_RECALL)
+	if (ccpacket_get_preset_mode(pkt) == CC_PRESET_RECALL)
 		encode_recall_function(wtr, pkt, preset - 1);
-	else if(pkt->command & CC_STORE)
+	else if (ccpacket_get_preset_mode(pkt) == CC_PRESET_STORE)
 		encode_store_function(wtr, pkt, preset - 1);
 }
 
