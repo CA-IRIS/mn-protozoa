@@ -150,7 +150,7 @@ static inline void decode_toggles(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_AUTO_PAN))
 		pkt->command |= CC_AUTO_PAN;
 	if(bit_is_set(mess, BIT_LENS_SPEED))
-		pkt->command |= CC_LENS_SPEED;
+		ccpacket_set_lens(pkt, CC_LENS_SPEED);
 }
 
 /*
@@ -370,7 +370,7 @@ static void encode_toggles(uint8_t *mess, struct ccpacket *pkt) {
 		bit_set(mess, BIT_AUTO_IRIS);
 	if(pkt->command & CC_AUTO_PAN)
 		bit_set(mess, BIT_AUTO_PAN);
-	if(pkt->command & CC_LENS_SPEED)
+	if (ccpacket_get_lens(pkt) == CC_LENS_SPEED)
 		bit_set(mess, BIT_LENS_SPEED);
 }
 

@@ -280,6 +280,31 @@ enum lens_t ccpacket_get_iris(const struct ccpacket *self) {
 	return ccpacket_iris(self->lens);
 }
 
+/** Get a valid lens mode */
+static enum lens_t ccpacket_lens(enum lens_t lm) {
+	enum lens_t l = lm & CC_LENS;
+	switch(l) {
+	case CC_LENS_SPEED:
+		return l;
+	default:
+		return CC_LENS_NONE;
+	}
+}
+
+/** Set the lens mode.
+ *
+ * @param lm		Lens mode
+ */
+void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm) {
+	self->lens = ccpacket_lens(lm) | (self->lens & ~CC_LENS);
+}
+
+/** Get the lens mode.
+ */
+enum lens_t ccpacket_get_lens(const struct ccpacket *self) {
+	return ccpacket_lens(self->lens);
+}
+
 /*
  * ccpacket_has_command	Test if a packet has a command to encode.
  *
@@ -360,6 +385,7 @@ static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
 	enum lens_t zm = ccpacket_get_zoom(pkt);
 	enum lens_t fm = ccpacket_get_focus(pkt);
 	enum lens_t im = ccpacket_get_iris(pkt);
+	enum lens_t lm = ccpacket_get_lens(pkt);
 	if (zm == CC_ZOOM_IN)
 		log_printf(log, " zoom IN");
 	if (zm == CC_ZOOM_OUT)
@@ -376,6 +402,8 @@ static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " iris OPEN");
 	if (im == CC_IRIS_AUTO)
 		log_printf(log, " iris AUTO");
+	if (lm == CC_LENS_SPEED)
+		log_printf(log, " lens SPEED");
 }
 
 /*
@@ -403,8 +431,6 @@ static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " auto-pan");
 	if(pkt->command & CC_MANUAL_PAN)
 		log_printf(log, " manual-pan");
-	if(pkt->command & CC_LENS_SPEED)
-		log_printf(log, " lens-speed");
 	if(pkt->command & CC_ACK_ALARM)
 		log_printf(log, " ack-alarm");
 	if(pkt->command & CC_MENU_OPEN)

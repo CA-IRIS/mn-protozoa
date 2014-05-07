@@ -27,7 +27,6 @@ enum command_t {
 	CC_PRESET = (CC_RECALL | CC_STORE | CC_CLEAR),
 	CC_AUTO_PAN = 1 << 8,
 	CC_MANUAL_PAN = 1 << 9,
-	CC_LENS_SPEED = 1 << 10,
 	CC_ACK_ALARM = 1 << 11,
 	CC_CAMERA_ON = 1 << 12,
 	CC_CAMERA_OFF = 1 << 13,
@@ -51,7 +50,9 @@ enum lens_t {
 	CC_IRIS_OPEN = 1 << 9,
 	CC_IRIS_AUTO = 1 << 10,
 	CC_IRIS = CC_IRIS_STOP | CC_IRIS_CLOSE | CC_IRIS_OPEN | CC_IRIS_AUTO,
-	CC_LENS_SPEED_ = 1 << 11,
+	CC_LENS_NONE = 1 << 11,
+	CC_LENS_SPEED = 1 << 12,
+	CC_LENS = CC_LENS_NONE | CC_LENS_SPEED,
 };
 
 #define SPEED_MAX ((1 << 11) - 1)
@@ -111,6 +112,8 @@ void ccpacket_set_focus(struct ccpacket *self, enum lens_t fm);
 enum lens_t ccpacket_get_focus(const struct ccpacket *self);
 void ccpacket_set_iris(struct ccpacket *self, enum lens_t im);
 enum lens_t ccpacket_get_iris(const struct ccpacket *self);
+void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm);
+enum lens_t ccpacket_get_lens(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_aux(struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);
