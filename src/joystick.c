@@ -86,6 +86,12 @@ static enum command_t decode_pan_mode(short speed) {
 	return speed <= 0 ? CC_PAN_LEFT : CC_PAN_RIGHT;
 }
 
+/** Decode tilt mode.
+ */
+static enum command_t decode_tilt_mode(short speed) {
+	return speed < 0 ? CC_TILT_UP : CC_TILT_DOWN;
+}
+
 /*
  * decode_pan_tilt_zoom		Decode a pan/tilt/zoom event.
  */
@@ -99,12 +105,8 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 				remap_speed(speed));
 			break;
 		case JAXIS_TILT:
-			pkt->command &= ~CC_TILT;
-			if(speed < 0)
-				pkt->command |= CC_TILT_UP;
-			if(speed >= 0)
-				pkt->command |= CC_TILT_DOWN;
-			ccpacket_set_tilt_speed(pkt, remap_speed(speed));
+			ccpacket_set_tilt(pkt, decode_tilt_mode(speed),
+				remap_speed(speed));
 			break;
 		case JAXIS_ZOOM:
 			if(speed < 0)

@@ -92,9 +92,9 @@ static void encode_tilt(struct ccpacket *pkt, char *mess) {
 	char speed_str[8];
 
 	int speed = axis_encode_speed(ccpacket_get_tilt_speed(pkt));
-	if(pkt->command & CC_TILT_DOWN)
+	if (ccpacket_get_tilt_mode(pkt) == CC_TILT_DOWN)
 		speed = -speed;
-	if(snprintf(speed_str, 8, "%d,", speed) > 0)
+	if (snprintf(speed_str, 8, "%d,", speed) > 0)
 		strcat(mess, speed_str);
 	else
 		strcat(mess, "0,");

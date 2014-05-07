@@ -105,16 +105,12 @@ static inline void decode_pan(struct ccpacket *pkt, uint8_t *mess) {
  * decode_tilt		Decode the tilt speed (and command).
  */
 static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
-	if(bit_is_set(mess, BIT_TILT_UP)) {
-		pkt->command |= CC_TILT_UP;
-		ccpacket_set_tilt_speed(pkt, SPEED_MAX);
-	} else if(bit_is_set(mess, BIT_TILT_DOWN)) {
-		pkt->command |= CC_TILT_DOWN;
-		ccpacket_set_tilt_speed(pkt, SPEED_MAX);
-	} else {
-		pkt->command |= CC_TILT_DOWN;
-		ccpacket_set_tilt_speed(pkt, 0);
-	}
+	if (bit_is_set(mess, BIT_TILT_UP))
+		ccpacket_set_tilt(pkt, CC_TILT_UP, SPEED_MAX);
+	else if (bit_is_set(mess, BIT_TILT_DOWN))
+		ccpacket_set_tilt(pkt, CC_TILT_DOWN, SPEED_MAX);
+	else
+		ccpacket_set_tilt(pkt, CC_TILT_DOWN, 0);
 }
 
 /*
@@ -324,16 +320,16 @@ static inline void encode_receiver(uint8_t *mess, const struct ccpacket *pkt) {
  * encode_pan_tilt	Encode a pan/tilt command.
  */
 static void encode_pan_tilt(uint8_t *mess, struct ccpacket *pkt) {
-	if(ccpacket_has_pan(pkt)) {
+	if (ccpacket_has_pan(pkt)) {
 		if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
 		else if (ccpacket_get_pan_mode(pkt) == CC_PAN_RIGHT)
 			bit_set(mess, BIT_PAN_RIGHT);
 	}
-	if(ccpacket_has_tilt(pkt)) {
-		if(pkt->command & CC_TILT_UP)
+	if (ccpacket_has_tilt(pkt)) {
+		if (ccpacket_get_tilt_mode(pkt) == CC_TILT_UP)
 			bit_set(mess, BIT_TILT_UP);
-		else if(pkt->command & CC_TILT_DOWN)
+		else if (ccpacket_get_tilt_mode(pkt) == CC_TILT_DOWN)
 			bit_set(mess, BIT_TILT_DOWN);
 	}
 }

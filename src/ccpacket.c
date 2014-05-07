@@ -139,6 +139,32 @@ bool ccpacket_has_pan(const struct ccpacket *self) {
 	return ccpacket_get_pan_mode(self) && self->pan;
 }
 
+/** Get a valid tilt mode */
+static enum command_t ccpacket_tilt(enum command_t tm) {
+	enum command_t t = tm & CC_TILT;
+	switch(t) {
+	case CC_TILT_UP:
+	case CC_TILT_DOWN:
+		return t;
+	default:
+		return CC_TILT_STOP;
+	}
+}
+
+/** Set tilt mode and speed.
+ */
+void ccpacket_set_tilt(struct ccpacket *self, enum command_t tm, int speed) {
+	enum command_t command = self->command & ~CC_TILT;
+	self->command = command | ccpacket_tilt(tm);
+	ccpacket_set_tilt_speed(self, speed);
+}
+
+/** Get tilt mode.
+ */
+enum command_t ccpacket_get_tilt_mode(const struct ccpacket *self) {
+	return ccpacket_tilt(self->command);
+}
+
 /** Set tilt speed.
  *
  * @param speed		Tilt speed.
@@ -156,7 +182,7 @@ int ccpacket_get_tilt_speed(const struct ccpacket *self) {
 /** Check if packet has tilt.
  */
 bool ccpacket_has_tilt(const struct ccpacket *self) {
-	return (self->command & CC_TILT) && (self->tilt);
+	return ccpacket_get_tilt_mode(self) && self->tilt;
 }
 
 /*
@@ -422,11 +448,11 @@ static inline void ccpacket_log_pan(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
-	if(pkt->tilt == 0)
+	if (pkt->tilt == 0)
 		log_printf(log, " tilt: 0");
-	else if(pkt->command & CC_TILT_UP)
+	else if (ccpacket_get_tilt_mode(pkt) == CC_TILT_UP)
 		log_printf(log, " tilt up: %d", pkt->tilt);
-	else if(pkt->command & CC_TILT_DOWN)
+	else if (ccpacket_get_tilt_mode(pkt) == CC_TILT_DOWN)
 		log_printf(log, " tilt down: %d", pkt->tilt);
 }
 
