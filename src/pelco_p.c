@@ -165,9 +165,9 @@ static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess,
  */
 static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_IRIS_OPEN))
-		pkt->iris = IRIS_OPEN;
+		ccpacket_set_iris(pkt, CC_IRIS_OPEN);
 	else if(bit_is_set(mess, BIT_IRIS_CLOSE))
-		pkt->iris = IRIS_CLOSE;
+		ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
 	if(bit_is_set(mess, BIT_FOCUS_NEAR))
 		ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
 	else if(bit_is_set(mess, BIT_FOCUS_FAR))
@@ -423,9 +423,9 @@ static void encode_tilt(uint8_t *mess, struct ccpacket *pkt) {
  * encode_lens		Encode the lens commands.
  */
 static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
-	if(pkt->iris == IRIS_OPEN)
+	if (ccpacket_get_iris(pkt) == CC_IRIS_OPEN)
 		bit_set(mess, BIT_IRIS_OPEN);
-	else if(pkt->iris == IRIS_CLOSE)
+	else if (ccpacket_get_iris(pkt) == CC_IRIS_CLOSE)
 		bit_set(mess, BIT_IRIS_CLOSE);
 	if (ccpacket_get_focus(pkt) == CC_FOCUS_NEAR)
 		bit_set(mess, BIT_FOCUS_NEAR);
@@ -529,12 +529,12 @@ static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
  * adjust_menu_commands	Adjust menu commands for pelco d protocol.
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
-	if(pkt->command & CC_MENU_OPEN)
+	if (pkt->command & CC_MENU_OPEN)
 		ccpacket_store_preset(pkt, PELCO_PRESET_MENU_OPEN);
-	else if(pkt->command & CC_MENU_ENTER)
-		pkt->iris = IRIS_OPEN;
-	else if(pkt->command & CC_MENU_CANCEL)
-		pkt->iris = IRIS_CLOSE;
+	else if (pkt->command & CC_MENU_ENTER)
+		ccpacket_set_iris(pkt, CC_IRIS_OPEN);
+	else if (pkt->command & CC_MENU_CANCEL)
+		ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
 }
 
 /*

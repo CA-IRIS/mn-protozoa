@@ -126,9 +126,9 @@ static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess) {
  */
 static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_IRIS_OPEN))
-		pkt->iris = IRIS_OPEN;
+		ccpacket_set_iris(pkt, CC_IRIS_OPEN);
 	else if(bit_is_set(mess, BIT_IRIS_CLOSE))
-		pkt->iris = IRIS_CLOSE;
+		ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
 	if(bit_is_set(mess, BIT_FOCUS_NEAR))
 		ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
 	else if(bit_is_set(mess, BIT_FOCUS_FAR))
@@ -146,7 +146,7 @@ static inline void decode_toggles(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_ACK_ALARM))
 		pkt->command |= CC_ACK_ALARM;
 	if(bit_is_set(mess, BIT_AUTO_IRIS))
-		pkt->command |= CC_AUTO_IRIS;
+		ccpacket_set_iris(pkt, CC_IRIS_AUTO);
 	if(bit_is_set(mess, BIT_AUTO_PAN))
 		pkt->command |= CC_AUTO_PAN;
 	if(bit_is_set(mess, BIT_LENS_SPEED))
@@ -346,9 +346,9 @@ static void encode_pan_tilt(uint8_t *mess, struct ccpacket *pkt) {
  * encode_lens		Encode a lens command.
  */
 static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
-	if(pkt->iris == IRIS_OPEN)
+	if (ccpacket_get_iris(pkt) == CC_IRIS_OPEN)
 		bit_set(mess, BIT_IRIS_OPEN);
-	else if(pkt->iris == IRIS_CLOSE)
+	else if (ccpacket_get_iris(pkt) == CC_IRIS_CLOSE)
 		bit_set(mess, BIT_IRIS_CLOSE);
 	if (ccpacket_get_focus(pkt) == CC_FOCUS_NEAR)
 		bit_set(mess, BIT_FOCUS_NEAR);
@@ -366,7 +366,7 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
 static void encode_toggles(uint8_t *mess, struct ccpacket *pkt) {
 	if(pkt->command & CC_ACK_ALARM)
 		bit_set(mess, BIT_ACK_ALARM);
-	if(pkt->command & CC_AUTO_IRIS)
+	if(ccpacket_get_iris(pkt) == CC_IRIS_AUTO)
 		bit_set(mess, BIT_AUTO_IRIS);
 	if(pkt->command & CC_AUTO_PAN)
 		bit_set(mess, BIT_AUTO_PAN);
@@ -556,8 +556,8 @@ static inline void adjust_menu_commands(struct ccpacket *pkt) {
 		ccpacket_store_preset(pkt, VICON_PRESET_MENU_OPEN);
 	else if(pkt->command & CC_MENU_ENTER)
 		pkt->command |= CC_AUTO_PAN;
-	else if(pkt->command & CC_MENU_CANCEL)
-		pkt->command |= CC_AUTO_IRIS;
+	else if (pkt->command & CC_MENU_CANCEL)
+		ccpacket_set_iris(pkt, CC_IRIS_AUTO);
 }
 
 /*

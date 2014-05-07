@@ -151,15 +151,15 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 			return true;
 		case JBUTTON_IRIS_CLOSE:
 			if(pressed)
-				pkt->iris = IRIS_CLOSE;
+				ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
 			else
-				pkt->iris = IRIS_NONE;
+				ccpacket_set_iris(pkt, CC_IRIS_STOP);
 			return true;
 		case JBUTTON_IRIS_OPEN:
 			if(pressed)
-				pkt->iris = IRIS_OPEN;
+				ccpacket_set_iris(pkt, CC_IRIS_OPEN);
 			else
-				pkt->iris = IRIS_NONE;
+				ccpacket_set_iris(pkt, CC_IRIS_STOP);
 			return true;
 		case JBUTTON_AUX_1:
 			if(pressed)

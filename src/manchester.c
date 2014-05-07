@@ -167,10 +167,10 @@ static inline void decode_lens(struct ccpacket *pkt, enum xl_lens_t extra) {
 		ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
 		break;
 	case XL_IRIS_OPEN:
-		pkt->iris = IRIS_OPEN;
+		ccpacket_set_iris(pkt, CC_IRIS_OPEN);
 		break;
 	case XL_IRIS_CLOSE:
-		pkt->iris = IRIS_CLOSE;
+		ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
 		break;
 	case XL_TILT_DOWN:
 		/* Weird special case for full down */
@@ -406,9 +406,9 @@ static inline void encode_focus(struct ccwriter *wtr, struct ccpacket *pkt) {
  * encode_iris		Encode an iris command.
  */
 static inline void encode_iris(struct ccwriter *wtr, struct ccpacket *pkt) {
-	if(pkt->iris < 0)
+	if (ccpacket_get_iris(pkt) == CC_IRIS_CLOSE)
 		encode_lens_function(wtr, pkt, XL_IRIS_CLOSE);
-	else if(pkt->iris > 0)
+	else if (ccpacket_get_iris(pkt) == CC_IRIS_OPEN)
 		encode_lens_function(wtr, pkt, XL_IRIS_OPEN);
 }
 

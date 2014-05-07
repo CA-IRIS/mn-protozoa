@@ -25,7 +25,6 @@ enum command_t {
 	CC_STORE = 1 << 5,
 	CC_CLEAR = 1 << 6,
 	CC_PRESET = (CC_RECALL | CC_STORE | CC_CLEAR),
-	CC_AUTO_IRIS = 1 << 7,
 	CC_AUTO_PAN = 1 << 8,
 	CC_MANUAL_PAN = 1 << 9,
 	CC_LENS_SPEED = 1 << 10,
@@ -57,12 +56,6 @@ enum lens_t {
 
 #define SPEED_MAX ((1 << 11) - 1)
 
-enum iris_t {
-	IRIS_CLOSE = -1,
-	IRIS_NONE = 0,
-	IRIS_OPEN = 1,
-};
-
 enum aux_t {
 	AUX_NONE = 0,
 	AUX_1 = 1 << 0,
@@ -87,7 +80,6 @@ struct ccpacket {
 	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
 	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
 	enum lens_t	lens;		/* bitmask of lens functions */
-	enum iris_t	iris;		/* -1 (close), 0, or 1 (open) */
 	enum aux_t	aux;		/* bitmask of aux functions */
 	int		preset;		/* preset number */
 	struct timeval	expire;		/* expiration time */
@@ -113,10 +105,12 @@ void ccpacket_recall_preset(struct ccpacket *self, int p_num);
 void ccpacket_clear_preset(struct ccpacket *self, int p_num);
 int ccpacket_get_preset(const struct ccpacket *self);
 bool ccpacket_is_stop(struct ccpacket *pkt);
-void ccpacket_set_zoom(struct ccpacket *self, enum lens_t z);
+void ccpacket_set_zoom(struct ccpacket *self, enum lens_t zm);
 enum lens_t ccpacket_get_zoom(const struct ccpacket *self);
-void ccpacket_set_focus(struct ccpacket *self, enum lens_t f);
+void ccpacket_set_focus(struct ccpacket *self, enum lens_t fm);
 enum lens_t ccpacket_get_focus(const struct ccpacket *self);
+void ccpacket_set_iris(struct ccpacket *self, enum lens_t im);
+enum lens_t ccpacket_get_iris(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_aux(struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);

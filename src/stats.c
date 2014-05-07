@@ -95,7 +95,8 @@ void ptz_stats_count(struct ccpacket *pkt) {
 			stats.n_tilt++;
 		if (ccpacket_get_zoom(pkt) != CC_ZOOM_STOP)
 			stats.n_zoom++;
-		if ((ccpacket_get_focus(pkt) != CC_FOCUS_STOP) | pkt->iris)
+		if ((ccpacket_get_focus(pkt) != CC_FOCUS_STOP) ||
+		    (ccpacket_get_iris(pkt) != CC_IRIS_STOP))
 			stats.n_lens++;
 		if (pkt->aux)
 			stats.n_aux++;

@@ -41,7 +41,6 @@ void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->pan = 0;
 	pkt->tilt = 0;
 	pkt->lens = 0;
-	pkt->iris = IRIS_NONE;
 	pkt->aux = 0;
 	pkt->preset = 0;
 }
@@ -196,18 +195,18 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	       pkt->tilt == 0 &&
 	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
 	       ccpacket_get_focus(pkt) == CC_FOCUS_STOP &&
-	       pkt->iris == IRIS_NONE &&
+	       ccpacket_get_iris(pkt) == CC_IRIS_STOP &&
 	       pkt->aux == 0 &&
 	       pkt->status == STATUS_NONE;
 }
 
 /** Get a valid zoom mode */
-static enum lens_t ccpacket_zoom(enum lens_t z) {
-	enum lens_t lz = z & CC_ZOOM;
-	switch(lz) {
+static enum lens_t ccpacket_zoom(enum lens_t zm) {
+	enum lens_t z = zm & CC_ZOOM;
+	switch(z) {
 	case CC_ZOOM_IN:
 	case CC_ZOOM_OUT:
-		return lz;
+		return z;
 	default:
 		return CC_ZOOM_STOP;
 	}
@@ -215,10 +214,10 @@ static enum lens_t ccpacket_zoom(enum lens_t z) {
 
 /** Set the zoom mode.
  *
- * @param z		Zoom mode
+ * @param zm		Zoom mode
  */
-void ccpacket_set_zoom(struct ccpacket *self, enum lens_t z) {
-	self->lens = ccpacket_zoom(z) | (self->lens & ~CC_ZOOM);
+void ccpacket_set_zoom(struct ccpacket *self, enum lens_t zm) {
+	self->lens = ccpacket_zoom(zm) | (self->lens & ~CC_ZOOM);
 }
 
 /** Get the zoom mode.
@@ -228,13 +227,13 @@ enum lens_t ccpacket_get_zoom(const struct ccpacket *self) {
 }
 
 /** Get a valid focus mode */
-static enum lens_t ccpacket_focus(enum lens_t f) {
-	enum lens_t lf = f & CC_FOCUS;
-	switch(lf) {
+static enum lens_t ccpacket_focus(enum lens_t fm) {
+	enum lens_t f = fm & CC_FOCUS;
+	switch(f) {
 	case CC_FOCUS_NEAR:
 	case CC_FOCUS_FAR:
 	case CC_FOCUS_AUTO:
-		return lf;
+		return f;
 	default:
 		return CC_FOCUS_STOP;
 	}
@@ -242,16 +241,43 @@ static enum lens_t ccpacket_focus(enum lens_t f) {
 
 /** Set the focus mode.
  *
- * @param f		Focus mode
+ * @param fm		Focus mode
  */
-void ccpacket_set_focus(struct ccpacket *self, enum lens_t f) {
-	self->lens = ccpacket_focus(f) | (self->lens & ~CC_FOCUS);
+void ccpacket_set_focus(struct ccpacket *self, enum lens_t fm) {
+	self->lens = ccpacket_focus(fm) | (self->lens & ~CC_FOCUS);
 }
 
 /** Get the focus mode.
  */
 enum lens_t ccpacket_get_focus(const struct ccpacket *self) {
 	return ccpacket_focus(self->lens);
+}
+
+/** Get a valid iris mode */
+static enum lens_t ccpacket_iris(enum lens_t im) {
+	enum lens_t i = im & CC_IRIS;
+	switch(i) {
+	case CC_IRIS_CLOSE:
+	case CC_IRIS_OPEN:
+	case CC_IRIS_AUTO:
+		return i;
+	default:
+		return CC_IRIS_STOP;
+	}
+}
+
+/** Set the iris mode.
+ *
+ * @param im		Iris mode
+ */
+void ccpacket_set_iris(struct ccpacket *self, enum lens_t im) {
+	self->lens = ccpacket_iris(im) | (self->lens & ~CC_IRIS);
+}
+
+/** Get the iris mode.
+ */
+enum lens_t ccpacket_get_iris(const struct ccpacket *self) {
+	return ccpacket_iris(self->lens);
 }
 
 /*
@@ -264,7 +290,7 @@ bool ccpacket_has_command(const struct ccpacket *pkt) {
 	return (pkt->command & CC_PAN_TILT) ||
 	       (ccpacket_get_zoom(pkt) != CC_ZOOM_STOP) ||
 	       (ccpacket_get_focus(pkt) != CC_FOCUS_STOP) ||
-	       (pkt->iris);
+	       (ccpacket_get_iris(pkt) != CC_IRIS_STOP);
 }
 
 /*
@@ -331,20 +357,25 @@ static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
-	enum lens_t z = ccpacket_get_zoom(pkt);
-	enum lens_t f = ccpacket_get_focus(pkt);
-	if (z == CC_ZOOM_IN)
+	enum lens_t zm = ccpacket_get_zoom(pkt);
+	enum lens_t fm = ccpacket_get_focus(pkt);
+	enum lens_t im = ccpacket_get_iris(pkt);
+	if (zm == CC_ZOOM_IN)
 		log_printf(log, " zoom IN");
-	if (z == CC_ZOOM_OUT)
+	if (zm == CC_ZOOM_OUT)
 		log_printf(log, " zoom OUT");
-	if (f == CC_FOCUS_NEAR)
+	if (fm == CC_FOCUS_NEAR)
 		log_printf(log, " focus NEAR");
-	if (f == CC_FOCUS_FAR)
+	if (fm == CC_FOCUS_FAR)
 		log_printf(log, " focus FAR");
-	if (f == CC_FOCUS_AUTO)
+	if (fm == CC_FOCUS_AUTO)
 		log_printf(log, " focus AUTO");
-	if(pkt->iris)
-		log_printf(log, " iris: %d", pkt->iris);
+	if (im == CC_IRIS_CLOSE)
+		log_printf(log, " iris CLOSE");
+	if (im == CC_IRIS_OPEN)
+		log_printf(log, " iris OPEN");
+	if (im == CC_IRIS_AUTO)
+		log_printf(log, " iris AUTO");
 }
 
 /*
@@ -368,8 +399,6 @@ static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
-	if(pkt->command & CC_AUTO_IRIS)
-		log_printf(log, " auto-iris");
 	if(pkt->command & CC_AUTO_PAN)
 		log_printf(log, " auto-pan");
 	if(pkt->command & CC_MANUAL_PAN)
