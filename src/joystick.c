@@ -113,7 +113,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 				ccpacket_set_zoom(pkt, CC_ZOOM_STOP);
 			break;
 	}
-	pkt->command &= ~CC_PRESET;
+	ccpacket_set_preset(pkt, CC_PRESET_NONE, 0);
 	return true;
 }
 
@@ -175,33 +175,33 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 			return true;
 		case JBUTTON_PRESET_1:
 			if(pressed)
-				ccpacket_recall_preset(pkt, 1);
+				ccpacket_set_preset(pkt, CC_PRESET_RECALL, 1);
 			else if(moved)
-				ccpacket_store_preset(pkt, 1);
+				ccpacket_set_preset(pkt, CC_PRESET_STORE, 1);
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_2:
 			if(pressed)
-				ccpacket_recall_preset(pkt, 2);
+				ccpacket_set_preset(pkt, CC_PRESET_RECALL, 2);
 			else if(moved)
-				ccpacket_store_preset(pkt, 2);
+				ccpacket_set_preset(pkt, CC_PRESET_STORE, 2);
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_3:
 			if(pressed)
-				ccpacket_recall_preset(pkt, 3);
+				ccpacket_set_preset(pkt, CC_PRESET_RECALL, 3);
 			else if(moved)
-				ccpacket_store_preset(pkt, 3);
+				ccpacket_set_preset(pkt, CC_PRESET_STORE, 3);
 			else
 				break;
 			return true;
 		case JBUTTON_PRESET_4:
 			if(pressed)
-				ccpacket_recall_preset(pkt, 4);
+				ccpacket_set_preset(pkt, CC_PRESET_RECALL, 4);
 			else if(moved)
-				ccpacket_store_preset(pkt, 4);
+				ccpacket_set_preset(pkt, CC_PRESET_STORE, 4);
 			else
 				break;
 			return true;
@@ -214,7 +214,7 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 				ccreader_next_camera(rdr);
 			break;
 	}
-	ccpacket_recall_preset(pkt, 0);
+	ccpacket_set_preset(pkt, CC_PRESET_NONE, 0);
 	return false;
 }
 
@@ -253,5 +253,5 @@ void joystick_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 		c += joystick_read_message(rdr, rxbuf);
 	if(c)
 		ccreader_process_packet_no_clear(rdr);
-	ccpacket_recall_preset(&rdr->packet, 0);
+	ccpacket_set_preset(&rdr->packet, CC_PRESET_NONE, 0);
 }

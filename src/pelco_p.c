@@ -240,13 +240,13 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 {
 	switch(ex) {
 	case EX_STORE:
-		ccpacket_store_preset(pkt, p0);
+		ccpacket_set_preset(pkt, CC_PRESET_STORE, p0);
 		break;
 	case EX_RECALL:
-		ccpacket_recall_preset(pkt, p0);
+		ccpacket_set_preset(pkt, CC_PRESET_RECALL, p0);
 		break;
 	case EX_CLEAR:
-		ccpacket_clear_preset(pkt, p0);
+		ccpacket_set_preset(pkt, CC_PRESET_CLEAR, p0);
 		break;
 	case EX_AUX_SET:
 		pkt->aux = decode_aux(p0);
@@ -531,7 +531,7 @@ static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
 	if (pkt->command & CC_MENU_OPEN)
-		ccpacket_store_preset(pkt, PELCO_PRESET_MENU_OPEN);
+		ccpacket_set_preset(pkt,CC_PRESET_STORE,PELCO_PRESET_MENU_OPEN);
 	else if (pkt->command & CC_MENU_ENTER)
 		ccpacket_set_iris(pkt, CC_IRIS_OPEN);
 	else if (pkt->command & CC_MENU_CANCEL)

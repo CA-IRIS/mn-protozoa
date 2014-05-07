@@ -143,45 +143,26 @@ bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout) {
 /** Decode a store preset command.  Predefined presets are replaced with menu
  * commands.
  */
-void ccpacket_store_preset(struct ccpacket *self, int p_num) {
-	self->command &= ~CC_PRESET;
+static bool ccpacket_menu_preset(struct ccpacket *self, int p_num) {
 	switch(p_num) {
 	case MENU_OPEN_PRESET:
 		self->command |= CC_MENU_OPEN;
-		break;
+		return true;
 	case MENU_ENTER_PRESET:
 		self->command |= CC_MENU_ENTER;
-		break;
+		return true;
 	case MENU_CANCEL_PRESET:
 		self->command |= CC_MENU_CANCEL;
-		break;
+		return true;
 	default:
-		if(p_num > 0)
-			self->command |= CC_PRESET_STORE;
-		self->preset = p_num;
+		return false;
 	}
 }
 
-/** Recall a preset.
- */
-void ccpacket_recall_preset(struct ccpacket *self, int p_num) {
-	self->command &= ~CC_PRESET;
-	if(p_num > 0)
-		self->command |= CC_PRESET_RECALL;
-	self->preset = p_num;
-}
-
-/** Clear a preset.
- */
-void ccpacket_clear_preset(struct ccpacket *self, int p_num) {
-	self->command &= ~CC_PRESET;
-	if(p_num > 0)
-		self->command |= CC_PRESET_CLEAR;
-	self->preset = p_num;
-}
-
 /** Get a valid preset mode */
-static enum command_t ccpacket_preset(enum command_t pm) {
+static enum command_t ccpacket_preset(enum command_t pm, int p_num) {
+	if(p_num <= 0)
+		return CC_PRESET_NONE;
 	enum command_t p = pm & CC_PRESET;
 	switch(p) {
 	case CC_PRESET_RECALL:
@@ -193,10 +174,27 @@ static enum command_t ccpacket_preset(enum command_t pm) {
 	}
 }
 
+/** Set the preset mode and number.
+ *
+ * @param pm		Preset mode
+ * @param p_num		Preset number
+ */
+void ccpacket_set_preset(struct ccpacket *self, enum command_t pm, int p_num) {
+	enum command_t command = self->command & ~CC_PRESET;
+	enum command_t p = ccpacket_preset(pm, p_num);
+	if (p == CC_PRESET_STORE && ccpacket_menu_preset(self, p_num)) {
+		self->command = command;
+		self->preset = 0;
+	} else {
+		self->command = command | p;
+		self->preset = p_num;
+	}
+}
+
 /** Get the preset mode.
  */
 enum command_t ccpacket_get_preset_mode(const struct ccpacket *self) {
-	return ccpacket_preset(self->command);
+	return ccpacket_preset(self->command, self->preset);
 }
 
 /** Get the preset number.

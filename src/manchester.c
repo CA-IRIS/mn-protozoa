@@ -205,7 +205,7 @@ static inline void decode_aux(struct ccpacket *pkt, int extra) {
  * decode_recall	Decode a preset recall command.
  */
 static inline void decode_recall(struct ccpacket *pkt, int extra) {
-	ccpacket_recall_preset(pkt, extra + 1);
+	ccpacket_set_preset(pkt, CC_PRESET_RECALL, extra + 1);
 }
 
 /*
@@ -225,7 +225,7 @@ static inline void decode_extended(struct ccpacket *pkt,
 		decode_recall(pkt, extra);
 		break;
 	case EX_STORE:
-		ccpacket_store_preset(pkt, extra + 1);
+		ccpacket_set_preset(pkt, CC_PRESET_STORE, extra + 1);
 		break;
 	}
 }

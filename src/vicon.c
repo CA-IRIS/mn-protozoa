@@ -178,9 +178,9 @@ static inline void decode_aux(struct ccpacket *pkt, uint8_t *mess) {
 static inline void decode_preset(struct ccpacket *pkt, uint8_t *mess) {
 	int p_num = mess[5] & 0x0f;
 	if(bit_is_set(mess, BIT_RECALL))
-		ccpacket_recall_preset(pkt, p_num);
+		ccpacket_set_preset(pkt, CC_PRESET_RECALL, p_num);
 	else if(bit_is_set(mess, BIT_STORE))
-		ccpacket_store_preset(pkt, p_num);
+		ccpacket_set_preset(pkt, CC_PRESET_STORE, p_num);
 }
 
 /*
@@ -216,9 +216,9 @@ static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
 	int pan = mess[8] & 0x7f;
 	int tilt = mess[9] & 0x7f;
 	if(bit_is_set(mess, BIT_EX_STORE))
-		ccpacket_store_preset(pkt, p_num);
+		ccpacket_set_preset(pkt, CC_PRESET_STORE, p_num);
 	else
-		ccpacket_recall_preset(pkt, p_num);
+		ccpacket_set_preset(pkt, CC_PRESET_RECALL, p_num);
 	ccpacket_set_pan_speed(pkt, pan);
 	ccpacket_set_tilt_speed(pkt, tilt);
 }
@@ -555,7 +555,7 @@ static inline bool is_extended_speed(struct ccpacket *pkt) {
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
 	if(pkt->command & CC_MENU_OPEN)
-		ccpacket_store_preset(pkt, VICON_PRESET_MENU_OPEN);
+		ccpacket_set_preset(pkt,CC_PRESET_STORE,VICON_PRESET_MENU_OPEN);
 	else if(pkt->command & CC_MENU_ENTER)
 		pkt->command |= CC_AUTO_PAN;
 	else if (pkt->command & CC_MENU_CANCEL)
