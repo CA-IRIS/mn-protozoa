@@ -144,7 +144,7 @@ bool ccpacket_has_preset(const struct ccpacket *self) {
  * commands.
  */
 void ccpacket_store_preset(struct ccpacket *self, int p_num) {
-	self->command ^= self->command & CC_PRESET;
+	self->command &= ~CC_PRESET;
 	switch(p_num) {
 	case MENU_OPEN_PRESET:
 		self->command |= CC_MENU_OPEN;
@@ -165,7 +165,7 @@ void ccpacket_store_preset(struct ccpacket *self, int p_num) {
 /** Recall a preset.
  */
 void ccpacket_recall_preset(struct ccpacket *self, int p_num) {
-	self->command ^= self->command & CC_PRESET;
+	self->command &= ~CC_PRESET;
 	if(p_num > 0)
 		self->command |= CC_RECALL;
 	self->preset = p_num;
@@ -174,7 +174,7 @@ void ccpacket_recall_preset(struct ccpacket *self, int p_num) {
 /** Clear a preset.
  */
 void ccpacket_clear_preset(struct ccpacket *self, int p_num) {
-	self->command ^= self->command & CC_PRESET;
+	self->command &= ~CC_PRESET;
 	if(p_num > 0)
 		self->command |= CC_CLEAR;
 	self->preset = p_num;
