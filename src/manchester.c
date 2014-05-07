@@ -51,7 +51,7 @@ enum ex_function_t {
 };
 
 /* Lens command values */
-enum lens_t {
+enum xl_lens_t {
 	XL_TILT_DOWN,	/* 000 (not really a lens function) */
 	XL_IRIS_OPEN,	/* 001 */
 	XL_FOCUS_FAR,	/* 010 */
@@ -152,7 +152,7 @@ static inline void decode_pan_tilt(struct ccpacket *pkt, enum pt_command_t cmnd,
 /*
  * decode_lens		Decode a lens command.
  */
-static inline void decode_lens(struct ccpacket *pkt, enum lens_t extra) {
+static inline void decode_lens(struct ccpacket *pkt, enum xl_lens_t extra) {
 	switch(extra) {
 	case XL_ZOOM_IN:
 		pkt->zoom = ZOOM_IN;
@@ -311,7 +311,7 @@ static void encode_pan_tilt_command(struct ccwriter *wtr, struct ccpacket *pkt,
  * encode_lens_function		Encode a lens function.
  */
 static void encode_lens_function(struct ccwriter *wtr, struct ccpacket *pkt,
-	enum lens_t func)
+	enum xl_lens_t func)
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
 	if(mess) {
