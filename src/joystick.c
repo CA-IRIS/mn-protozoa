@@ -139,15 +139,15 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 	switch(number) {
 		case JBUTTON_FOCUS_NEAR:
 			if(pressed)
-				pkt->focus = FOCUS_NEAR;
+				ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
 			else
-				pkt->focus = FOCUS_NONE;
+				ccpacket_set_focus(pkt, CC_FOCUS_STOP);
 			return true;
 		case JBUTTON_FOCUS_FAR:
 			if(pressed)
-				pkt->focus = FOCUS_FAR;
+				ccpacket_set_focus(pkt, CC_FOCUS_FAR);
 			else
-				pkt->focus = FOCUS_NONE;
+				ccpacket_set_focus(pkt, CC_FOCUS_STOP);
 			return true;
 		case JBUTTON_IRIS_CLOSE:
 			if(pressed)

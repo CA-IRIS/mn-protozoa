@@ -152,10 +152,10 @@ static bool encode_focus(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	char mess[32];
 	strcpy(mess, "continuousfocusmove=");
-	if(pkt->focus == FOCUS_NEAR) {
+	if (ccpacket_get_focus(pkt) == CC_FOCUS_NEAR) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, default_speed);
-	} else if(pkt->focus == FOCUS_FAR) {
+	} else if (ccpacket_get_focus(pkt) == CC_FOCUS_FAR) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "-");
 		strcat(mess, default_speed);

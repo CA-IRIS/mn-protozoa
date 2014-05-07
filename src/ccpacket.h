@@ -57,12 +57,6 @@ enum lens_t {
 
 #define SPEED_MAX ((1 << 11) - 1)
 
-enum focus_t {
-	FOCUS_NEAR = -1,
-	FOCUS_NONE = 0,
-	FOCUS_FAR = 1,
-};
-
 enum iris_t {
 	IRIS_CLOSE = -1,
 	IRIS_NONE = 0,
@@ -93,7 +87,6 @@ struct ccpacket {
 	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
 	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
 	enum lens_t	lens;		/* bitmask of lens functions */
-	enum focus_t	focus;		/* -1 (near), 0, or 1 (far) */
 	enum iris_t	iris;		/* -1 (close), 0, or 1 (open) */
 	enum aux_t	aux;		/* bitmask of aux functions */
 	int		preset;		/* preset number */
@@ -122,6 +115,8 @@ int ccpacket_get_preset(const struct ccpacket *self);
 bool ccpacket_is_stop(struct ccpacket *pkt);
 void ccpacket_set_zoom(struct ccpacket *self, enum lens_t z);
 enum lens_t ccpacket_get_zoom(const struct ccpacket *self);
+void ccpacket_set_focus(struct ccpacket *self, enum lens_t f);
+enum lens_t ccpacket_get_focus(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_aux(struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);

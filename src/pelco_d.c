@@ -147,9 +147,9 @@ static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
 	else if(bit_is_set(mess, BIT_IRIS_CLOSE))
 		pkt->iris = IRIS_CLOSE;
 	if(bit_is_set(mess, BIT_FOCUS_NEAR))
-		pkt->focus = FOCUS_NEAR;
+		ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
 	else if(bit_is_set(mess, BIT_FOCUS_FAR))
-		pkt->focus = FOCUS_FAR;
+		ccpacket_set_focus(pkt, CC_FOCUS_FAR);
 	if(bit_is_set(mess, BIT_ZOOM_IN))
 		ccpacket_set_zoom(pkt, CC_ZOOM_IN);
 	else if(bit_is_set(mess, BIT_ZOOM_OUT))
@@ -403,13 +403,13 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
 		bit_set(mess, BIT_IRIS_OPEN);
 	else if(pkt->iris == IRIS_CLOSE)
 		bit_set(mess, BIT_IRIS_CLOSE);
-	if(pkt->focus == FOCUS_NEAR)
+	if (ccpacket_get_focus(pkt) == CC_FOCUS_NEAR)
 		bit_set(mess, BIT_FOCUS_NEAR);
-	else if(pkt->focus == FOCUS_FAR)
+	else if (ccpacket_get_focus(pkt) == CC_FOCUS_FAR)
 		bit_set(mess, BIT_FOCUS_FAR);
-	if(ccpacket_get_zoom(pkt) == CC_ZOOM_IN)
+	if (ccpacket_get_zoom(pkt) == CC_ZOOM_IN)
 		bit_set(mess, BIT_ZOOM_IN);
-	else if(ccpacket_get_zoom(pkt) == CC_ZOOM_OUT)
+	else if (ccpacket_get_zoom(pkt) == CC_ZOOM_OUT)
 		bit_set(mess, BIT_ZOOM_OUT);
 }
 

@@ -161,10 +161,10 @@ static inline void decode_lens(struct ccpacket *pkt, enum xl_lens_t extra) {
 		ccpacket_set_zoom(pkt, CC_ZOOM_OUT);
 		break;
 	case XL_FOCUS_FAR:
-		pkt->focus = FOCUS_FAR;
+		ccpacket_set_focus(pkt, CC_FOCUS_FAR);
 		break;
 	case XL_FOCUS_NEAR:
-		pkt->focus = FOCUS_NEAR;
+		ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
 		break;
 	case XL_IRIS_OPEN:
 		pkt->iris = IRIS_OPEN;
@@ -396,9 +396,9 @@ static inline void encode_zoom(struct ccwriter *wtr, struct ccpacket *pkt) {
  * encode_focus		Encode a focus command.
  */
 static inline void encode_focus(struct ccwriter *wtr, struct ccpacket *pkt) {
-	if(pkt->focus < 0)
+	if (ccpacket_get_focus(pkt) == CC_FOCUS_NEAR)
 		encode_lens_function(wtr, pkt, XL_FOCUS_NEAR);
-	else if(pkt->focus > 0)
+	else if (ccpacket_get_focus(pkt) == CC_FOCUS_FAR)
 		encode_lens_function(wtr, pkt, XL_FOCUS_FAR);
 }
 

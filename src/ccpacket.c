@@ -41,7 +41,6 @@ void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->pan = 0;
 	pkt->tilt = 0;
 	pkt->lens = 0;
-	pkt->focus = FOCUS_NONE;
 	pkt->iris = IRIS_NONE;
 	pkt->aux = 0;
 	pkt->preset = 0;
@@ -196,18 +195,19 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	       pkt->pan == 0 &&
 	       pkt->tilt == 0 &&
 	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
-	       pkt->focus == FOCUS_NONE &&
+	       ccpacket_get_focus(pkt) == CC_FOCUS_STOP &&
 	       pkt->iris == IRIS_NONE &&
 	       pkt->aux == 0 &&
 	       pkt->status == STATUS_NONE;
 }
 
-/** Get a valid zoom */
+/** Get a valid zoom mode */
 static enum lens_t ccpacket_zoom(enum lens_t z) {
-	switch(z & CC_ZOOM) {
+	enum lens_t lz = z & CC_ZOOM;
+	switch(lz) {
 	case CC_ZOOM_IN:
 	case CC_ZOOM_OUT:
-		return z;
+		return lz;
 	default:
 		return CC_ZOOM_STOP;
 	}
@@ -227,6 +227,33 @@ enum lens_t ccpacket_get_zoom(const struct ccpacket *self) {
 	return ccpacket_zoom(self->lens);
 }
 
+/** Get a valid focus mode */
+static enum lens_t ccpacket_focus(enum lens_t f) {
+	enum lens_t lf = f & CC_FOCUS;
+	switch(lf) {
+	case CC_FOCUS_NEAR:
+	case CC_FOCUS_FAR:
+	case CC_FOCUS_AUTO:
+		return lf;
+	default:
+		return CC_FOCUS_STOP;
+	}
+}
+
+/** Set the focus mode.
+ *
+ * @param f		Focus mode
+ */
+void ccpacket_set_focus(struct ccpacket *self, enum lens_t f) {
+	self->lens = ccpacket_focus(f) | (self->lens & ~CC_FOCUS);
+}
+
+/** Get the focus mode.
+ */
+enum lens_t ccpacket_get_focus(const struct ccpacket *self) {
+	return ccpacket_focus(self->lens);
+}
+
 /*
  * ccpacket_has_command	Test if a packet has a command to encode.
  *
@@ -236,7 +263,7 @@ enum lens_t ccpacket_get_zoom(const struct ccpacket *self) {
 bool ccpacket_has_command(const struct ccpacket *pkt) {
 	return (pkt->command & CC_PAN_TILT) ||
 	       (ccpacket_get_zoom(pkt) != CC_ZOOM_STOP) ||
-	       (pkt->focus) ||
+	       (ccpacket_get_focus(pkt) != CC_FOCUS_STOP) ||
 	       (pkt->iris);
 }
 
@@ -305,12 +332,17 @@ static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
  */
 static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
 	enum lens_t z = ccpacket_get_zoom(pkt);
-	if(z == CC_ZOOM_IN)
+	enum lens_t f = ccpacket_get_focus(pkt);
+	if (z == CC_ZOOM_IN)
 		log_printf(log, " zoom IN");
-	if(z == CC_ZOOM_OUT)
+	if (z == CC_ZOOM_OUT)
 		log_printf(log, " zoom OUT");
-	if(pkt->focus)
-		log_printf(log, " focus: %d", pkt->focus);
+	if (f == CC_FOCUS_NEAR)
+		log_printf(log, " focus NEAR");
+	if (f == CC_FOCUS_FAR)
+		log_printf(log, " focus FAR");
+	if (f == CC_FOCUS_AUTO)
+		log_printf(log, " focus AUTO");
 	if(pkt->iris)
 		log_printf(log, " iris: %d", pkt->iris);
 }
