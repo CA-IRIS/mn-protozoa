@@ -83,6 +83,33 @@ enum status_t ccpacket_get_status(const struct ccpacket *self) {
 	return ccpacket_status(self->status);
 }
 
+/** Get a valid menu command */
+static enum command_t ccpacket_menu(enum command_t mc) {
+	enum command_t m = mc & CC_MENU;
+	switch(m) {
+	case CC_MENU_OPEN:
+	case CC_MENU_ENTER:
+	case CC_MENU_CANCEL:
+		return m;
+	default:
+		return CC_MENU_NONE;
+	}
+}
+
+/** Set menu command.
+ *
+ * @param mc		Menu command.
+ */
+void ccpacket_set_menu(struct ccpacket *self, enum command_t mc) {
+	self->command = ccpacket_menu(mc) | (self->command & ~CC_MENU);
+}
+
+/** Get menu command.
+ */
+enum command_t ccpacket_get_menu(const struct ccpacket *self) {
+	return ccpacket_menu(self->command);
+}
+
 /** Clamp speed value */
 static int clamp_speed(int speed) {
 	if (speed < 0)
@@ -209,13 +236,13 @@ bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout) {
 static bool ccpacket_menu_preset(struct ccpacket *self, int p_num) {
 	switch(p_num) {
 	case MENU_OPEN_PRESET:
-		self->command |= CC_MENU_OPEN;
+		ccpacket_set_menu(self, CC_MENU_OPEN);
 		return true;
 	case MENU_ENTER_PRESET:
-		self->command |= CC_MENU_ENTER;
+		ccpacket_set_menu(self, CC_MENU_ENTER);
 		return true;
 	case MENU_CANCEL_PRESET:
-		self->command |= CC_MENU_CANCEL;
+		ccpacket_set_menu(self, CC_MENU_CANCEL);
 		return true;
 	default:
 		return false;
@@ -505,17 +532,18 @@ static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
  */
 static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	enum command_t mc = ccpacket_get_menu(pkt);
 	if (pm == CC_PAN_AUTO)
 		log_printf(log, " auto-pan");
 	if (pm == CC_PAN_MANUAL)
 		log_printf(log, " manual-pan");
 	if(pkt->command & CC_ACK_ALARM)
 		log_printf(log, " ack-alarm");
-	if(pkt->command & CC_MENU_OPEN)
+	if (mc == CC_MENU_OPEN)
 		log_printf(log, " menu-open");
-	if(pkt->command & CC_MENU_ENTER)
+	if (mc == CC_MENU_ENTER)
 		log_printf(log, " menu-enter");
-	if(pkt->command & CC_MENU_CANCEL)
+	if (mc == CC_MENU_CANCEL)
 		log_printf(log, " menu-cancel");
 }
 

@@ -546,11 +546,12 @@ static inline bool is_extended_speed(struct ccpacket *pkt) {
  * adjust_menu_commands	Adjust menu commands for vicon protocol.
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
-	if(pkt->command & CC_MENU_OPEN)
+	enum command_t mc = ccpacket_get_menu(pkt);
+	if (mc == CC_MENU_OPEN)
 		ccpacket_set_preset(pkt,CC_PRESET_STORE,VICON_PRESET_MENU_OPEN);
-	else if(pkt->command & CC_MENU_ENTER)
+	else if (mc == CC_MENU_ENTER)
 		ccpacket_set_pan(pkt, CC_PAN_AUTO, 0);
-	else if (pkt->command & CC_MENU_CANCEL)
+	else if (mc == CC_MENU_CANCEL)
 		ccpacket_set_iris(pkt, CC_IRIS_AUTO);
 }
 

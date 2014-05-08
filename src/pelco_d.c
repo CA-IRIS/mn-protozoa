@@ -504,11 +504,12 @@ static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
  * adjust_menu_commands	Adjust menu commands for pelco d protocol.
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
-	if (pkt->command & CC_MENU_OPEN)
+	enum command_t mc = ccpacket_get_menu(pkt);
+	if (mc == CC_MENU_OPEN)
 		ccpacket_set_preset(pkt,CC_PRESET_STORE,PELCO_PRESET_MENU_OPEN);
-	else if (pkt->command & CC_MENU_ENTER)
+	else if (mc == CC_MENU_ENTER)
 		ccpacket_set_iris(pkt, CC_IRIS_OPEN);
-	else if (pkt->command & CC_MENU_CANCEL)
+	else if (mc == CC_MENU_CANCEL)
 		ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
 }
 
