@@ -138,8 +138,6 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 	bool pressed = decode_pressed(mess);
 	bool moved = moved_since_pressed(pkt);
 
-	pkt->command &= ~CC_PAN_TILT;
-
 	switch(number) {
 		case JBUTTON_FOCUS_NEAR:
 			if(pressed)

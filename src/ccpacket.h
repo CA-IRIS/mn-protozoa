@@ -24,7 +24,6 @@ enum command_t {
 	CC_TILT_UP = 1 << 4,
 	CC_TILT_DOWN = 1 << 5,
 	CC_TILT = CC_TILT_UP | CC_TILT_DOWN,
-	CC_PAN_TILT = CC_PAN | CC_TILT,
 	CC_PRESET_NONE = 0,
 	CC_PRESET_RECALL = 1 << 6,
 	CC_PRESET_STORE = 1 << 7,

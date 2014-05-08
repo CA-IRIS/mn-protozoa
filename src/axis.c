@@ -112,7 +112,7 @@ static bool encode_pan_tilt(struct ccwriter *wtr, struct ccpacket *pkt,
 {
 	char mess[64];
 	mess[0] = '\0';
-	if(pkt->command & CC_PAN_TILT) {
+	if (ccpacket_has_pan(pkt) || ccpacket_has_tilt(pkt)) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcat(mess, "continuouspantiltmove=");
 		if (ccpacket_has_pan(pkt))

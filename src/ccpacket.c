@@ -293,13 +293,19 @@ int ccpacket_get_preset_number(const struct ccpacket *self) {
 	return self->preset;
 }
 
-/*
- * ccpacket_is_stop	Test if the packet is a stop command.
+/** Test if a packet is a stop command.
  */
 bool ccpacket_is_stop(struct ccpacket *pkt) {
-	return (pkt->command | CC_PAN_TILT) == CC_PAN_TILT &&
-	       pkt->pan == 0 &&
+	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	return pkt->pan == 0 &&
 	       pkt->tilt == 0 &&
+	       pm != CC_PAN_AUTO &&
+	       pm != CC_PAN_MANUAL &&
+	       ccpacket_get_preset_mode(pkt) == CC_PRESET_NONE &&
+	       ccpacket_get_menu(pkt) == CC_MENU_NONE &&
+	       (pkt->command | CC_ACK_ALARM) == 0 &&
+	       (pkt->command | CC_CAMERA_ON) == 0 &&
+	       (pkt->command | CC_CAMERA_OFF) == 0 &&
 	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
 	       ccpacket_get_focus(pkt) == CC_FOCUS_STOP &&
 	       ccpacket_get_iris(pkt) == CC_IRIS_STOP &&
@@ -412,18 +418,17 @@ enum lens_t ccpacket_get_lens(const struct ccpacket *self) {
 	return ccpacket_lens(self->lens);
 }
 
-/*
- * ccpacket_has_command	Test if a packet has a command to encode.
+/** Test if a packet has a command to encode.
  *
- * pkt: Packet to check for command
- * return: True if command is present; false otherwise
+ * @param pkt	Packet to check for command
+ * @return	True if command is present; false otherwise
  */
 bool ccpacket_has_command(const struct ccpacket *pkt) {
-	return (ccpacket_get_pan_mode(pkt) != CC_PAN_STOP) ||
-	       (pkt->command & CC_PAN_TILT) ||
-	       (ccpacket_get_zoom(pkt) != CC_ZOOM_STOP) ||
-	       (ccpacket_get_focus(pkt) != CC_FOCUS_STOP) ||
-	       (ccpacket_get_iris(pkt) != CC_IRIS_STOP);
+	return ccpacket_get_pan_mode(pkt) != CC_PAN_STOP ||
+	       ccpacket_get_tilt_mode(pkt) != CC_TILT_STOP ||
+	       ccpacket_get_zoom(pkt) != CC_ZOOM_STOP ||
+	       ccpacket_get_focus(pkt) != CC_FOCUS_STOP ||
+	       ccpacket_get_iris(pkt) != CC_IRIS_STOP;
 }
 
 /*

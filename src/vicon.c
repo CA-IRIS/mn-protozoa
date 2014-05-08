@@ -539,7 +539,7 @@ static inline bool is_extended_preset(struct ccpacket *pkt) {
 static inline bool is_extended_speed(struct ccpacket *pkt) {
 	// NOTE: for certain receivers, it appears that auxiliary functions
 	//       will not work unless they are in an extended packet.
-	return (pkt->command & CC_PAN_TILT) || pkt->aux;
+	return ccpacket_has_pan(pkt) || ccpacket_has_tilt(pkt) || pkt->aux;
 }
 
 /*
