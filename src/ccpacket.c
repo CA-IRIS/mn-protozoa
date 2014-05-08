@@ -329,9 +329,8 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	       pm != CC_PAN_MANUAL &&
 	       ccpacket_get_preset_mode(pkt) == CC_PRESET_NONE &&
 	       ccpacket_get_menu(pkt) == CC_MENU_NONE &&
-	       (pkt->command | CC_ACK_ALARM) == 0 &&
-	       (pkt->command | CC_CAMERA_ON) == 0 &&
-	       (pkt->command | CC_CAMERA_OFF) == 0 &&
+	       ccpacket_get_ack(pkt) == CC_ACK_NONE &&
+	       ccpacket_get_camera(pkt) == CC_CAMERA_NONE &&
 	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
 	       ccpacket_get_focus(pkt) == CC_FOCUS_STOP &&
 	       ccpacket_get_iris(pkt) == CC_IRIS_STOP &&
@@ -442,6 +441,31 @@ void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm) {
  */
 enum lens_t ccpacket_get_lens(const struct ccpacket *self) {
 	return ccpacket_lens(self->lens);
+}
+
+/** Get a valid alarm ack */
+static enum command_t ccpacket_ack(enum command_t am) {
+	enum command_t a = am & CC_ACK_ALARM;
+	switch(a) {
+	case CC_ACK_ALARM:
+		return a;
+	default:
+		return CC_ACK_NONE;
+	}
+}
+
+/** Set the alarm ack.
+ *
+ * @param am		Alarm ack.
+ */
+void ccpacket_set_ack(struct ccpacket *self, enum command_t am) {
+	self->command = ccpacket_ack(am) | (self->command & ~CC_ACK);
+}
+
+/** Get the alarm ack.
+ */
+enum command_t ccpacket_get_ack(const struct ccpacket *self) {
+	return ccpacket_ack(self->command);
 }
 
 /** Test if a packet has a command to encode.
@@ -568,14 +592,14 @@ static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
 		log_printf(log, " auto-pan");
 	if (pm == CC_PAN_MANUAL)
 		log_printf(log, " manual-pan");
-	if(pkt->command & CC_ACK_ALARM)
-		log_printf(log, " ack-alarm");
 	if (mc == CC_MENU_OPEN)
 		log_printf(log, " menu-open");
 	if (mc == CC_MENU_ENTER)
 		log_printf(log, " menu-enter");
 	if (mc == CC_MENU_CANCEL)
 		log_printf(log, " menu-cancel");
+	if (ccpacket_get_ack(pkt) == CC_ACK_ALARM)
+		log_printf(log, " ack-alarm");
 }
 
 /*

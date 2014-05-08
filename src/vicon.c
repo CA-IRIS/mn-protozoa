@@ -136,7 +136,7 @@ static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
  */
 static inline void decode_toggles(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_ACK_ALARM))
-		pkt->command |= CC_ACK_ALARM;
+		ccpacket_set_ack(pkt, CC_ACK_ALARM);
 	if(bit_is_set(mess, BIT_AUTO_IRIS))
 		ccpacket_set_iris(pkt, CC_IRIS_AUTO);
 	if(bit_is_set(mess, BIT_AUTO_PAN))
@@ -356,7 +356,7 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
  * encode_toggles	Encode toggle functions.
  */
 static void encode_toggles(uint8_t *mess, struct ccpacket *pkt) {
-	if(pkt->command & CC_ACK_ALARM)
+	if (ccpacket_get_ack(pkt) == CC_ACK_ALARM)
 		bit_set(mess, BIT_ACK_ALARM);
 	if (ccpacket_get_iris(pkt) == CC_IRIS_AUTO)
 		bit_set(mess, BIT_AUTO_IRIS);

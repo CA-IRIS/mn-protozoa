@@ -38,7 +38,9 @@ enum command_t {
 	CC_CAMERA_ON = 1 << 12,
 	CC_CAMERA_OFF = 1 << 13,
 	CC_CAMERA = CC_CAMERA_ON | CC_CAMERA_OFF,
+	CC_ACK_NONE = 0,
 	CC_ACK_ALARM = 1 << 14,
+	CC_ACK = CC_ACK_ALARM,
 };
 
 enum lens_t {
@@ -126,6 +128,8 @@ void ccpacket_set_iris(struct ccpacket *self, enum lens_t im);
 enum lens_t ccpacket_get_iris(const struct ccpacket *self);
 void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm);
 enum lens_t ccpacket_get_lens(const struct ccpacket *self);
+void ccpacket_set_ack(struct ccpacket *self, enum command_t a);
+enum command_t ccpacket_get_ack(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_aux(struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);
