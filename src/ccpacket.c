@@ -110,6 +110,32 @@ enum command_t ccpacket_get_menu(const struct ccpacket *self) {
 	return ccpacket_menu(self->command);
 }
 
+/** Get a valid camera command */
+static enum command_t ccpacket_camera(enum command_t cc) {
+	enum command_t c = cc & CC_CAMERA;
+	switch(c) {
+	case CC_CAMERA_ON:
+	case CC_CAMERA_OFF:
+		return c;
+	default:
+		return CC_CAMERA_NONE;
+	}
+}
+
+/** Set camera on/off command.
+ *
+ * @param cc		Camera command.
+ */
+void ccpacket_set_camera(struct ccpacket *self, enum command_t cc) {
+	self->command = ccpacket_camera(cc) | (self->command & ~CC_CAMERA);
+}
+
+/** Get camera command.
+ */
+enum command_t ccpacket_get_camera(const struct ccpacket *self) {
+	return ccpacket_camera(self->command);
+}
+
 /** Clamp speed value */
 static int clamp_speed(int speed) {
 	if (speed < 0)

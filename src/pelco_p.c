@@ -176,9 +176,9 @@ static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
 static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 	if (bit_is_set(mess, BIT_CAMERA_ON_OFF)) {
 		if (bit_is_set(mess, BIT_CAMERA_ON))
-			pkt->command |= CC_CAMERA_ON;
+			ccpacket_set_camera(pkt, CC_CAMERA_ON);
 		else
-			pkt->command |= CC_CAMERA_OFF;
+			ccpacket_set_camera(pkt, CC_CAMERA_OFF);
 	}
 	if (bit_is_set(mess, BIT_AUTO_PAN))
 		ccpacket_set_pan(pkt, CC_PAN_AUTO, 0);
@@ -433,10 +433,10 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
  * encode_sense		Encode a sense command.
  */
 static inline void encode_sense(uint8_t *mess, struct ccpacket *pkt) {
-	if (pkt->command & CC_CAMERA_ON) {
+	if (ccpacket_get_camera(pkt) == CC_CAMERA_ON) {
 		bit_set(mess, BIT_CAMERA_ON_OFF);
 		bit_set(mess, BIT_CAMERA_ON);
-	} else if (pkt->command & CC_CAMERA_OFF)
+	} else if (ccpacket_get_camera(pkt) == CC_CAMERA_OFF)
 		bit_set(mess, BIT_CAMERA_ON_OFF);
 	if (ccpacket_get_pan_mode(pkt) == CC_PAN_AUTO)
 		bit_set(mess, BIT_AUTO_PAN);

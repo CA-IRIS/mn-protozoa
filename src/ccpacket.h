@@ -34,9 +34,11 @@ enum command_t {
 	CC_MENU_ENTER = 1 << 10,
 	CC_MENU_CANCEL = 1 << 11,
 	CC_MENU = CC_MENU_OPEN | CC_MENU_ENTER | CC_MENU_CANCEL,
-	CC_ACK_ALARM = 1 << 12,
-	CC_CAMERA_ON = 1 << 13,
-	CC_CAMERA_OFF = 1 << 14,
+	CC_CAMERA_NONE = 0,
+	CC_CAMERA_ON = 1 << 12,
+	CC_CAMERA_OFF = 1 << 13,
+	CC_CAMERA = CC_CAMERA_ON | CC_CAMERA_OFF,
+	CC_ACK_ALARM = 1 << 14,
 };
 
 enum lens_t {
@@ -98,6 +100,8 @@ void ccpacket_set_status(struct ccpacket *self, enum status_t s);
 enum status_t ccpacket_get_status(const struct ccpacket *self);
 void ccpacket_set_menu(struct ccpacket *self, enum command_t mc);
 enum command_t ccpacket_get_menu(const struct ccpacket *self);
+void ccpacket_set_camera(struct ccpacket *self, enum command_t cc);
+enum command_t ccpacket_get_camera(const struct ccpacket *self);
 void ccpacket_set_pan(struct ccpacket *self, enum command_t pm, int speed);
 enum command_t ccpacket_get_pan_mode(const struct ccpacket *self);
 void ccpacket_set_pan_speed(struct ccpacket *self, int speed);
