@@ -140,7 +140,7 @@ static inline void decode_toggles(struct ccpacket *pkt, uint8_t *mess) {
 	if(bit_is_set(mess, BIT_AUTO_IRIS))
 		ccpacket_set_iris(pkt, CC_IRIS_AUTO);
 	if(bit_is_set(mess, BIT_AUTO_PAN))
-		pkt->command |= CC_AUTO_PAN;
+		ccpacket_set_pan(pkt, CC_PAN_AUTO, 0);
 	if(bit_is_set(mess, BIT_LENS_SPEED))
 		ccpacket_set_lens(pkt, CC_LENS_SPEED);
 }
@@ -358,9 +358,9 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
 static void encode_toggles(uint8_t *mess, struct ccpacket *pkt) {
 	if(pkt->command & CC_ACK_ALARM)
 		bit_set(mess, BIT_ACK_ALARM);
-	if(ccpacket_get_iris(pkt) == CC_IRIS_AUTO)
+	if (ccpacket_get_iris(pkt) == CC_IRIS_AUTO)
 		bit_set(mess, BIT_AUTO_IRIS);
-	if(pkt->command & CC_AUTO_PAN)
+	if (ccpacket_get_pan_mode(pkt) == CC_PAN_AUTO)
 		bit_set(mess, BIT_AUTO_PAN);
 	if (ccpacket_get_lens(pkt) == CC_LENS_SPEED)
 		bit_set(mess, BIT_LENS_SPEED);
@@ -549,7 +549,7 @@ static inline void adjust_menu_commands(struct ccpacket *pkt) {
 	if(pkt->command & CC_MENU_OPEN)
 		ccpacket_set_preset(pkt,CC_PRESET_STORE,VICON_PRESET_MENU_OPEN);
 	else if(pkt->command & CC_MENU_ENTER)
-		pkt->command |= CC_AUTO_PAN;
+		ccpacket_set_pan(pkt, CC_PAN_AUTO, 0);
 	else if (pkt->command & CC_MENU_CANCEL)
 		ccpacket_set_iris(pkt, CC_IRIS_AUTO);
 }

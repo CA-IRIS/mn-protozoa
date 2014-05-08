@@ -181,7 +181,7 @@ static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 			pkt->command |= CC_CAMERA_OFF;
 	}
 	if (bit_is_set(mess, BIT_AUTO_PAN))
-		pkt->command |= CC_AUTO_PAN;
+		ccpacket_set_pan(pkt, CC_PAN_AUTO, 0);
 }
 
 /*
@@ -385,7 +385,7 @@ static int pelco_p_encode_pan_speed(int speed) {
 static void encode_pan(uint8_t *mess, struct ccpacket *pkt) {
 	int pan = pelco_p_encode_pan_speed(ccpacket_get_pan_speed(pkt));
 	mess[4] = pan;
-	if (pan) {
+	if (ccpacket_has_pan(pkt)) {
 		if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
 		else if (ccpacket_get_pan_mode(pkt) == CC_PAN_RIGHT)
@@ -438,7 +438,7 @@ static inline void encode_sense(uint8_t *mess, struct ccpacket *pkt) {
 		bit_set(mess, BIT_CAMERA_ON);
 	} else if (pkt->command & CC_CAMERA_OFF)
 		bit_set(mess, BIT_CAMERA_ON_OFF);
-	if (pkt->command & CC_AUTO_PAN)
+	if (ccpacket_get_pan_mode(pkt) == CC_PAN_AUTO)
 		bit_set(mess, BIT_AUTO_PAN);
 }
 

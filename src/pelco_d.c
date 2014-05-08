@@ -156,12 +156,12 @@ static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 		if (bit_is_set(mess, BIT_CAMERA_ON_OFF))
 			pkt->command |= CC_CAMERA_ON;
 		if (bit_is_set(mess, BIT_AUTO_PAN))
-			pkt->command |= CC_AUTO_PAN;
+			ccpacket_set_pan(pkt, CC_PAN_AUTO, 0);
 	} else {
 		if (bit_is_set(mess, BIT_CAMERA_ON_OFF))
 			pkt->command |= CC_CAMERA_OFF;
 		if (bit_is_set(mess, BIT_AUTO_PAN))
-			pkt->command |= CC_MANUAL_PAN;
+			ccpacket_set_pan(pkt, CC_PAN_MANUAL, 0);
 	}
 }
 
@@ -361,7 +361,7 @@ static int pelco_d_encode_pan_speed(int speed) {
 static void encode_pan(uint8_t *mess, struct ccpacket *pkt) {
 	int pan = pelco_d_encode_pan_speed(ccpacket_get_pan_speed(pkt));
 	mess[4] = pan;
-	if (pan) {
+	if (ccpacket_has_pan(pkt)) {
 		if (ccpacket_get_pan_mode(pkt) == CC_PAN_LEFT)
 			bit_set(mess, BIT_PAN_LEFT);
 		else if (ccpacket_get_pan_mode(pkt) == CC_PAN_RIGHT)
@@ -409,16 +409,17 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
  * encode_sense		Encode a sense command.
  */
 static inline void encode_sense(uint8_t *mess, struct ccpacket *pkt) {
-	if (pkt->command & (CC_CAMERA_ON | CC_AUTO_PAN)) {
+	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	if ((pkt->command & CC_CAMERA_ON) || pm == CC_PAN_AUTO) {
 		bit_set(mess, BIT_SENSE);
 		if (pkt->command & CC_CAMERA_ON)
 			bit_set(mess, BIT_CAMERA_ON_OFF);
-		if (pkt->command & CC_AUTO_PAN)
+		if (pm == CC_PAN_AUTO)
 			bit_set(mess, BIT_AUTO_PAN);
-	} else if (pkt->command & (CC_CAMERA_OFF | CC_MANUAL_PAN)) {
+	} else if ((pkt->command & CC_CAMERA_OFF) || pm == CC_PAN_MANUAL) {
 		if (pkt->command & CC_CAMERA_OFF)
 			bit_set(mess, BIT_CAMERA_ON_OFF);
-		if (pkt->command & CC_MANUAL_PAN)
+		if (pm == CC_PAN_MANUAL)
 			bit_set(mess, BIT_AUTO_PAN);
 	}
 }

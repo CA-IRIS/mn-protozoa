@@ -99,6 +99,7 @@ static enum command_t ccpacket_pan(enum command_t pm) {
 	switch(p) {
 	case CC_PAN_LEFT:
 	case CC_PAN_RIGHT:
+	case CC_PAN_AUTO:
 		return p;
 	default:
 		return CC_PAN_STOP;
@@ -402,20 +403,15 @@ bool ccpacket_has_command(const struct ccpacket *pkt) {
  * ccpacket_has_aux	Test if the packet has an auxiliary function.
  */
 bool ccpacket_has_aux(struct ccpacket *pkt) {
-	if(pkt->aux)
-		return true;
-	else
-		return false;
+	return pkt->aux;
 }
 
 /*
  * ccpacket_has_autopan	Test if the packet has an autopan command.
  */
 bool ccpacket_has_autopan(const struct ccpacket *pkt) {
-	if(pkt->command & (CC_AUTO_PAN | CC_MANUAL_PAN))
-		return true;
-	else
-		return false;
+	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	return pm == CC_PAN_AUTO || pm == CC_PAN_MANUAL;
 }
 
 /*
@@ -508,9 +504,10 @@ static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
-	if(pkt->command & CC_AUTO_PAN)
+	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	if (pm == CC_PAN_AUTO)
 		log_printf(log, " auto-pan");
-	if(pkt->command & CC_MANUAL_PAN)
+	if (pm == CC_PAN_MANUAL)
 		log_printf(log, " manual-pan");
 	if(pkt->command & CC_ACK_ALARM)
 		log_printf(log, " ack-alarm");

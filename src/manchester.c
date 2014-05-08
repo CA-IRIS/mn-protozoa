@@ -463,11 +463,11 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
  */
 unsigned int manchester_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int receiver = ccpacket_get_receiver(pkt);
-	if(receiver < 1 || receiver > MANCHESTER_MAX_ADDRESS)
+	if (receiver < 1 || receiver > MANCHESTER_MAX_ADDRESS)
 		return 0;
-	if(ccpacket_get_pan_speed(pkt))
+	if (ccpacket_has_pan(pkt))
 		encode_pan(wtr, pkt);
-	if(ccpacket_get_tilt_speed(pkt))
+	if (ccpacket_get_tilt_speed(pkt))
 		encode_tilt(wtr, pkt);
 	encode_zoom(wtr, pkt);
 	encode_focus(wtr, pkt);
