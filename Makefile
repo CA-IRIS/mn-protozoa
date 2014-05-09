@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -Wall -Werror
+CFLAGS = -O2 -Wall -Werror -flto
 #CFLAGS = -Wall -ggdb
 TARGET = protozoa
 
