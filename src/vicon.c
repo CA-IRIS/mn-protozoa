@@ -211,20 +211,20 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *rdr,
 {
 	if(buffer_available(rxbuf) < SIZE_EXTENDED)
 		return DECODE_DONE;
-	decode_receiver(&rdr->packet, mess);
-	decode_pan(&rdr->packet, mess);
-	decode_tilt(&rdr->packet, mess);
-	decode_lens(&rdr->packet, mess);
-	decode_toggles(&rdr->packet, mess);
-	decode_aux(&rdr->packet, mess);
-	decode_preset(&rdr->packet, mess);
+	decode_receiver(rdr->packet, mess);
+	decode_pan(rdr->packet, mess);
+	decode_tilt(rdr->packet, mess);
+	decode_lens(rdr->packet, mess);
+	decode_toggles(rdr->packet, mess);
+	decode_aux(rdr->packet, mess);
+	decode_preset(rdr->packet, mess);
 	if(bit_is_set(mess, BIT_EX_REQUEST)) {
 		if(bit_is_set(mess, BIT_EX_STATUS))
-			decode_ex_status(&rdr->packet, mess);
+			decode_ex_status(rdr->packet, mess);
 		else
-			decode_ex_preset(&rdr->packet, mess);
+			decode_ex_preset(rdr->packet, mess);
 	} else
-		decode_ex_speed(&rdr->packet, mess);
+		decode_ex_speed(rdr->packet, mess);
 	buffer_consume(rxbuf, SIZE_EXTENDED);
 	ccreader_process_packet(rdr);
 	return DECODE_MORE;
@@ -238,13 +238,13 @@ static inline enum decode_t vicon_decode_command(struct ccreader *rdr,
 {
 	if(buffer_available(rxbuf) < SIZE_COMMAND)
 		return DECODE_DONE;
-	decode_receiver(&rdr->packet, mess);
-	decode_pan(&rdr->packet, mess);
-	decode_tilt(&rdr->packet, mess);
-	decode_lens(&rdr->packet, mess);
-	decode_toggles(&rdr->packet, mess);
-	decode_aux(&rdr->packet, mess);
-	decode_preset(&rdr->packet, mess);
+	decode_receiver(rdr->packet, mess);
+	decode_pan(rdr->packet, mess);
+	decode_tilt(rdr->packet, mess);
+	decode_lens(rdr->packet, mess);
+	decode_toggles(rdr->packet, mess);
+	decode_aux(rdr->packet, mess);
+	decode_preset(rdr->packet, mess);
 	buffer_consume(rxbuf, SIZE_COMMAND);
 	ccreader_process_packet(rdr);
 	return DECODE_MORE;
@@ -258,8 +258,8 @@ static inline enum decode_t vicon_decode_status(struct ccreader *rdr,
 {
 	if(buffer_available(rxbuf) < SIZE_STATUS)
 		return DECODE_DONE;
-	decode_receiver(&rdr->packet, mess);
-	ccpacket_set_status(&rdr->packet, STATUS_REQUEST);
+	decode_receiver(rdr->packet, mess);
+	ccpacket_set_status(rdr->packet, STATUS_REQUEST);
 	buffer_consume(rxbuf, SIZE_STATUS);
 	ccreader_process_packet(rdr);
 	return DECODE_MORE;

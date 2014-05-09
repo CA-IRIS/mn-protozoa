@@ -35,13 +35,8 @@ static int ccwriter_set_receivers(struct ccwriter *wtr, const int n_rcv) {
 		return -1;
 	for(i = 0; i < n_rcv; i++) {
 		struct deferred_pkt *dpkt = wtr->deferred + i;
-		// FIXME: deferred_pkt_init?
-		dpkt->tv.tv_sec = 0;
-		dpkt->tv.tv_usec = 0;
-		timeval_set_now(&dpkt->sent);
-		ccpacket_init(&dpkt->packet);
+		deferred_pkt_init(dpkt);
 		dpkt->writer = wtr;
-		dpkt->n_cnt = 0;
 	}
 	wtr->n_rcv = n_rcv;
 	return 0;
@@ -124,7 +119,12 @@ struct ccwriter *ccwriter_init(struct ccwriter *wtr, struct channel *chn,
  * ccwriter_destroy	Destroy a camera control writer.
  */
 void ccwriter_destroy(struct ccwriter *wtr) {
+	int i;
 	free(wtr->auth);
+	for(i = 0; i < wtr->n_rcv; i++) {
+		struct deferred_pkt *dpkt = wtr->deferred + i;
+		deferred_pkt_destroy(dpkt);
+	}
 	free(wtr->deferred);
 	memset(wtr, 0, sizeof(struct ccwriter));
 }

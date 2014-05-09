@@ -84,7 +84,8 @@ struct ccpacket {
 	struct timeval	expire;		/* expiration time */
 };
 
-void ccpacket_init(struct ccpacket *pkt);
+struct ccpacket *ccpacket_create(void);
+void ccpacket_destroy(struct ccpacket *self);
 void ccpacket_clear(struct ccpacket *pkt);
 void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);

@@ -133,7 +133,7 @@ static bool moved_since_pressed(struct ccpacket *pkt) {
  * decode_button	Decode a button pressed event.
  */
 static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
-	struct ccpacket *pkt = &rdr->packet;
+	struct ccpacket *pkt = rdr->packet;
 	uint8_t number = mess[7];
 	bool pressed = decode_pressed(mess);
 	bool moved = moved_since_pressed(pkt);
@@ -227,7 +227,7 @@ static inline bool joystick_decode_event(struct ccreader *rdr, uint8_t *mess) {
 	uint8_t ev_type = mess[6];
 
 	if(ev_type & JEVENT_AXIS)
-		return decode_pan_tilt_zoom(&rdr->packet, mess);
+		return decode_pan_tilt_zoom(rdr->packet, mess);
 	else if((ev_type & JEVENT_BUTTON) && !(ev_type & JEVENT_INITIAL))
 		return decode_button(rdr, mess);
 	else
@@ -255,5 +255,5 @@ void joystick_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 		c += joystick_read_message(rdr, rxbuf);
 	if(c)
 		ccreader_process_packet_no_clear(rdr);
-	ccpacket_set_preset(&rdr->packet, CC_PRESET_NONE, 0);
+	ccpacket_set_preset(rdr->packet, CC_PRESET_NONE, 0);
 }

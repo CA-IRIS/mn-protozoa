@@ -1,6 +1,6 @@
 /*
  * protozoa -- CCTV transcoder / mixer for PTZ
- * Copyright (C) 2008-2011  Minnesota Department of Transportation
+ * Copyright (C) 2008-2014  Minnesota Department of Transportation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,19 @@ static cl_compare_t compare_pkts(const void *value0, const void *value1) {
 	const struct deferred_pkt *dpkt1 = value1;
 
 	return timeval_compare(&dpkt0->tv, &dpkt1->tv);
+}
+
+void deferred_pkt_init(struct deferred_pkt *dpkt) {
+	dpkt->tv.tv_sec = 0;
+	dpkt->tv.tv_usec = 0;
+	timeval_set_now(&dpkt->sent);
+	dpkt->packet = ccpacket_create();
+	dpkt->writer = NULL;
+	dpkt->n_cnt = 0;
+}
+
+void deferred_pkt_destroy(struct deferred_pkt *dpkt) {
+	free(dpkt->packet);
 }
 
 /*
@@ -65,7 +78,7 @@ int defer_packet(struct defer *dfr, struct deferred_pkt *dpkt,
 	if(pkt) {
 		timeval_set_now(&dpkt->tv);
 		timeval_adjust(&dpkt->tv, ms);
-		ccpacket_copy(&dpkt->packet, pkt);
+		ccpacket_copy(dpkt->packet, pkt);
 		if(cl_rbtree_add(&dfr->tree, dpkt) == NULL)
 			return -1;
 	}
@@ -79,7 +92,7 @@ static void defer_packet_now(struct defer *dfr, struct deferred_pkt *dpkt) {
 	cl_rbtree_remove(&dfr->tree, dpkt);
 	timeval_set_now(&dpkt->tv);
 	timeval_adjust(&dpkt->tv, dpkt->writer->timeout);
-	ccwriter_do_write(dpkt->writer, &dpkt->packet);
+	ccwriter_do_write(dpkt->writer, dpkt->packet);
 }
 
 /*

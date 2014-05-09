@@ -26,7 +26,7 @@ struct ccnode {
 
 struct ccreader {
 	void	(*do_read)	(struct ccreader *rdr, struct buffer *rxbuf);
-	struct	ccpacket	packet;		/* camera control packet */
+	struct	ccpacket	*packet;	/* camera control packet */
 	unsigned int		timeout;	/* time to hold commands (ms) */
 	enum rdr_flags_t	flags;		/* special reader flags */
 	struct	ccnode		*head;		/* head of writer list */

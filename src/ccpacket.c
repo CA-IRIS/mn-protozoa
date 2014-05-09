@@ -13,6 +13,7 @@
  * GNU General Public License for more details.
  */
 #include <string.h>	/* for memcpy */
+#include <stdlib.h>
 #include "ccpacket.h"
 #include "stats.h"
 
@@ -25,11 +26,21 @@ enum special_presets {
 	MENU_CANCEL_PRESET = 79,
 };
 
-/** Initialize a camera control packet.
+/** Create a camera control packet.
  */
-void ccpacket_init(struct ccpacket *pkt) {
-	timeval_set_now(&pkt->expire);
-	ccpacket_clear(pkt);
+struct ccpacket *ccpacket_create(void) {
+	struct ccpacket *self = malloc(sizeof(struct ccpacket));
+	if (self) {
+		timeval_set_now(&self->expire);
+		ccpacket_clear(self);
+	}
+	return self;
+}
+
+/** Destroy a camera control packet.
+ */
+void ccpacket_destroy(struct ccpacket *self) {
+	free(self);
 }
 
 /** Clear the camera control packet.

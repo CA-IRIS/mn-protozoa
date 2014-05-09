@@ -86,15 +86,15 @@ static void ccnode_set_shift(struct ccnode *node, const char *shift) {
 }
 
 void ccreader_previous_camera(struct ccreader *rdr) {
-	int receiver = ccpacket_get_receiver(&rdr->packet);
+	int receiver = ccpacket_get_receiver(rdr->packet);
 	if(receiver > 0)
-		ccpacket_set_receiver(&rdr->packet, receiver - 1);
+		ccpacket_set_receiver(rdr->packet, receiver - 1);
 }
 
 void ccreader_next_camera(struct ccreader *rdr) {
-	int receiver = ccpacket_get_receiver(&rdr->packet);
+	int receiver = ccpacket_get_receiver(rdr->packet);
 	if(receiver < 1024)
-		ccpacket_set_receiver(&rdr->packet, receiver + 1);
+		ccpacket_set_receiver(rdr->packet, receiver + 1);
 }
 
 /*
@@ -108,7 +108,7 @@ void ccreader_next_camera(struct ccreader *rdr) {
 struct ccreader *ccreader_init(struct ccreader *rdr, const char *name,
 	struct log *log, const char *protocol)
 {
-	ccpacket_init(&rdr->packet);
+	rdr->packet = ccpacket_create();
 	rdr->timeout = DEFAULT_TIMEOUT;
 	rdr->flags = 0;
 	rdr->head = NULL;
@@ -136,7 +136,7 @@ void ccreader_add_writer(struct ccreader *rdr, struct ccnode *node,
 	ccnode_set_shift(node, shift);
 	node->next = rdr->head;
 	rdr->head = node;
-	ccpacket_set_receiver(&rdr->packet, node->range_first);
+	ccpacket_set_receiver(rdr->packet, node->range_first);
 }
 
 /*
@@ -162,7 +162,7 @@ static int ccnode_get_receiver(const struct ccnode *node, int receiver) {
  */
 static unsigned int ccreader_do_writers(struct ccreader *rdr) {
 	unsigned int res = 0;
-	struct ccpacket *pkt = &rdr->packet;
+	struct ccpacket *pkt = rdr->packet;
 	const int receiver = ccpacket_get_receiver(pkt);  /* "true" receiver */
 	struct ccnode *node = rdr->head;
 	while(node) {
@@ -184,7 +184,7 @@ static unsigned int ccreader_do_writers(struct ccreader *rdr) {
  * return: number of writers that wrote the packet
  */
 unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
-	struct ccpacket *pkt = &rdr->packet;
+	struct ccpacket *pkt = rdr->packet;
 	unsigned int res = 0;
 	if(rdr->log->packet)
 		ccpacket_log(pkt, rdr->log, "IN", rdr->name);
@@ -209,6 +209,6 @@ unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
  */
 unsigned int ccreader_process_packet(struct ccreader *rdr) {
 	unsigned int res = ccreader_process_packet_no_clear(rdr);
-	ccpacket_clear(&rdr->packet);
+	ccpacket_clear(rdr->packet);
 	return res;
 }

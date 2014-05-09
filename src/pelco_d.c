@@ -177,11 +177,11 @@ static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 static inline enum decode_t pelco_decode_command(struct ccreader *rdr,
 	uint8_t *mess)
 {
-	decode_receiver(&rdr->packet, mess);
-	decode_pan(&rdr->packet, mess);
-	decode_tilt(&rdr->packet, mess);
-	decode_lens(&rdr->packet, mess);
-	decode_sense(&rdr->packet, mess);
+	decode_receiver(rdr->packet, mess);
+	decode_pan(rdr->packet, mess);
+	decode_tilt(rdr->packet, mess);
+	decode_lens(rdr->packet, mess);
+	decode_sense(rdr->packet, mess);
 	ccreader_process_packet(rdr);
 	return DECODE_MORE;
 }
@@ -234,11 +234,11 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 static inline enum decode_t pelco_decode_extended(struct ccreader *rdr,
 	uint8_t *mess)
 {
-	decode_receiver(&rdr->packet, mess);
+	decode_receiver(rdr->packet, mess);
 	int ex = mess[3] >> 1 & 0x1f;
 	int p0 = mess[5];
 	int p1 = mess[4];
-	decode_extended(&rdr->packet, ex, p0, p1);
+	decode_extended(rdr->packet, ex, p0, p1);
 	ccreader_process_packet(rdr);
 	return DECODE_MORE;
 }

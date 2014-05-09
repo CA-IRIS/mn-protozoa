@@ -11,9 +11,12 @@ struct deferred_pkt {
 	struct ccwriter		*writer;	/* writer to send packet */
 	struct timeval		tv;		/* time to send packet */
 	struct timeval		sent;		/* last sent time */
-	struct ccpacket		packet;		/* packet to be deferred */
+	struct ccpacket		*packet;	/* packet to be deferred */
 	unsigned int		n_cnt;		/* number of times deferred */
 };
+
+void deferred_pkt_init(struct deferred_pkt *dpkt);
+void deferred_pkt_destroy(struct deferred_pkt *dpkt);
 
 struct defer {
 	struct cl_rbtree	tree;		/* tree of deferred packets */

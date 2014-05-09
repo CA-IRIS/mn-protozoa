@@ -235,10 +235,10 @@ static inline void decode_packet(struct ccpacket *pkt, uint8_t *mess) {
  */
 static void manchester_decode_packet(struct ccreader *rdr, uint8_t *mess) {
 	int receiver = decode_receiver(mess);
-	if(ccpacket_get_receiver(&rdr->packet) != receiver)
+	if(ccpacket_get_receiver(rdr->packet) != receiver)
 		ccreader_process_packet(rdr);
-	ccpacket_set_receiver(&rdr->packet, receiver);
-	decode_packet(&rdr->packet, mess);
+	ccpacket_set_receiver(rdr->packet, receiver);
+	decode_packet(rdr->packet, mess);
 }
 
 /*
