@@ -17,9 +17,7 @@
 	the Pelco protocols is trivial.
 </p>
 <p>
-	The wiper function can be controlled in two ways.
-	AUX 1 can be set to turn on and cleared to turn off the wiper.
-	Also, preset 100 turns the wiper on (store) and off (recall).
+	The wiper function can be controlled in two ways: aux 1 or preset 100.
 </p>
 
 <div class="left">
@@ -175,8 +173,44 @@
 	So, for Pelco D, seven bytes are sent for each packet.
 </p>
 
+<p class="all">
+	Auxiliary functions:
+</p>
+<table>
+<tr>
+	<th>AUX</th>
+	<th>FUNCTION</th>
+</tr>
+<tr>
+	<td>1</td>
+	<td>wiper</td>
+</tr>
+</table>
+<table>
+<tr>
+	<th>PRESET</th>
+	<th>FUNCTION</th>
+</tr>
+<tr>
+	<td>Recall / Store 95</td>
+	<td>Enter menu</td>
+</tr>
+<tr>
+	<td>Recall 99</td>
+	<td>Begin auto scan</td>
+</tr>
+<tr>
+	<td>Store 100</td>
+	<td>Turn on wiper</td>
+</tr>
+<tr>
+	<td>Recall 100</td>
+	<td>Turn off wiper</td>
+</tr>
+</table>
+
 <p class="stamp">
-	2014 April 23
+	2014 May 9
 </p>
 </body>
 </html>
