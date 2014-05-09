@@ -120,6 +120,15 @@ struct ccreader *ccreader_init(struct ccreader *rdr, const char *name,
 		return rdr;
 }
 
+/** Destroy a ccreader.
+ */
+void ccreader_destroy(struct ccreader *rdr) {
+	if (rdr->packet) {
+		ccpacket_destroy(rdr->packet);
+		rdr->packet = NULL;
+	}
+}
+
 /*
  * ccreader_add_writer		Add a writer to the camera control reader.
  *

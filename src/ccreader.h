@@ -36,6 +36,7 @@ struct ccreader {
 
 struct ccreader *ccreader_init(struct ccreader *rdr, const char *name,
 	struct log *log, const char *protocol);
+void ccreader_destroy(struct ccreader *rdr);
 void ccreader_previous_camera(struct ccreader *rdr);
 void ccreader_next_camera(struct ccreader *rdr);
 void ccreader_add_writer(struct ccreader *rdr, struct ccnode *node,

@@ -70,6 +70,8 @@ void channel_destroy(struct channel *chn) {
 	channel_close(chn);
 	buffer_destroy(&chn->rxbuf);
 	buffer_destroy(&chn->txbuf);
+	if (chn->reader)
+		ccreader_destroy(chn->reader);
 	memset(chn, 0, sizeof(struct channel));
 }
 

@@ -61,7 +61,6 @@ fail:
 void config_destroy(struct config *cfg) {
 	struct ccwriter *writer = cfg->writer_head;
 	struct channel *chn = cfg->chns;
-	// FIXME: readers should be destroyed (leak)
 	while(chn) {
 		struct channel *nchn = chn->next;
 		channel_destroy(chn);
