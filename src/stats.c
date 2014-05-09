@@ -22,7 +22,6 @@ struct ptz_stats {
 	struct log	*log;		/* logger */
 	long long	n_packets;	/* total count of packets */
 	long long	n_dropped;	/* count of dropped packets */
-	long long	n_status;	/* count of status packets */
 	long long	n_pan;		/* count of pan packets */
 	long long	n_tilt;		/* count of tilt packets */
 	long long	n_zoom;		/* count of zoom packets */
@@ -63,8 +62,6 @@ static void ptz_stats_display(void) {
 		stats.n_packets);
 	if (stats.n_dropped)
 		ptz_stats_print("dropped", stats.n_dropped);
-	if (stats.n_status)
-		ptz_stats_print("status", stats.n_status);
 	if (stats.n_pan)
 		ptz_stats_print("pan", stats.n_pan);
 	if (stats.n_tilt)
@@ -87,8 +84,6 @@ static void ptz_stats_display(void) {
 void ptz_stats_count(struct ccpacket *pkt) {
 	if (stats.log) {
 		stats.n_packets++;
-		if (ccpacket_get_status(pkt))
-			stats.n_status++;
 		if (ccpacket_has_pan(pkt))
 			stats.n_pan++;
 		if (ccpacket_has_tilt(pkt))

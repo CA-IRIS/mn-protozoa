@@ -195,18 +195,14 @@ static unsigned int ccreader_do_writers(struct ccreader *rdr) {
 unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	struct ccpacket *pkt = rdr->packet;
 	unsigned int res = 0;
-	if(rdr->log->packet)
+	if (rdr->log->packet)
 		ccpacket_log(pkt, rdr->log, "IN", rdr->name);
-	if(ccpacket_get_status(pkt))
+	ccpacket_set_timeout(pkt, rdr->timeout);
+	res = ccreader_do_writers(rdr);
+	if(res)
+		ccpacket_count(pkt);
+	else
 		ccpacket_drop(pkt);
-	else {
-		ccpacket_set_timeout(pkt, rdr->timeout);
-		res = ccreader_do_writers(rdr);
-		if(res)
-			ccpacket_count(pkt);
-		else
-			ccpacket_drop(pkt);
-	}
 	return res;
 }
 

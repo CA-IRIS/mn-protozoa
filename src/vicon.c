@@ -173,19 +173,10 @@ static inline void decode_ex_speed(struct ccpacket *pkt, uint8_t *mess) {
 	ccpacket_set_tilt_speed(pkt, tilt);
 }
 
-/*
- * decode_ex_status	Decode extended status functions.
+/** Decode extended status functions.
  */
-static inline void decode_ex_status(struct ccpacket *pkt, uint8_t *mess) {
-	enum status_t s = STATUS_REQUEST;
-	if(bit_is_set(mess, BIT_STAT_SECTOR))
-		s |= STATUS_SECTOR;
-	if(bit_is_set(mess, BIT_STAT_PRESET))
-		s |= STATUS_PRESET;
-	if(bit_is_set(mess, BIT_STAT_V15UVS) &&
-	   bit_is_set(mess, BIT_STAT_AUX_SET_2))
-		s |= STATUS_AUX_SET_2;
-	ccpacket_set_status(pkt, s);
+static void decode_ex_status(struct ccpacket *pkt, uint8_t *mess) {
+	/* Ignore status messages */
 }
 
 /*
@@ -203,13 +194,12 @@ static inline void decode_ex_preset(struct ccpacket *pkt, uint8_t *mess) {
 	ccpacket_set_tilt_speed(pkt, tilt);
 }
 
-/*
- * vicon_decode_extended	Decode an extended packet.
+/** Decode an extended packet.
  */
-static inline enum decode_t vicon_decode_extended(struct ccreader *rdr,
+static enum decode_t vicon_decode_extended(struct ccreader *rdr,
 	uint8_t *mess, struct buffer *rxbuf)
 {
-	if(buffer_available(rxbuf) < SIZE_EXTENDED)
+	if (buffer_available(rxbuf) < SIZE_EXTENDED)
 		return DECODE_DONE;
 	decode_receiver(rdr->packet, mess);
 	decode_pan(rdr->packet, mess);
@@ -218,8 +208,8 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *rdr,
 	decode_toggles(rdr->packet, mess);
 	decode_aux(rdr->packet, mess);
 	decode_preset(rdr->packet, mess);
-	if(bit_is_set(mess, BIT_EX_REQUEST)) {
-		if(bit_is_set(mess, BIT_EX_STATUS))
+	if (bit_is_set(mess, BIT_EX_REQUEST)) {
+		if (bit_is_set(mess, BIT_EX_STATUS))
 			decode_ex_status(rdr->packet, mess);
 		else
 			decode_ex_preset(rdr->packet, mess);
@@ -233,10 +223,10 @@ static inline enum decode_t vicon_decode_extended(struct ccreader *rdr,
 /*
  * vicon_decode_command		Decode a command packet.
  */
-static inline enum decode_t vicon_decode_command(struct ccreader *rdr,
+static enum decode_t vicon_decode_command(struct ccreader *rdr,
 	uint8_t *mess, struct buffer *rxbuf)
 {
-	if(buffer_available(rxbuf) < SIZE_COMMAND)
+	if (buffer_available(rxbuf) < SIZE_COMMAND)
 		return DECODE_DONE;
 	decode_receiver(rdr->packet, mess);
 	decode_pan(rdr->packet, mess);
@@ -250,36 +240,34 @@ static inline enum decode_t vicon_decode_command(struct ccreader *rdr,
 	return DECODE_MORE;
 }
 
-/*
- * vicon_decode_status	Decode a status packet.
+/** Decode a status packet.
  */
-static inline enum decode_t vicon_decode_status(struct ccreader *rdr,
+static enum decode_t vicon_decode_status(struct ccreader *rdr,
 	uint8_t *mess, struct buffer *rxbuf)
 {
 	if(buffer_available(rxbuf) < SIZE_STATUS)
 		return DECODE_DONE;
-	decode_receiver(rdr->packet, mess);
-	ccpacket_set_status(rdr->packet, STATUS_REQUEST);
-	buffer_consume(rxbuf, SIZE_STATUS);
-	ccreader_process_packet(rdr);
-	return DECODE_MORE;
+	else {
+		/* Ignore status messages */
+		buffer_consume(rxbuf, SIZE_STATUS);
+		return DECODE_MORE;
+	}
 }
 
-/*
- * vicon_decode_message		Decode a vicon message.
+/** Decode a vicon message.
  */
-static inline enum decode_t vicon_decode_message(struct ccreader *rdr,
+static enum decode_t vicon_decode_message(struct ccreader *rdr,
 	struct buffer *rxbuf)
 {
 	uint8_t *mess = buffer_output(rxbuf);
-	if((mess[0] & FLAG) == 0) {
+	if ((mess[0] & FLAG) == 0) {
 		log_println(rdr->log, "Vicon: unexpected byte %02X", mess[0]);
 		buffer_consume(rxbuf, 1);
 		return DECODE_MORE;
 	}
-	if(is_extended_command(mess))
+	if (is_extended_command(mess))
 		return vicon_decode_extended(rdr, mess, rxbuf);
-	else if(is_command(mess))
+	else if (is_command(mess))
 		return vicon_decode_command(rdr, mess, rxbuf);
 	else
 		return vicon_decode_status(rdr, mess, rxbuf);
@@ -449,53 +437,6 @@ static void encode_extended_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 }
 
 /*
- * encode_simple_status		Encode simple status message.
- */
-static inline void encode_simple_status(struct ccwriter *wtr,
-	struct ccpacket *pkt)
-{
-	uint8_t *mess = ccwriter_append(wtr, SIZE_STATUS);
-	if(mess)
-		encode_receiver(mess, pkt);
-}
-
-/*
- * encode_extended_status	Encode extended status message.
- */
-static inline void encode_extended_status(struct ccwriter *wtr,
-	struct ccpacket *pkt)
-{
-	uint8_t *mess = ccwriter_append(wtr, SIZE_EXTENDED);
-	if(mess) {
-		enum status_t s = ccpacket_get_status(pkt);
-		encode_receiver(mess, pkt);
-		bit_set(mess, BIT_COMMAND);
-		bit_set(mess, BIT_EXTENDED);
-		bit_set(mess, BIT_EX_STATUS);
-		bit_set(mess, BIT_EX_REQUEST);
-		if(s & STATUS_SECTOR)
-			bit_set(mess, BIT_STAT_SECTOR);
-		if(s & STATUS_PRESET)
-			bit_set(mess, BIT_STAT_PRESET);
-		if(s & STATUS_AUX_SET_2) {
-			bit_set(mess, BIT_STAT_V15UVS);
-			bit_set(mess, BIT_STAT_AUX_SET_2);
-		}
-	}
-}
-
-/*
- * encode_status	Encode a status message.
- */
-static void encode_status(struct ccwriter *wtr, struct ccpacket *pkt) {
-	enum status_t s = ccpacket_get_status(pkt);
-	if(s & STATUS_EXTENDED)
-		encode_extended_status(wtr, pkt);
-	else
-		encode_simple_status(wtr, pkt);
-}
-
-/*
  * is_extended_preset	Test if a command is an extended preset.
  */
 static inline bool is_extended_preset(struct ccpacket *pkt) {
@@ -531,19 +472,16 @@ static inline void adjust_menu_commands(struct ccpacket *pkt) {
 		ccpacket_set_iris(pkt, CC_IRIS_AUTO);
 }
 
-/*
- * vicon_do_write	Write a packet in vicon protocol.
+/** Write a packet in vicon protocol.
  */
 unsigned int vicon_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	int receiver = ccpacket_get_receiver(pkt);
 	if(receiver < 1 || receiver > VICON_MAX_ADDRESS)
 		return 0;
 	adjust_menu_commands(pkt);
-	if(ccpacket_get_status(pkt))
-		encode_status(wtr, pkt);
-	else if(is_extended_preset(pkt))
+	if (is_extended_preset(pkt))
 		encode_extended_preset(wtr, pkt);
-	else if(is_extended_speed(pkt))
+	else if (is_extended_speed(pkt))
 		encode_extended_speed(wtr, pkt);
 	else
 		encode_command(wtr, pkt);

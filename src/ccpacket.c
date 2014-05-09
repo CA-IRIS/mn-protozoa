@@ -32,7 +32,6 @@ enum special_presets {
  */
 struct ccpacket {
 	int		receiver;	/* receiver address: 1 to 1024 */
-	enum status_t	status;		/* status request type */
 	enum cc_flags	flags;		/* bitmask of flags */
 	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
 	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
@@ -61,7 +60,6 @@ void ccpacket_destroy(struct ccpacket *self) {
  */
 void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->receiver = 0;
-	pkt->status = STATUS_NONE;
 	pkt->flags = 0;
 	pkt->pan = 0;
 	pkt->tilt = 0;
@@ -82,28 +80,6 @@ void ccpacket_set_receiver(struct ccpacket *self, int receiver) {
  */
 int ccpacket_get_receiver(const struct ccpacket *self) {
 	return self->receiver;
-}
-
-/** Get a valid status mode */
-static enum status_t ccpacket_status(enum status_t sm) {
-	return sm & (STATUS_REQUEST | STATUS_SECTOR | STATUS_PRESET |
-	             STATUS_AUX_SET_2);
-}
-
-/** Set status request.
- *
- * @param s		Status request.
- */
-void ccpacket_set_status(struct ccpacket *self, enum status_t sm) {
-	self->status = ccpacket_status(sm);
-}
-
-/** Get status request.
- *
- * @return Status request.
- */
-enum status_t ccpacket_get_status(const struct ccpacket *self) {
-	return ccpacket_status(self->status);
 }
 
 /** Get a valid menu command */
@@ -357,8 +333,7 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	       ccpacket_get_zoom(pkt) == 0 &&
 	       ccpacket_get_focus(pkt) == 0 &&
 	       ccpacket_get_iris(pkt) == 0 &&
-	       ccpacket_get_wiper(pkt) == 0 &&
-	       ccpacket_get_status(pkt) == STATUS_NONE;
+	       ccpacket_get_wiper(pkt) == 0;
 }
 
 /** Get a valid zoom mode */
@@ -651,8 +626,6 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
 {
 	log_line_start(log);
 	log_printf(log, "packet: %s %s rcv: %d", dir, name, pkt->receiver);
-	if(ccpacket_get_status(pkt) != STATUS_NONE)
-		log_printf(log, " status: %d", ccpacket_get_status(pkt));
 	ccpacket_log_pan(pkt, log);
 	ccpacket_log_tilt(pkt, log);
 	ccpacket_log_lens(pkt, log);

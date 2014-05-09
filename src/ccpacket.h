@@ -4,15 +4,6 @@
 #include "log.h"
 #include "timeval.h"
 
-enum status_t {
-	STATUS_NONE = 0,
-	STATUS_REQUEST = 1 << 0,
-	STATUS_SECTOR = 1 << 1,
-	STATUS_PRESET = 1 << 2,
-	STATUS_AUX_SET_2 = 1 << 3,
-	STATUS_EXTENDED = (STATUS_SECTOR | STATUS_PRESET | STATUS_AUX_SET_2),
-};
-
 enum cc_flags {
 	CC_PAN_LEFT = 1 << 0,
 	CC_PAN_RIGHT = 1 << 1,
@@ -60,8 +51,6 @@ void ccpacket_destroy(struct ccpacket *self);
 void ccpacket_clear(struct ccpacket *pkt);
 void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);
-void ccpacket_set_status(struct ccpacket *self, enum status_t s);
-enum status_t ccpacket_get_status(const struct ccpacket *self);
 void ccpacket_set_menu(struct ccpacket *self, enum cc_flags mc);
 enum cc_flags ccpacket_get_menu(const struct ccpacket *self);
 void ccpacket_set_camera(struct ccpacket *self, enum cc_flags cc);
