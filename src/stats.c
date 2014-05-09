@@ -27,7 +27,7 @@ struct ptz_stats {
 	long long	n_tilt;		/* count of tilt packets */
 	long long	n_zoom;		/* count of zoom packets */
 	long long	n_lens;		/* count of lens packets */
-	long long	n_aux;		/* count of aux packets */
+	long long	n_wiper;	/* count of wiper packets */
 	long long	n_preset;	/* count of preset packets */
 };
 
@@ -73,8 +73,8 @@ static void ptz_stats_display(void) {
 		ptz_stats_print("zoom", stats.n_zoom);
 	if (stats.n_lens)
 		ptz_stats_print("lens", stats.n_lens);
-	if (stats.n_aux)
-		ptz_stats_print("aux", stats.n_aux);
+	if (stats.n_wiper)
+		ptz_stats_print("wiper", stats.n_wiper);
 	if (stats.n_preset)
 		ptz_stats_print("preset", stats.n_preset);
 }
@@ -98,8 +98,8 @@ void ptz_stats_count(struct ccpacket *pkt) {
 		if ((ccpacket_get_focus(pkt) != CC_FOCUS_STOP) ||
 		    (ccpacket_get_iris(pkt) != CC_IRIS_STOP))
 			stats.n_lens++;
-		if (pkt->aux)
-			stats.n_aux++;
+		if (ccpacket_get_wiper(pkt))
+			stats.n_wiper++;
 		if (ccpacket_get_preset_mode(pkt))
 			stats.n_preset++;
 		if ((stats.n_packets % 100) == 0)

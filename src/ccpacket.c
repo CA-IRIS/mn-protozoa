@@ -443,6 +443,32 @@ enum lens_t ccpacket_get_lens(const struct ccpacket *self) {
 	return ccpacket_lens(self->lens);
 }
 
+/** Get a valid wiper mode */
+static enum lens_t ccpacket_wiper(enum lens_t wm) {
+	enum lens_t w = wm & CC_WIPER;
+	switch(w) {
+	case CC_WIPER_ON:
+	case CC_WIPER_OFF:
+		return w;
+	default:
+		return CC_WIPER_NONE;
+	}
+}
+
+/** Set the wiper mode.
+ *
+ * @param wm		Wiper mode
+ */
+void ccpacket_set_wiper(struct ccpacket *self, enum lens_t wm) {
+	self->lens = ccpacket_wiper(wm) | (self->lens & ~CC_WIPER);
+}
+
+/** Get the wiper mode.
+ */
+enum lens_t ccpacket_get_wiper(const struct ccpacket *self) {
+	return ccpacket_wiper(self->lens);
+}
+
 /** Get a valid alarm ack */
 static enum command_t ccpacket_ack(enum command_t am) {
 	enum command_t a = am & CC_ACK_ALARM;

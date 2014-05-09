@@ -74,6 +74,12 @@ enum extended_t {
 	EX_FOCUS_SPEED,		/* 10011 set focus speed */
 };
 
+/* Auxiliary functions */
+enum ex_aux_t {
+	EX_AUX_AUTO_SCAN,	/* 0 (auto scan) */
+	EX_AUX_WIPER,		/* 1 (wiper) */
+};
+
 /*
  * calculate_checksum	Calculate the checksum for a pelco_p packet.
  */
@@ -155,25 +161,25 @@ static inline void decode_tilt(struct ccpacket *pkt, uint8_t *mess,
 /*
  * decode_lens		Decode a lens command.
  */
-static inline void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
-	if(bit_is_set(mess, BIT_IRIS_OPEN))
+static void decode_lens(struct ccpacket *pkt, uint8_t *mess) {
+	if (bit_is_set(mess, BIT_IRIS_OPEN))
 		ccpacket_set_iris(pkt, CC_IRIS_OPEN);
-	else if(bit_is_set(mess, BIT_IRIS_CLOSE))
+	else if (bit_is_set(mess, BIT_IRIS_CLOSE))
 		ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
-	if(bit_is_set(mess, BIT_FOCUS_NEAR))
+	if (bit_is_set(mess, BIT_FOCUS_NEAR))
 		ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
-	else if(bit_is_set(mess, BIT_FOCUS_FAR))
+	else if (bit_is_set(mess, BIT_FOCUS_FAR))
 		ccpacket_set_focus(pkt, CC_FOCUS_FAR);
-	if(bit_is_set(mess, BIT_ZOOM_IN))
+	if (bit_is_set(mess, BIT_ZOOM_IN))
 		ccpacket_set_zoom(pkt, CC_ZOOM_IN);
-	else if(bit_is_set(mess, BIT_ZOOM_OUT))
+	else if (bit_is_set(mess, BIT_ZOOM_OUT))
 		ccpacket_set_zoom(pkt, CC_ZOOM_OUT);
 }
 
 /*
  * decode_sense		Decode a sense command.
  */
-static inline void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
+static void decode_sense(struct ccpacket *pkt, uint8_t *mess) {
 	if (bit_is_set(mess, BIT_CAMERA_ON_OFF)) {
 		if (bit_is_set(mess, BIT_CAMERA_ON))
 			ccpacket_set_camera(pkt, CC_CAMERA_ON);
@@ -199,38 +205,27 @@ static inline enum decode_t pelco_decode_command(struct ccreader *rdr,
 	return DECODE_MORE;
 }
 
-/*
- * decode_aux		Decode an auxiliary command.
+/** Decode an auxiliary command set.
  */
-static enum aux_t decode_aux(int a) {
-	switch(a) {
-	case 1:
-		return AUX_1;
-	case 2:
-		return AUX_2;
-	case 3:
-		return AUX_3;
-	case 4:
-		return AUX_4;
-	case 5:
-		return AUX_5;
-	case 6:
-		return AUX_6;
-	case 7:
-		return AUX_7;
-	case 8:
-		return AUX_8;
-	}
-	return AUX_NONE;
+static void decode_aux_set(struct ccpacket *pkt, int p0) {
+	if (p0 == EX_AUX_WIPER)
+		ccpacket_set_wiper(pkt, CC_WIPER_ON);
+}
+
+/** Decode an auxiliary command clear.
+ */
+static void decode_aux_clear(struct ccpacket *pkt, int p0) {
+	if (p0 == EX_AUX_WIPER)
+		ccpacket_set_wiper(pkt, CC_WIPER_OFF);
 }
 
 /*
  * decode_extended	Decode an extended command.
  */
-static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
+static void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 	int p0, int p1)
 {
-	switch(ex) {
+	switch (ex) {
 	case EX_STORE:
 		ccpacket_set_preset(pkt, CC_PRESET_STORE, p0);
 		break;
@@ -241,10 +236,10 @@ static inline void decode_extended(struct ccpacket *pkt, enum extended_t ex,
 		ccpacket_set_preset(pkt, CC_PRESET_CLEAR, p0);
 		break;
 	case EX_AUX_SET:
-		pkt->aux = decode_aux(p0);
+		decode_aux_set(pkt, p0);
 		break;
 	case EX_AUX_CLEAR:
-		pkt->aux = decode_aux(p0) | AUX_CLEAR;
+		decode_aux_clear(pkt, p0);
 		break;
 	/* FIXME: add other extended functions */
 	default:
@@ -484,36 +479,18 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 	}
 }
 
-/*
- * encode_aux		Encode an auxiliary command.
+/** Encode a wiper command.
  */
-static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
+static void encode_wiper(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
-	if(mess) {
+	if (mess) {
+		enum lens_t wm = ccpacket_get_wiper(pkt);
+		enum extended_t ex = (wm == CC_WIPER_ON)
+			? EX_AUX_SET : EX_AUX_CLEAR;
 		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_EXTENDED);
-		/* FIXME: other protocols don't send an AUX_CLEAR ... */
-		if(pkt->aux & AUX_CLEAR)
-			mess[3] |= EX_AUX_CLEAR << 1;
-		else
-			mess[3] |= EX_AUX_SET << 1;
-		/* FIXME: use a lookup table; loop through bits */
-		if(pkt->aux & AUX_1)
-			mess[5] = 1;
-		else if(pkt->aux & AUX_2)
-			mess[5] = 2;
-		else if(pkt->aux & AUX_3)
-			mess[5] = 3;
-		else if(pkt->aux & AUX_4)
-			mess[5] = 4;
-		else if(pkt->aux & AUX_5)
-			mess[5] = 5;
-		else if(pkt->aux & AUX_6)
-			mess[5] = 6;
-		else if(pkt->aux & AUX_7)
-			mess[5] = 7;
-		else if(pkt->aux & AUX_8)
-			mess[5] = 8;
+		mess[3] |= ex << 1;
+		mess[5] = EX_AUX_WIPER;
 		encode_checksum(mess);
 	}
 }
@@ -546,7 +523,7 @@ unsigned int pelco_p_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	}
 	if (ccpacket_get_preset_mode(pkt))
 		encode_preset(wtr, pkt);
-	if(ccpacket_has_aux(pkt))
-		encode_aux(wtr, pkt);
+	if (ccpacket_get_wiper(pkt))
+		encode_wiper(wtr, pkt);
 	return 1;
 }

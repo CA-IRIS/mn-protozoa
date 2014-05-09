@@ -62,29 +62,16 @@ enum xl_lens_t {
 	XL_PAN_LEFT,	/* 111 (not really a lens function) */
 };
 
-#define EX_AUX_FULL_UP (0)
-#define EX_AUX_FULL_RIGHT (1)
-
-/* Auxiliary command lookup table */
-static const enum aux_t AUX_LUT[] = {
-	AUX_NONE,	/* 000 (full tilt up) */
-	AUX_NONE,	/* 001 (full pan right) */
-	AUX_1,		/* 010 */
-	AUX_4,		/* 011 */
-	AUX_2,		/* 100 */
-	AUX_5,		/* 101 */
-	AUX_3,		/* 110 */
-	AUX_6		/* 111 */
-};
-
-/* Masks for each aux function */
-static const enum aux_t AUX_MASK[] = {
-	AUX_1, AUX_2, AUX_3, AUX_4, AUX_5, AUX_6
-};
-
-/* Reverse AUX function lookup table */
-static const int LUT_AUX[] = {
-	2, 4, 6, 3, 5, 7
+/* Auxiliary command bit masks */
+enum ex_aux_t {
+	EX_AUX_FULL_UP,		/* 000 (full tilt up) */
+	EX_AUX_FULL_RIGHT,	/* 001 (full pan right) */
+	EX_AUX_1,		/* 010 (camera off) */
+	EX_AUX_4,		/* 011 (camera on) */
+	EX_AUX_2,		/* 100 */
+	EX_AUX_5,		/* 101 */
+	EX_AUX_3,		/* 110 */
+	EX_AUX_6,		/* 111 (wiper on) */
 };
 
 /*
@@ -179,18 +166,28 @@ static inline void decode_lens(struct ccpacket *pkt, enum xl_lens_t extra) {
 	}
 }
 
-/*
- * decode_aux		Decode an auxiliary command.
+/** Decode an auxiliary command.
  */
-static inline void decode_aux(struct ccpacket *pkt, int extra) {
-	if(extra == EX_AUX_FULL_UP) {
-		/* Weird special case for full up */
+static void decode_aux(struct ccpacket *pkt, int extra) {
+	switch (extra) {
+	case EX_AUX_FULL_UP:
 		ccpacket_set_tilt(pkt, CC_TILT_UP, SPEED_MAX);
-	} else if(extra == EX_AUX_FULL_RIGHT) {
-		/** Weird special case for full right */
+		return;
+	case EX_AUX_FULL_RIGHT:
 		ccpacket_set_pan(pkt, CC_PAN_RIGHT, SPEED_MAX);
-	} else
-		pkt->aux |= AUX_LUT[extra];
+		return;
+	case EX_AUX_1:
+		ccpacket_set_camera(pkt, CC_CAMERA_OFF);
+		return;
+	case EX_AUX_4:
+		ccpacket_set_camera(pkt, CC_CAMERA_ON);
+		return;
+	case EX_AUX_6:
+		ccpacket_set_wiper(pkt, CC_WIPER_ON);
+		return;
+	default:
+		return;
+	}
 }
 
 /*
@@ -312,14 +309,13 @@ static void encode_lens_function(struct ccwriter *wtr, struct ccpacket *pkt,
 	}
 }
 
-/*
- * encode_aux_function		Encode an auxiliary function.
+/** Encode an auxiliary function.
  */
 static void encode_aux_function(struct ccwriter *wtr, struct ccpacket *pkt,
 	int aux)
 {
 	uint8_t *mess = ccwriter_append(wtr, SIZE_MSG);
-	if(mess) {
+	if (mess) {
 		encode_receiver(mess, pkt);
 		mess[1] |= (aux << 1) | (EX_AUX << 4);
 	}
@@ -406,17 +402,15 @@ static inline void encode_iris(struct ccwriter *wtr, struct ccpacket *pkt) {
 		encode_lens_function(wtr, pkt, XL_IRIS_OPEN);
 }
 
-/*
- * encode_aux		Encode an auxiliary command.
+/** Encode an auxiliary command.
  */
-static inline void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
-	int i;
-	if(pkt->aux & AUX_CLEAR)
-		return;
-	for(i = 0; i < 6; i++) {
-		if(pkt->aux & AUX_MASK[i])
-			encode_aux_function(wtr, pkt, LUT_AUX[i]);
-	}
+static void encode_aux(struct ccwriter *wtr, struct ccpacket *pkt) {
+	if (ccpacket_get_camera(pkt) == CC_CAMERA_OFF)
+		encode_aux_function(wtr, pkt, EX_AUX_1);
+	else if (ccpacket_get_camera(pkt) == CC_CAMERA_ON)
+		encode_aux_function(wtr, pkt, EX_AUX_4);
+	else if (ccpacket_get_wiper(pkt) == CC_WIPER_ON)
+		encode_aux_function(wtr, pkt, EX_AUX_6);
 }
 
 /*

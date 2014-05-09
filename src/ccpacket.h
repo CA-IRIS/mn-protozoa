@@ -61,6 +61,10 @@ enum lens_t {
 	CC_LENS_NONE = 0,
 	CC_LENS_SPEED = 1 << 9,
 	CC_LENS = CC_LENS_SPEED,
+	CC_WIPER_NONE = 0,
+	CC_WIPER_ON = 1 << 10,
+	CC_WIPER_OFF = 1 << 11,
+	CC_WIPER = CC_WIPER_ON | CC_WIPER_OFF,
 };
 
 #define SPEED_MAX ((1 << 11) - 1)
@@ -128,6 +132,8 @@ void ccpacket_set_iris(struct ccpacket *self, enum lens_t im);
 enum lens_t ccpacket_get_iris(const struct ccpacket *self);
 void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm);
 enum lens_t ccpacket_get_lens(const struct ccpacket *self);
+void ccpacket_set_wiper(struct ccpacket *self, enum lens_t wm);
+enum lens_t ccpacket_get_wiper(const struct ccpacket *self);
 void ccpacket_set_ack(struct ccpacket *self, enum command_t a);
 enum command_t ccpacket_get_ack(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);

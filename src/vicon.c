@@ -145,23 +145,11 @@ static inline void decode_toggles(struct ccpacket *pkt, uint8_t *mess) {
 		ccpacket_set_lens(pkt, CC_LENS_SPEED);
 }
 
-/*
- * decode_aux		Decode auxiliary functions.
+/** Decode auxiliary functions.
  */
-static inline void decode_aux(struct ccpacket *pkt, uint8_t *mess) {
-	pkt->aux = 0;
-	if(bit_is_set(mess, BIT_AUX_1))
-		pkt->aux |= AUX_1;
-	if(bit_is_set(mess, BIT_AUX_2))
-		pkt->aux |= AUX_2;
-	if(bit_is_set(mess, BIT_AUX_3))
-		pkt->aux |= AUX_3;
-	if(bit_is_set(mess, BIT_AUX_4))
-		pkt->aux |= AUX_4;
-	if(bit_is_set(mess, BIT_AUX_5))
-		pkt->aux |= AUX_5;
-	if(bit_is_set(mess, BIT_AUX_6))
-		pkt->aux |= AUX_6;
+static void decode_aux(struct ccpacket *pkt, uint8_t *mess) {
+	if (bit_is_set(mess, BIT_AUX_6))
+		ccpacket_set_wiper(pkt, CC_WIPER_ON);
 }
 
 /*
@@ -366,23 +354,10 @@ static void encode_toggles(uint8_t *mess, struct ccpacket *pkt) {
 		bit_set(mess, BIT_LENS_SPEED);
 }
 
-/*
- * encode_aux		Encode auxiliary functions.
+/** Encode auxiliary functions.
  */
 static void encode_aux(uint8_t *mess, struct ccpacket *pkt) {
-	if(pkt->aux & AUX_CLEAR)
-		return;
-	if(pkt->aux & AUX_1)
-		bit_set(mess, BIT_AUX_1);
-	if(pkt->aux & AUX_2)
-		bit_set(mess, BIT_AUX_2);
-	if(pkt->aux & AUX_3)
-		bit_set(mess, BIT_AUX_3);
-	if(pkt->aux & AUX_4)
-		bit_set(mess, BIT_AUX_4);
-	if(pkt->aux & AUX_5)
-		bit_set(mess, BIT_AUX_5);
-	if(pkt->aux & AUX_6)
+	if (ccpacket_get_wiper(pkt) == CC_WIPER_ON)
 		bit_set(mess, BIT_AUX_6);
 }
 
@@ -533,13 +508,14 @@ static inline bool is_extended_preset(struct ccpacket *pkt) {
 		return false;
 }
 
-/*
- * is_extended_speed	Test if a command is an extended speed.
+/** Test if a command is an extended speed.
  */
-static inline bool is_extended_speed(struct ccpacket *pkt) {
+static bool is_extended_speed(struct ccpacket *pkt) {
 	// NOTE: for certain receivers, it appears that auxiliary functions
 	//       will not work unless they are in an extended packet.
-	return ccpacket_has_pan(pkt) || ccpacket_has_tilt(pkt) || pkt->aux;
+	return ccpacket_has_pan(pkt) ||
+	       ccpacket_has_tilt(pkt) ||
+	       ccpacket_get_wiper(pkt);
 }
 
 /*

@@ -42,7 +42,7 @@
 #define JBUTTON_FOCUS_FAR	(1)
 #define JBUTTON_IRIS_CLOSE	(2)
 #define JBUTTON_IRIS_OPEN	(3)
-#define JBUTTON_AUX_1		(4)
+#define JBUTTON_WIPER		(4)
 #define JBUTTON_AUX_2		(5)
 #define JBUTTON_PRESET_1	(6)
 #define JBUTTON_PRESET_2	(7)
@@ -163,11 +163,11 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 			else
 				ccpacket_set_iris(pkt, CC_IRIS_STOP);
 			return true;
-		case JBUTTON_AUX_1:
+		case JBUTTON_WIPER:
 			if(pressed)
-				pkt->aux = AUX_1;
+				ccpacket_set_wiper(pkt, CC_WIPER_ON);
 			else
-				pkt->aux = AUX_NONE;
+				ccpacket_set_wiper(pkt, CC_WIPER_NONE);
 			return true;
 		case JBUTTON_AUX_2:
 			if(pressed)
