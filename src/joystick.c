@@ -117,7 +117,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 				ccpacket_set_zoom(pkt, CC_ZOOM_STOP);
 			break;
 	}
-	ccpacket_set_preset(pkt, CC_PRESET_NONE, 0);
+	ccpacket_set_preset(pkt, 0, 0);
 	return true;
 }
 
@@ -173,7 +173,7 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 			if(pressed)
 				ccpacket_set_camera(pkt, CC_CAMERA_ON);
 			else
-				ccpacket_set_camera(pkt, CC_CAMERA_NONE);
+				ccpacket_set_camera(pkt, 0);
 			return true;
 		case JBUTTON_PRESET_1:
 			if(pressed)
@@ -216,7 +216,7 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 				ccreader_next_camera(rdr);
 			break;
 	}
-	ccpacket_set_preset(pkt, CC_PRESET_NONE, 0);
+	ccpacket_set_preset(pkt, 0, 0);
 	return false;
 }
 
@@ -255,5 +255,5 @@ void joystick_do_read(struct ccreader *rdr, struct buffer *rxbuf) {
 		c += joystick_read_message(rdr, rxbuf);
 	if(c)
 		ccreader_process_packet_no_clear(rdr);
-	ccpacket_set_preset(rdr->packet, CC_PRESET_NONE, 0);
+	ccpacket_set_preset(rdr->packet, 0, 0);
 }

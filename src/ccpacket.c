@@ -117,7 +117,7 @@ static enum cc_flags ccpacket_menu(enum cc_flags mc) {
 	case CC_MENU_CANCEL:
 		return m;
 	default:
-		return CC_MENU_NONE;
+		return 0;
 	}
 }
 
@@ -143,7 +143,7 @@ static enum cc_flags ccpacket_camera(enum cc_flags cc) {
 	case CC_CAMERA_OFF:
 		return c;
 	default:
-		return CC_CAMERA_NONE;
+		return 0;
 	}
 }
 
@@ -180,7 +180,7 @@ static enum cc_flags ccpacket_pan(enum cc_flags pm) {
 	case CC_PAN_AUTO:
 		return p;
 	default:
-		return CC_PAN_STOP;
+		return 0;
 	}
 }
 
@@ -226,7 +226,7 @@ static enum cc_flags ccpacket_tilt(enum cc_flags tm) {
 	case CC_TILT_DOWN:
 		return t;
 	default:
-		return CC_TILT_STOP;
+		return 0;
 	}
 }
 
@@ -303,7 +303,7 @@ static bool ccpacket_menu_preset(struct ccpacket *self, int p_num) {
 /** Get a valid preset mode */
 static enum cc_flags ccpacket_preset(enum cc_flags pm, int p_num) {
 	if(p_num <= 0)
-		return CC_PRESET_NONE;
+		return 0;
 	enum cc_flags p = pm & CC_PRESET;
 	switch(p) {
 	case CC_PRESET_RECALL:
@@ -311,7 +311,7 @@ static enum cc_flags ccpacket_preset(enum cc_flags pm, int p_num) {
 	case CC_PRESET_CLEAR:
 		return p;
 	default:
-		return CC_PRESET_NONE;
+		return 0;
 	}
 }
 
@@ -352,10 +352,10 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	       pkt->tilt == 0 &&
 	       pm != CC_PAN_AUTO &&
 	       pm != CC_PAN_MANUAL &&
-	       ccpacket_get_preset_mode(pkt) == CC_PRESET_NONE &&
-	       ccpacket_get_menu(pkt) == CC_MENU_NONE &&
-	       ccpacket_get_ack(pkt) == CC_ACK_NONE &&
-	       ccpacket_get_camera(pkt) == CC_CAMERA_NONE &&
+	       ccpacket_get_preset_mode(pkt) == 0 &&
+	       ccpacket_get_menu(pkt) == 0 &&
+	       ccpacket_get_ack(pkt) == 0 &&
+	       ccpacket_get_camera(pkt) == 0 &&
 	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
 	       ccpacket_get_focus(pkt) == CC_FOCUS_STOP &&
 	       ccpacket_get_iris(pkt) == CC_IRIS_STOP &&
@@ -501,7 +501,7 @@ static enum cc_flags ccpacket_ack(enum cc_flags am) {
 	case CC_ACK_ALARM:
 		return a;
 	default:
-		return CC_ACK_NONE;
+		return 0;
 	}
 }
 
@@ -525,8 +525,8 @@ enum cc_flags ccpacket_get_ack(const struct ccpacket *self) {
  * @return	True if command is present; false otherwise
  */
 bool ccpacket_has_command(const struct ccpacket *pkt) {
-	return ccpacket_get_pan_mode(pkt) != CC_PAN_STOP ||
-	       ccpacket_get_tilt_mode(pkt) != CC_TILT_STOP ||
+	return ccpacket_get_pan_mode(pkt) ||
+	       ccpacket_get_tilt_mode(pkt) ||
 	       ccpacket_get_zoom(pkt) != CC_ZOOM_STOP ||
 	       ccpacket_get_focus(pkt) != CC_FOCUS_STOP ||
 	       ccpacket_get_iris(pkt) != CC_IRIS_STOP;
