@@ -43,7 +43,7 @@
 #define JBUTTON_IRIS_CLOSE	(2)
 #define JBUTTON_IRIS_OPEN	(3)
 #define JBUTTON_WIPER		(4)
-#define JBUTTON_AUX_2		(5)
+#define JBUTTON_CAMERA		(5)
 #define JBUTTON_PRESET_1	(6)
 #define JBUTTON_PRESET_2	(7)
 #define JBUTTON_PRESET_3	(8)
@@ -169,11 +169,11 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 			else
 				ccpacket_set_wiper(pkt, CC_WIPER_NONE);
 			return true;
-		case JBUTTON_AUX_2:
+		case JBUTTON_CAMERA:
 			if(pressed)
-				pkt->aux = AUX_2;
+				ccpacket_set_camera(pkt, CC_CAMERA_ON);
 			else
-				pkt->aux = AUX_NONE;
+				ccpacket_set_camera(pkt, CC_CAMERA_NONE);
 			return true;
 		case JBUTTON_PRESET_1:
 			if(pressed)

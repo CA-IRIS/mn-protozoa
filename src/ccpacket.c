@@ -41,7 +41,6 @@ void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->pan = 0;
 	pkt->tilt = 0;
 	pkt->lens = 0;
-	pkt->aux = 0;
 	pkt->preset = 0;
 }
 
@@ -334,7 +333,7 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
 	       ccpacket_get_focus(pkt) == CC_FOCUS_STOP &&
 	       ccpacket_get_iris(pkt) == CC_IRIS_STOP &&
-	       pkt->aux == 0 &&
+	       ccpacket_get_wiper(pkt) == CC_WIPER_NONE &&
 	       ccpacket_get_status(pkt) == STATUS_NONE;
 }
 
@@ -508,13 +507,6 @@ bool ccpacket_has_command(const struct ccpacket *pkt) {
 }
 
 /*
- * ccpacket_has_aux	Test if the packet has an auxiliary function.
- */
-bool ccpacket_has_aux(struct ccpacket *pkt) {
-	return pkt->aux;
-}
-
-/*
  * ccpacket_has_autopan	Test if the packet has an autopan command.
  */
 bool ccpacket_has_autopan(const struct ccpacket *pkt) {
@@ -643,8 +635,10 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
 	ccpacket_log_pan(pkt, log);
 	ccpacket_log_tilt(pkt, log);
 	ccpacket_log_lens(pkt, log);
-	if(pkt->aux)
-		log_printf(log, " aux: %d", pkt->aux);
+	if (ccpacket_get_camera(pkt))
+		log_printf(log, " camera");
+	if (ccpacket_get_wiper(pkt))
+		log_printf(log, " wiper");
 	if(pkt->preset)
 		ccpacket_log_preset(pkt, log);
 	ccpacket_log_special(pkt, log);

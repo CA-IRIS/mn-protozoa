@@ -69,19 +69,6 @@ enum lens_t {
 
 #define SPEED_MAX ((1 << 11) - 1)
 
-enum aux_t {
-	AUX_NONE = 0,
-	AUX_1 = 1 << 0,
-	AUX_2 = 1 << 1,
-	AUX_3 = 1 << 2,
-	AUX_4 = 1 << 3,
-	AUX_5 = 1 << 4,
-	AUX_6 = 1 << 5,
-	AUX_7 = 1 << 6,
-	AUX_8 = 1 << 7,
-	AUX_CLEAR = 1 << 8,
-};
-
 /*
  * A camera control packet is a protocol-neutral representation of a single
  * message to a camera receiver driver.
@@ -93,7 +80,6 @@ struct ccpacket {
 	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
 	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
 	enum lens_t	lens;		/* bitmask of lens functions */
-	enum aux_t	aux;		/* bitmask of aux functions */
 	int		preset;		/* preset number */
 	struct timeval	expire;		/* expiration time */
 };
@@ -137,7 +123,6 @@ enum lens_t ccpacket_get_wiper(const struct ccpacket *self);
 void ccpacket_set_ack(struct ccpacket *self, enum command_t a);
 enum command_t ccpacket_get_ack(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);
-bool ccpacket_has_aux(struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);
 bool ccpacket_has_power(const struct ccpacket *pkt);
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
