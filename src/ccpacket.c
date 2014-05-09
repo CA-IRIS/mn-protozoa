@@ -33,10 +33,9 @@ enum special_presets {
 struct ccpacket {
 	int		receiver;	/* receiver address: 1 to 1024 */
 	enum status_t	status;		/* status request type */
-	enum cc_flags	command;	/* bitmask of commands */
+	enum cc_flags	flags;		/* bitmask of flags */
 	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
 	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
-	enum lens_t	lens;		/* bitmask of lens functions */
 	int		preset;		/* preset number */
 	struct timeval	expire;		/* expiration time */
 };
@@ -63,10 +62,9 @@ void ccpacket_destroy(struct ccpacket *self) {
 void ccpacket_clear(struct ccpacket *pkt) {
 	pkt->receiver = 0;
 	pkt->status = STATUS_NONE;
-	pkt->command = 0;
+	pkt->flags = 0;
 	pkt->pan = 0;
 	pkt->tilt = 0;
-	pkt->lens = 0;
 	pkt->preset = 0;
 }
 
@@ -126,13 +124,13 @@ static enum cc_flags ccpacket_menu(enum cc_flags mc) {
  * @param mc		Menu command.
  */
 void ccpacket_set_menu(struct ccpacket *self, enum cc_flags mc) {
-	self->command = ccpacket_menu(mc) | (self->command & ~CC_MENU);
+	self->flags = ccpacket_menu(mc) | (self->flags & ~CC_MENU);
 }
 
 /** Get menu command.
  */
 enum cc_flags ccpacket_get_menu(const struct ccpacket *self) {
-	return ccpacket_menu(self->command);
+	return ccpacket_menu(self->flags);
 }
 
 /** Get a valid camera command */
@@ -152,13 +150,13 @@ static enum cc_flags ccpacket_camera(enum cc_flags cc) {
  * @param cc		Camera command.
  */
 void ccpacket_set_camera(struct ccpacket *self, enum cc_flags cc) {
-	self->command = ccpacket_camera(cc) | (self->command & ~CC_CAMERA);
+	self->flags = ccpacket_camera(cc) | (self->flags & ~CC_CAMERA);
 }
 
 /** Get camera command.
  */
 enum cc_flags ccpacket_get_camera(const struct ccpacket *self) {
-	return ccpacket_camera(self->command);
+	return ccpacket_camera(self->flags);
 }
 
 /** Clamp speed value */
@@ -187,15 +185,15 @@ static enum cc_flags ccpacket_pan(enum cc_flags pm) {
 /** Set pan mode and speed.
  */
 void ccpacket_set_pan(struct ccpacket *self, enum cc_flags pm, int speed) {
-	enum cc_flags command = self->command & ~CC_PAN;
-	self->command = command | ccpacket_pan(pm);
+	enum cc_flags flags = self->flags & ~CC_PAN;
+	self->flags = flags | ccpacket_pan(pm);
 	ccpacket_set_pan_speed(self, speed);
 }
 
 /** Get pan mode.
  */
 enum cc_flags ccpacket_get_pan_mode(const struct ccpacket *self) {
-	return ccpacket_pan(self->command);
+	return ccpacket_pan(self->flags);
 }
 
 /** Set pan speed.
@@ -233,15 +231,15 @@ static enum cc_flags ccpacket_tilt(enum cc_flags tm) {
 /** Set tilt mode and speed.
  */
 void ccpacket_set_tilt(struct ccpacket *self, enum cc_flags tm, int speed) {
-	enum cc_flags command = self->command & ~CC_TILT;
-	self->command = command | ccpacket_tilt(tm);
+	enum cc_flags flags = self->flags & ~CC_TILT;
+	self->flags = flags | ccpacket_tilt(tm);
 	ccpacket_set_tilt_speed(self, speed);
 }
 
 /** Get tilt mode.
  */
 enum cc_flags ccpacket_get_tilt_mode(const struct ccpacket *self) {
-	return ccpacket_tilt(self->command);
+	return ccpacket_tilt(self->flags);
 }
 
 /** Set tilt speed.
@@ -321,13 +319,13 @@ static enum cc_flags ccpacket_preset(enum cc_flags pm, int p_num) {
  * @param p_num		Preset number
  */
 void ccpacket_set_preset(struct ccpacket *self, enum cc_flags pm, int p_num) {
-	enum cc_flags command = self->command & ~CC_PRESET;
+	enum cc_flags flags = self->flags & ~CC_PRESET;
 	enum cc_flags p = ccpacket_preset(pm, p_num);
 	if (p == CC_PRESET_STORE && ccpacket_menu_preset(self, p_num)) {
-		self->command = command;
+		self->flags = flags;
 		self->preset = 0;
 	} else {
-		self->command = command | p;
+		self->flags = flags | p;
 		self->preset = p_num;
 	}
 }
@@ -335,7 +333,7 @@ void ccpacket_set_preset(struct ccpacket *self, enum cc_flags pm, int p_num) {
 /** Get the preset mode.
  */
 enum cc_flags ccpacket_get_preset_mode(const struct ccpacket *self) {
-	return ccpacket_preset(self->command, self->preset);
+	return ccpacket_preset(self->flags, self->preset);
 }
 
 /** Get the preset number.
@@ -364,8 +362,8 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 }
 
 /** Get a valid zoom mode */
-static enum lens_t ccpacket_zoom(enum lens_t zm) {
-	enum lens_t z = zm & CC_ZOOM;
+static enum cc_flags ccpacket_zoom(enum cc_flags zm) {
+	enum cc_flags z = zm & CC_ZOOM;
 	switch(z) {
 	case CC_ZOOM_IN:
 	case CC_ZOOM_OUT:
@@ -379,19 +377,19 @@ static enum lens_t ccpacket_zoom(enum lens_t zm) {
  *
  * @param zm		Zoom mode
  */
-void ccpacket_set_zoom(struct ccpacket *self, enum lens_t zm) {
-	self->lens = ccpacket_zoom(zm) | (self->lens & ~CC_ZOOM);
+void ccpacket_set_zoom(struct ccpacket *self, enum cc_flags zm) {
+	self->flags = ccpacket_zoom(zm) | (self->flags & ~CC_ZOOM);
 }
 
 /** Get the zoom mode.
  */
-enum lens_t ccpacket_get_zoom(const struct ccpacket *self) {
-	return ccpacket_zoom(self->lens);
+enum cc_flags ccpacket_get_zoom(const struct ccpacket *self) {
+	return ccpacket_zoom(self->flags);
 }
 
 /** Get a valid focus mode */
-static enum lens_t ccpacket_focus(enum lens_t fm) {
-	enum lens_t f = fm & CC_FOCUS;
+static enum cc_flags ccpacket_focus(enum cc_flags fm) {
+	enum cc_flags f = fm & CC_FOCUS;
 	switch(f) {
 	case CC_FOCUS_NEAR:
 	case CC_FOCUS_FAR:
@@ -406,19 +404,19 @@ static enum lens_t ccpacket_focus(enum lens_t fm) {
  *
  * @param fm		Focus mode
  */
-void ccpacket_set_focus(struct ccpacket *self, enum lens_t fm) {
-	self->lens = ccpacket_focus(fm) | (self->lens & ~CC_FOCUS);
+void ccpacket_set_focus(struct ccpacket *self, enum cc_flags fm) {
+	self->flags = ccpacket_focus(fm) | (self->flags & ~CC_FOCUS);
 }
 
 /** Get the focus mode.
  */
-enum lens_t ccpacket_get_focus(const struct ccpacket *self) {
-	return ccpacket_focus(self->lens);
+enum cc_flags ccpacket_get_focus(const struct ccpacket *self) {
+	return ccpacket_focus(self->flags);
 }
 
 /** Get a valid iris mode */
-static enum lens_t ccpacket_iris(enum lens_t im) {
-	enum lens_t i = im & CC_IRIS;
+static enum cc_flags ccpacket_iris(enum cc_flags im) {
+	enum cc_flags i = im & CC_IRIS;
 	switch(i) {
 	case CC_IRIS_CLOSE:
 	case CC_IRIS_OPEN:
@@ -433,19 +431,19 @@ static enum lens_t ccpacket_iris(enum lens_t im) {
  *
  * @param im		Iris mode
  */
-void ccpacket_set_iris(struct ccpacket *self, enum lens_t im) {
-	self->lens = ccpacket_iris(im) | (self->lens & ~CC_IRIS);
+void ccpacket_set_iris(struct ccpacket *self, enum cc_flags im) {
+	self->flags = ccpacket_iris(im) | (self->flags & ~CC_IRIS);
 }
 
 /** Get the iris mode.
  */
-enum lens_t ccpacket_get_iris(const struct ccpacket *self) {
-	return ccpacket_iris(self->lens);
+enum cc_flags ccpacket_get_iris(const struct ccpacket *self) {
+	return ccpacket_iris(self->flags);
 }
 
 /** Get a valid lens mode */
-static enum lens_t ccpacket_lens(enum lens_t lm) {
-	enum lens_t l = lm & CC_LENS;
+static enum cc_flags ccpacket_lens(enum cc_flags lm) {
+	enum cc_flags l = lm & CC_LENS;
 	switch(l) {
 	case CC_LENS_SPEED:
 		return l;
@@ -458,19 +456,19 @@ static enum lens_t ccpacket_lens(enum lens_t lm) {
  *
  * @param lm		Lens mode
  */
-void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm) {
-	self->lens = ccpacket_lens(lm) | (self->lens & ~CC_LENS);
+void ccpacket_set_lens(struct ccpacket *self, enum cc_flags lm) {
+	self->flags = ccpacket_lens(lm) | (self->flags & ~CC_LENS);
 }
 
 /** Get the lens mode.
  */
-enum lens_t ccpacket_get_lens(const struct ccpacket *self) {
-	return ccpacket_lens(self->lens);
+enum cc_flags ccpacket_get_lens(const struct ccpacket *self) {
+	return ccpacket_lens(self->flags);
 }
 
 /** Get a valid wiper mode */
-static enum lens_t ccpacket_wiper(enum lens_t wm) {
-	enum lens_t w = wm & CC_WIPER;
+static enum cc_flags ccpacket_wiper(enum cc_flags wm) {
+	enum cc_flags w = wm & CC_WIPER;
 	switch(w) {
 	case CC_WIPER_ON:
 	case CC_WIPER_OFF:
@@ -484,14 +482,14 @@ static enum lens_t ccpacket_wiper(enum lens_t wm) {
  *
  * @param wm		Wiper mode
  */
-void ccpacket_set_wiper(struct ccpacket *self, enum lens_t wm) {
-	self->lens = ccpacket_wiper(wm) | (self->lens & ~CC_WIPER);
+void ccpacket_set_wiper(struct ccpacket *self, enum cc_flags wm) {
+	self->flags = ccpacket_wiper(wm) | (self->flags & ~CC_WIPER);
 }
 
 /** Get the wiper mode.
  */
-enum lens_t ccpacket_get_wiper(const struct ccpacket *self) {
-	return ccpacket_wiper(self->lens);
+enum cc_flags ccpacket_get_wiper(const struct ccpacket *self) {
+	return ccpacket_wiper(self->flags);
 }
 
 /** Get a valid alarm ack */
@@ -510,13 +508,13 @@ static enum cc_flags ccpacket_ack(enum cc_flags am) {
  * @param am		Alarm ack.
  */
 void ccpacket_set_ack(struct ccpacket *self, enum cc_flags am) {
-	self->command = ccpacket_ack(am) | (self->command & ~CC_ACK);
+	self->flags = ccpacket_ack(am) | (self->flags & ~CC_ACK);
 }
 
 /** Get the alarm ack.
  */
 enum cc_flags ccpacket_get_ack(const struct ccpacket *self) {
-	return ccpacket_ack(self->command);
+	return ccpacket_ack(self->flags);
 }
 
 /** Test if a packet has a command to encode.
@@ -544,10 +542,7 @@ bool ccpacket_has_autopan(const struct ccpacket *pkt) {
  * ccpacket_has_power	Test if the packet has a power command.
  */
 bool ccpacket_has_power(const struct ccpacket *pkt) {
-	if(pkt->command & (CC_CAMERA_ON | CC_CAMERA_OFF))
-		return true;
-	else
-		return false;
+	return ccpacket_get_camera(pkt);
 }
 
 /*
@@ -584,10 +579,10 @@ static inline void ccpacket_log_tilt(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
-	enum lens_t zm = ccpacket_get_zoom(pkt);
-	enum lens_t fm = ccpacket_get_focus(pkt);
-	enum lens_t im = ccpacket_get_iris(pkt);
-	enum lens_t lm = ccpacket_get_lens(pkt);
+	enum cc_flags zm = ccpacket_get_zoom(pkt);
+	enum cc_flags fm = ccpacket_get_focus(pkt);
+	enum cc_flags im = ccpacket_get_iris(pkt);
+	enum cc_flags lm = ccpacket_get_lens(pkt);
 	if (zm == CC_ZOOM_IN)
 		log_printf(log, " zoom IN");
 	if (zm == CC_ZOOM_OUT)

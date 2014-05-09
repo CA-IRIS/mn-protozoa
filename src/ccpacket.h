@@ -35,24 +35,21 @@ enum cc_flags {
 	CC_CAMERA = CC_CAMERA_ON | CC_CAMERA_OFF,
 	CC_ACK_ALARM = 1 << 14,
 	CC_ACK = CC_ACK_ALARM,
-};
-
-enum lens_t {
-	CC_ZOOM_IN = 1 << 1,
-	CC_ZOOM_OUT = 1 << 2,
+	CC_ZOOM_IN = 1 << 15,
+	CC_ZOOM_OUT = 1 << 16,
 	CC_ZOOM = CC_ZOOM_IN | CC_ZOOM_OUT,
-	CC_FOCUS_NEAR = 1 << 3,
-	CC_FOCUS_FAR = 1 << 4,
-	CC_FOCUS_AUTO = 1 << 5,
+	CC_FOCUS_NEAR = 1 << 17,
+	CC_FOCUS_FAR = 1 << 18,
+	CC_FOCUS_AUTO = 1 << 19,
 	CC_FOCUS = CC_FOCUS_NEAR | CC_FOCUS_FAR | CC_FOCUS_AUTO,
-	CC_IRIS_CLOSE = 1 << 6,
-	CC_IRIS_OPEN = 1 << 7,
-	CC_IRIS_AUTO = 1 << 8,
+	CC_IRIS_CLOSE = 1 << 20,
+	CC_IRIS_OPEN = 1 << 21,
+	CC_IRIS_AUTO = 1 << 22,
 	CC_IRIS = CC_IRIS_CLOSE | CC_IRIS_OPEN | CC_IRIS_AUTO,
-	CC_LENS_SPEED = 1 << 9,
+	CC_LENS_SPEED = 1 << 23,
 	CC_LENS = CC_LENS_SPEED,
-	CC_WIPER_ON = 1 << 10,
-	CC_WIPER_OFF = 1 << 11,
+	CC_WIPER_ON = 1 << 24,
+	CC_WIPER_OFF = 1 << 25,
 	CC_WIPER = CC_WIPER_ON | CC_WIPER_OFF,
 };
 
@@ -85,16 +82,16 @@ void ccpacket_set_preset(struct ccpacket *self, enum cc_flags pm, int p_num);
 enum cc_flags ccpacket_get_preset_mode(const struct ccpacket *self);
 int ccpacket_get_preset_number(const struct ccpacket *self);
 bool ccpacket_is_stop(struct ccpacket *pkt);
-void ccpacket_set_zoom(struct ccpacket *self, enum lens_t zm);
-enum lens_t ccpacket_get_zoom(const struct ccpacket *self);
-void ccpacket_set_focus(struct ccpacket *self, enum lens_t fm);
-enum lens_t ccpacket_get_focus(const struct ccpacket *self);
-void ccpacket_set_iris(struct ccpacket *self, enum lens_t im);
-enum lens_t ccpacket_get_iris(const struct ccpacket *self);
-void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm);
-enum lens_t ccpacket_get_lens(const struct ccpacket *self);
-void ccpacket_set_wiper(struct ccpacket *self, enum lens_t wm);
-enum lens_t ccpacket_get_wiper(const struct ccpacket *self);
+void ccpacket_set_zoom(struct ccpacket *self, enum cc_flags zm);
+enum cc_flags ccpacket_get_zoom(const struct ccpacket *self);
+void ccpacket_set_focus(struct ccpacket *self, enum cc_flags fm);
+enum cc_flags ccpacket_get_focus(const struct ccpacket *self);
+void ccpacket_set_iris(struct ccpacket *self, enum cc_flags im);
+enum cc_flags ccpacket_get_iris(const struct ccpacket *self);
+void ccpacket_set_lens(struct ccpacket *self, enum cc_flags lm);
+enum cc_flags ccpacket_get_lens(const struct ccpacket *self);
+void ccpacket_set_wiper(struct ccpacket *self, enum cc_flags wm);
+enum cc_flags ccpacket_get_wiper(const struct ccpacket *self);
 void ccpacket_set_ack(struct ccpacket *self, enum cc_flags a);
 enum cc_flags ccpacket_get_ack(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);

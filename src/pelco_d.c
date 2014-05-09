@@ -467,7 +467,7 @@ static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 static void encode_wiper(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if (mess) {
-		enum lens_t wm = ccpacket_get_wiper(pkt);
+		enum cc_flags wm = ccpacket_get_wiper(pkt);
 		enum extended_t ex = (wm == CC_WIPER_ON)
 			? EX_AUX_SET : EX_AUX_CLEAR;
 		encode_receiver(mess, pkt);
