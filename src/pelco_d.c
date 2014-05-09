@@ -501,14 +501,14 @@ unsigned int pelco_d_do_write_cb(struct ccwriter *wtr, struct ccpacket *pkt,
 	if(receiver < 1 || receiver > PELCO_D_MAX_ADDRESS)
 		return 0;
 	adjust_menu_commands(pkt);
-	if(ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
-	   ccpacket_has_power(pkt))
+	if (ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
+	    ccpacket_has_power(pkt))
 	{
-		if(prepare_writer(wtr))
+		if (prepare_writer(wtr))
 			encode_command(wtr, pkt);
 	}
 	if (ccpacket_get_preset_mode(pkt)) {
-		if(prepare_writer(wtr))
+		if (prepare_writer(wtr))
 			encode_preset(wtr, pkt);
 	}
 	if (ccpacket_get_wiper(pkt)) {

@@ -516,8 +516,8 @@ unsigned int pelco_p_do_write(struct ccwriter *wtr, struct ccpacket *pkt) {
 	if(receiver < 1 || receiver > PELCO_P_MAX_ADDRESS)
 		return 0;
 	adjust_menu_commands(pkt);
-	if(ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
-	   ccpacket_has_power(pkt))
+	if (ccpacket_has_command(pkt) || ccpacket_has_autopan(pkt) ||
+	    ccpacket_has_power(pkt))
 	{
 		encode_command(wtr, pkt);
 	}
