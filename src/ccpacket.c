@@ -356,10 +356,10 @@ bool ccpacket_is_stop(struct ccpacket *pkt) {
 	       ccpacket_get_menu(pkt) == 0 &&
 	       ccpacket_get_ack(pkt) == 0 &&
 	       ccpacket_get_camera(pkt) == 0 &&
-	       ccpacket_get_zoom(pkt) == CC_ZOOM_STOP &&
-	       ccpacket_get_focus(pkt) == CC_FOCUS_STOP &&
-	       ccpacket_get_iris(pkt) == CC_IRIS_STOP &&
-	       ccpacket_get_wiper(pkt) == CC_WIPER_NONE &&
+	       ccpacket_get_zoom(pkt) == 0 &&
+	       ccpacket_get_focus(pkt) == 0 &&
+	       ccpacket_get_iris(pkt) == 0 &&
+	       ccpacket_get_wiper(pkt) == 0 &&
 	       ccpacket_get_status(pkt) == STATUS_NONE;
 }
 
@@ -371,7 +371,7 @@ static enum lens_t ccpacket_zoom(enum lens_t zm) {
 	case CC_ZOOM_OUT:
 		return z;
 	default:
-		return CC_ZOOM_STOP;
+		return 0;
 	}
 }
 
@@ -398,7 +398,7 @@ static enum lens_t ccpacket_focus(enum lens_t fm) {
 	case CC_FOCUS_AUTO:
 		return f;
 	default:
-		return CC_FOCUS_STOP;
+		return 0;
 	}
 }
 
@@ -425,7 +425,7 @@ static enum lens_t ccpacket_iris(enum lens_t im) {
 	case CC_IRIS_AUTO:
 		return i;
 	default:
-		return CC_IRIS_STOP;
+		return 0;
 	}
 }
 
@@ -450,7 +450,7 @@ static enum lens_t ccpacket_lens(enum lens_t lm) {
 	case CC_LENS_SPEED:
 		return l;
 	default:
-		return CC_LENS_NONE;
+		return 0;
 	}
 }
 
@@ -476,7 +476,7 @@ static enum lens_t ccpacket_wiper(enum lens_t wm) {
 	case CC_WIPER_OFF:
 		return w;
 	default:
-		return CC_WIPER_NONE;
+		return 0;
 	}
 }
 
@@ -527,9 +527,9 @@ enum cc_flags ccpacket_get_ack(const struct ccpacket *self) {
 bool ccpacket_has_command(const struct ccpacket *pkt) {
 	return ccpacket_get_pan_mode(pkt) ||
 	       ccpacket_get_tilt_mode(pkt) ||
-	       ccpacket_get_zoom(pkt) != CC_ZOOM_STOP ||
-	       ccpacket_get_focus(pkt) != CC_FOCUS_STOP ||
-	       ccpacket_get_iris(pkt) != CC_IRIS_STOP;
+	       ccpacket_get_zoom(pkt) ||
+	       ccpacket_get_focus(pkt) ||
+	       ccpacket_get_iris(pkt);
 }
 
 /*

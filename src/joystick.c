@@ -114,7 +114,7 @@ static inline bool decode_pan_tilt_zoom(struct ccpacket *pkt, uint8_t *mess) {
 			else if(speed > 0)
 				ccpacket_set_zoom(pkt, CC_ZOOM_IN);
 			else
-				ccpacket_set_zoom(pkt, CC_ZOOM_STOP);
+				ccpacket_set_zoom(pkt, 0);
 			break;
 	}
 	ccpacket_set_preset(pkt, 0, 0);
@@ -143,31 +143,31 @@ static inline bool decode_button(struct ccreader *rdr, uint8_t *mess) {
 			if(pressed)
 				ccpacket_set_focus(pkt, CC_FOCUS_NEAR);
 			else
-				ccpacket_set_focus(pkt, CC_FOCUS_STOP);
+				ccpacket_set_focus(pkt, 0);
 			return true;
 		case JBUTTON_FOCUS_FAR:
 			if(pressed)
 				ccpacket_set_focus(pkt, CC_FOCUS_FAR);
 			else
-				ccpacket_set_focus(pkt, CC_FOCUS_STOP);
+				ccpacket_set_focus(pkt, 0);
 			return true;
 		case JBUTTON_IRIS_CLOSE:
 			if(pressed)
 				ccpacket_set_iris(pkt, CC_IRIS_CLOSE);
 			else
-				ccpacket_set_iris(pkt, CC_IRIS_STOP);
+				ccpacket_set_iris(pkt, 0);
 			return true;
 		case JBUTTON_IRIS_OPEN:
 			if(pressed)
 				ccpacket_set_iris(pkt, CC_IRIS_OPEN);
 			else
-				ccpacket_set_iris(pkt, CC_IRIS_STOP);
+				ccpacket_set_iris(pkt, 0);
 			return true;
 		case JBUTTON_WIPER:
 			if(pressed)
 				ccpacket_set_wiper(pkt, CC_WIPER_ON);
 			else
-				ccpacket_set_wiper(pkt, CC_WIPER_NONE);
+				ccpacket_set_wiper(pkt, 0);
 			return true;
 		case JBUTTON_CAMERA:
 			if(pressed)
