@@ -338,7 +338,7 @@ static int manchester_encode_speed(int speed) {
  * encode_pan		Encode a pan command.
  */
 static void encode_pan(struct ccwriter *wtr, struct ccpacket *pkt) {
-	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	enum cc_flags pm = ccpacket_get_pan_mode(pkt);
 	int speed = manchester_encode_speed(ccpacket_get_pan_speed(pkt));
 	if (pm == CC_PAN_LEFT) {
 		if (speed == SPEED_FULL)
@@ -357,7 +357,7 @@ static void encode_pan(struct ccwriter *wtr, struct ccpacket *pkt) {
  * encode_tilt		Encode a tilt command.
  */
 static void encode_tilt(struct ccwriter *wtr, struct ccpacket *pkt) {
-	enum command_t tm = ccpacket_get_tilt_mode(pkt);
+	enum cc_flags tm = ccpacket_get_tilt_mode(pkt);
 	int speed = manchester_encode_speed(ccpacket_get_tilt_speed(pkt));
 	if (tm == CC_TILT_DOWN) {
 		if (speed == SPEED_FULL)

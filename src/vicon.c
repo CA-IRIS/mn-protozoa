@@ -365,7 +365,7 @@ static void encode_aux(uint8_t *mess, struct ccpacket *pkt) {
  * encode_preset	Encode preset functions.
  */
 static void encode_preset(uint8_t *mess, struct ccpacket *pkt) {
-	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	enum cc_flags pm = ccpacket_get_preset_mode(pkt);
 	if (pm == CC_PRESET_RECALL)
 		bit_set(mess, BIT_RECALL);
 	else if (pm == CC_PRESET_STORE)
@@ -499,7 +499,7 @@ static void encode_status(struct ccwriter *wtr, struct ccpacket *pkt) {
  * is_extended_preset	Test if a command is an extended preset.
  */
 static inline bool is_extended_preset(struct ccpacket *pkt) {
-	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	enum cc_flags pm = ccpacket_get_preset_mode(pkt);
 	if(pm == CC_PRESET_RECALL || pm == CC_PRESET_STORE) {
 		int pan = ccpacket_get_pan_speed(pkt);
 		int tilt = ccpacket_get_tilt_speed(pkt);
@@ -522,7 +522,7 @@ static bool is_extended_speed(struct ccpacket *pkt) {
  * adjust_menu_commands	Adjust menu commands for vicon protocol.
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
-	enum command_t mc = ccpacket_get_menu(pkt);
+	enum cc_flags mc = ccpacket_get_menu(pkt);
 	if (mc == CC_MENU_OPEN)
 		ccpacket_set_preset(pkt,CC_PRESET_STORE,VICON_PRESET_MENU_OPEN);
 	else if (mc == CC_MENU_ENTER)

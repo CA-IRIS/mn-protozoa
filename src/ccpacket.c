@@ -33,7 +33,7 @@ enum special_presets {
 struct ccpacket {
 	int		receiver;	/* receiver address: 1 to 1024 */
 	enum status_t	status;		/* status request type */
-	enum command_t	command;	/* bitmask of commands */
+	enum cc_flags	command;	/* bitmask of commands */
 	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
 	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
 	enum lens_t	lens;		/* bitmask of lens functions */
@@ -109,8 +109,8 @@ enum status_t ccpacket_get_status(const struct ccpacket *self) {
 }
 
 /** Get a valid menu command */
-static enum command_t ccpacket_menu(enum command_t mc) {
-	enum command_t m = mc & CC_MENU;
+static enum cc_flags ccpacket_menu(enum cc_flags mc) {
+	enum cc_flags m = mc & CC_MENU;
 	switch(m) {
 	case CC_MENU_OPEN:
 	case CC_MENU_ENTER:
@@ -125,19 +125,19 @@ static enum command_t ccpacket_menu(enum command_t mc) {
  *
  * @param mc		Menu command.
  */
-void ccpacket_set_menu(struct ccpacket *self, enum command_t mc) {
+void ccpacket_set_menu(struct ccpacket *self, enum cc_flags mc) {
 	self->command = ccpacket_menu(mc) | (self->command & ~CC_MENU);
 }
 
 /** Get menu command.
  */
-enum command_t ccpacket_get_menu(const struct ccpacket *self) {
+enum cc_flags ccpacket_get_menu(const struct ccpacket *self) {
 	return ccpacket_menu(self->command);
 }
 
 /** Get a valid camera command */
-static enum command_t ccpacket_camera(enum command_t cc) {
-	enum command_t c = cc & CC_CAMERA;
+static enum cc_flags ccpacket_camera(enum cc_flags cc) {
+	enum cc_flags c = cc & CC_CAMERA;
 	switch(c) {
 	case CC_CAMERA_ON:
 	case CC_CAMERA_OFF:
@@ -151,13 +151,13 @@ static enum command_t ccpacket_camera(enum command_t cc) {
  *
  * @param cc		Camera command.
  */
-void ccpacket_set_camera(struct ccpacket *self, enum command_t cc) {
+void ccpacket_set_camera(struct ccpacket *self, enum cc_flags cc) {
 	self->command = ccpacket_camera(cc) | (self->command & ~CC_CAMERA);
 }
 
 /** Get camera command.
  */
-enum command_t ccpacket_get_camera(const struct ccpacket *self) {
+enum cc_flags ccpacket_get_camera(const struct ccpacket *self) {
 	return ccpacket_camera(self->command);
 }
 
@@ -172,8 +172,8 @@ static int clamp_speed(int speed) {
 }
 
 /** Get a valid pan mode */
-static enum command_t ccpacket_pan(enum command_t pm) {
-	enum command_t p = pm & CC_PAN;
+static enum cc_flags ccpacket_pan(enum cc_flags pm) {
+	enum cc_flags p = pm & CC_PAN;
 	switch(p) {
 	case CC_PAN_LEFT:
 	case CC_PAN_RIGHT:
@@ -186,15 +186,15 @@ static enum command_t ccpacket_pan(enum command_t pm) {
 
 /** Set pan mode and speed.
  */
-void ccpacket_set_pan(struct ccpacket *self, enum command_t pm, int speed) {
-	enum command_t command = self->command & ~CC_PAN;
+void ccpacket_set_pan(struct ccpacket *self, enum cc_flags pm, int speed) {
+	enum cc_flags command = self->command & ~CC_PAN;
 	self->command = command | ccpacket_pan(pm);
 	ccpacket_set_pan_speed(self, speed);
 }
 
 /** Get pan mode.
  */
-enum command_t ccpacket_get_pan_mode(const struct ccpacket *self) {
+enum cc_flags ccpacket_get_pan_mode(const struct ccpacket *self) {
 	return ccpacket_pan(self->command);
 }
 
@@ -219,8 +219,8 @@ bool ccpacket_has_pan(const struct ccpacket *self) {
 }
 
 /** Get a valid tilt mode */
-static enum command_t ccpacket_tilt(enum command_t tm) {
-	enum command_t t = tm & CC_TILT;
+static enum cc_flags ccpacket_tilt(enum cc_flags tm) {
+	enum cc_flags t = tm & CC_TILT;
 	switch(t) {
 	case CC_TILT_UP:
 	case CC_TILT_DOWN:
@@ -232,15 +232,15 @@ static enum command_t ccpacket_tilt(enum command_t tm) {
 
 /** Set tilt mode and speed.
  */
-void ccpacket_set_tilt(struct ccpacket *self, enum command_t tm, int speed) {
-	enum command_t command = self->command & ~CC_TILT;
+void ccpacket_set_tilt(struct ccpacket *self, enum cc_flags tm, int speed) {
+	enum cc_flags command = self->command & ~CC_TILT;
 	self->command = command | ccpacket_tilt(tm);
 	ccpacket_set_tilt_speed(self, speed);
 }
 
 /** Get tilt mode.
  */
-enum command_t ccpacket_get_tilt_mode(const struct ccpacket *self) {
+enum cc_flags ccpacket_get_tilt_mode(const struct ccpacket *self) {
 	return ccpacket_tilt(self->command);
 }
 
@@ -301,10 +301,10 @@ static bool ccpacket_menu_preset(struct ccpacket *self, int p_num) {
 }
 
 /** Get a valid preset mode */
-static enum command_t ccpacket_preset(enum command_t pm, int p_num) {
+static enum cc_flags ccpacket_preset(enum cc_flags pm, int p_num) {
 	if(p_num <= 0)
 		return CC_PRESET_NONE;
-	enum command_t p = pm & CC_PRESET;
+	enum cc_flags p = pm & CC_PRESET;
 	switch(p) {
 	case CC_PRESET_RECALL:
 	case CC_PRESET_STORE:
@@ -320,9 +320,9 @@ static enum command_t ccpacket_preset(enum command_t pm, int p_num) {
  * @param pm		Preset mode
  * @param p_num		Preset number
  */
-void ccpacket_set_preset(struct ccpacket *self, enum command_t pm, int p_num) {
-	enum command_t command = self->command & ~CC_PRESET;
-	enum command_t p = ccpacket_preset(pm, p_num);
+void ccpacket_set_preset(struct ccpacket *self, enum cc_flags pm, int p_num) {
+	enum cc_flags command = self->command & ~CC_PRESET;
+	enum cc_flags p = ccpacket_preset(pm, p_num);
 	if (p == CC_PRESET_STORE && ccpacket_menu_preset(self, p_num)) {
 		self->command = command;
 		self->preset = 0;
@@ -334,7 +334,7 @@ void ccpacket_set_preset(struct ccpacket *self, enum command_t pm, int p_num) {
 
 /** Get the preset mode.
  */
-enum command_t ccpacket_get_preset_mode(const struct ccpacket *self) {
+enum cc_flags ccpacket_get_preset_mode(const struct ccpacket *self) {
 	return ccpacket_preset(self->command, self->preset);
 }
 
@@ -347,7 +347,7 @@ int ccpacket_get_preset_number(const struct ccpacket *self) {
 /** Test if a packet is a stop command.
  */
 bool ccpacket_is_stop(struct ccpacket *pkt) {
-	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	enum cc_flags pm = ccpacket_get_pan_mode(pkt);
 	return pkt->pan == 0 &&
 	       pkt->tilt == 0 &&
 	       pm != CC_PAN_AUTO &&
@@ -495,8 +495,8 @@ enum lens_t ccpacket_get_wiper(const struct ccpacket *self) {
 }
 
 /** Get a valid alarm ack */
-static enum command_t ccpacket_ack(enum command_t am) {
-	enum command_t a = am & CC_ACK_ALARM;
+static enum cc_flags ccpacket_ack(enum cc_flags am) {
+	enum cc_flags a = am & CC_ACK_ALARM;
 	switch(a) {
 	case CC_ACK_ALARM:
 		return a;
@@ -509,13 +509,13 @@ static enum command_t ccpacket_ack(enum command_t am) {
  *
  * @param am		Alarm ack.
  */
-void ccpacket_set_ack(struct ccpacket *self, enum command_t am) {
+void ccpacket_set_ack(struct ccpacket *self, enum cc_flags am) {
 	self->command = ccpacket_ack(am) | (self->command & ~CC_ACK);
 }
 
 /** Get the alarm ack.
  */
-enum command_t ccpacket_get_ack(const struct ccpacket *self) {
+enum cc_flags ccpacket_get_ack(const struct ccpacket *self) {
 	return ccpacket_ack(self->command);
 }
 
@@ -536,7 +536,7 @@ bool ccpacket_has_command(const struct ccpacket *pkt) {
  * ccpacket_has_autopan	Test if the packet has an autopan command.
  */
 bool ccpacket_has_autopan(const struct ccpacket *pkt) {
-	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	enum cc_flags pm = ccpacket_get_pan_mode(pkt);
 	return pm == CC_PAN_AUTO || pm == CC_PAN_MANUAL;
 }
 
@@ -614,7 +614,7 @@ static inline void ccpacket_log_lens(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
-	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	enum cc_flags pm = ccpacket_get_preset_mode(pkt);
 	if (pm == CC_PRESET_RECALL)
 		log_printf(log, " recall");
 	else if (pm == CC_PRESET_STORE)
@@ -630,8 +630,8 @@ static inline void ccpacket_log_preset(struct ccpacket *pkt, struct log *log) {
  * log: message logger
  */
 static inline void ccpacket_log_special(struct ccpacket *pkt, struct log *log) {
-	enum command_t pm = ccpacket_get_pan_mode(pkt);
-	enum command_t mc = ccpacket_get_menu(pkt);
+	enum cc_flags pm = ccpacket_get_pan_mode(pkt);
+	enum cc_flags mc = ccpacket_get_menu(pkt);
 	if (pm == CC_PAN_AUTO)
 		log_printf(log, " auto-pan");
 	if (pm == CC_PAN_MANUAL)

@@ -222,7 +222,7 @@ static bool encode_preset(struct ccwriter *wtr, struct ccpacket *pkt,
 	char num[16];
 	char mess[32];
 
-	enum command_t pm = ccpacket_get_preset_mode(pkt);
+	enum cc_flags pm = ccpacket_get_preset_mode(pkt);
 	if (pm == CC_PRESET_RECALL) {
 		somein = axis_prepare_buffer(wtr, somein, false);
 		strcpy(mess, "goto");

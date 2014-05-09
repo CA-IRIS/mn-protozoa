@@ -13,7 +13,7 @@ enum status_t {
 	STATUS_EXTENDED = (STATUS_SECTOR | STATUS_PRESET | STATUS_AUX_SET_2),
 };
 
-enum command_t {
+enum cc_flags {
 	CC_PAN_STOP = 0,
 	CC_PAN_LEFT = 1 << 0,
 	CC_PAN_RIGHT = 1 << 1,
@@ -76,24 +76,24 @@ void ccpacket_set_receiver(struct ccpacket *self, int receiver);
 int ccpacket_get_receiver(const struct ccpacket *self);
 void ccpacket_set_status(struct ccpacket *self, enum status_t s);
 enum status_t ccpacket_get_status(const struct ccpacket *self);
-void ccpacket_set_menu(struct ccpacket *self, enum command_t mc);
-enum command_t ccpacket_get_menu(const struct ccpacket *self);
-void ccpacket_set_camera(struct ccpacket *self, enum command_t cc);
-enum command_t ccpacket_get_camera(const struct ccpacket *self);
-void ccpacket_set_pan(struct ccpacket *self, enum command_t pm, int speed);
-enum command_t ccpacket_get_pan_mode(const struct ccpacket *self);
+void ccpacket_set_menu(struct ccpacket *self, enum cc_flags mc);
+enum cc_flags ccpacket_get_menu(const struct ccpacket *self);
+void ccpacket_set_camera(struct ccpacket *self, enum cc_flags cc);
+enum cc_flags ccpacket_get_camera(const struct ccpacket *self);
+void ccpacket_set_pan(struct ccpacket *self, enum cc_flags pm, int speed);
+enum cc_flags ccpacket_get_pan_mode(const struct ccpacket *self);
 void ccpacket_set_pan_speed(struct ccpacket *self, int speed);
 int ccpacket_get_pan_speed(const struct ccpacket *self);
 bool ccpacket_has_pan(const struct ccpacket *self);
-void ccpacket_set_tilt(struct ccpacket *self, enum command_t tm, int speed);
-enum command_t ccpacket_get_tilt_mode(const struct ccpacket *self);
+void ccpacket_set_tilt(struct ccpacket *self, enum cc_flags tm, int speed);
+enum cc_flags ccpacket_get_tilt_mode(const struct ccpacket *self);
 void ccpacket_set_tilt_speed(struct ccpacket *self, int speed);
 int ccpacket_get_tilt_speed(const struct ccpacket *self);
 bool ccpacket_has_tilt(const struct ccpacket *self);
 void ccpacket_set_timeout(struct ccpacket *pkt, unsigned int timeout);
 bool ccpacket_is_expired(struct ccpacket *self, unsigned int timeout);
-void ccpacket_set_preset(struct ccpacket *self, enum command_t pm, int p_num);
-enum command_t ccpacket_get_preset_mode(const struct ccpacket *self);
+void ccpacket_set_preset(struct ccpacket *self, enum cc_flags pm, int p_num);
+enum cc_flags ccpacket_get_preset_mode(const struct ccpacket *self);
 int ccpacket_get_preset_number(const struct ccpacket *self);
 bool ccpacket_is_stop(struct ccpacket *pkt);
 void ccpacket_set_zoom(struct ccpacket *self, enum lens_t zm);
@@ -106,8 +106,8 @@ void ccpacket_set_lens(struct ccpacket *self, enum lens_t lm);
 enum lens_t ccpacket_get_lens(const struct ccpacket *self);
 void ccpacket_set_wiper(struct ccpacket *self, enum lens_t wm);
 enum lens_t ccpacket_get_wiper(const struct ccpacket *self);
-void ccpacket_set_ack(struct ccpacket *self, enum command_t a);
-enum command_t ccpacket_get_ack(const struct ccpacket *self);
+void ccpacket_set_ack(struct ccpacket *self, enum cc_flags a);
+enum cc_flags ccpacket_get_ack(const struct ccpacket *self);
 bool ccpacket_has_command(const struct ccpacket *pkt);
 bool ccpacket_has_autopan(const struct ccpacket *pkt);
 bool ccpacket_has_power(const struct ccpacket *pkt);

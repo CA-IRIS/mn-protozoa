@@ -404,8 +404,8 @@ static void encode_lens(uint8_t *mess, struct ccpacket *pkt) {
  * encode_sense		Encode a sense command.
  */
 static inline void encode_sense(uint8_t *mess, struct ccpacket *pkt) {
-	enum command_t cc = ccpacket_get_camera(pkt);
-	enum command_t pm = ccpacket_get_pan_mode(pkt);
+	enum cc_flags cc = ccpacket_get_camera(pkt);
+	enum cc_flags pm = ccpacket_get_pan_mode(pkt);
 	if (cc == CC_CAMERA_ON || pm == CC_PAN_AUTO) {
 		bit_set(mess, BIT_SENSE);
 		if (cc == CC_CAMERA_ON)
@@ -448,7 +448,7 @@ static void encode_command(struct ccwriter *wtr, struct ccpacket *pkt) {
 static void encode_preset(struct ccwriter *wtr, struct ccpacket *pkt) {
 	uint8_t *mess = ccwriter_append(wtr, PELCO_D_SZ);
 	if(mess) {
-		enum command_t pm = ccpacket_get_preset_mode(pkt);
+		enum cc_flags pm = ccpacket_get_preset_mode(pkt);
 		encode_receiver(mess, pkt);
 		bit_set(mess, BIT_EXTENDED);
 		if (pm == CC_PRESET_RECALL)
@@ -482,7 +482,7 @@ static void encode_wiper(struct ccwriter *wtr, struct ccpacket *pkt) {
  * adjust_menu_commands	Adjust menu commands for pelco d protocol.
  */
 static inline void adjust_menu_commands(struct ccpacket *pkt) {
-	enum command_t mc = ccpacket_get_menu(pkt);
+	enum cc_flags mc = ccpacket_get_menu(pkt);
 	if (mc == CC_MENU_OPEN)
 		ccpacket_set_preset(pkt,CC_PRESET_STORE,PELCO_PRESET_MENU_OPEN);
 	else if (mc == CC_MENU_ENTER)

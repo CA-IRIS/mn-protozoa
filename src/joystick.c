@@ -82,13 +82,13 @@ static inline int remap_speed(int value) {
 
 /** Decode pan mode.
  */
-static enum command_t decode_pan_mode(short speed) {
+static enum cc_flags decode_pan_mode(short speed) {
 	return speed <= 0 ? CC_PAN_LEFT : CC_PAN_RIGHT;
 }
 
 /** Decode tilt mode.
  */
-static enum command_t decode_tilt_mode(short speed) {
+static enum cc_flags decode_tilt_mode(short speed) {
 	return speed < 0 ? CC_TILT_UP : CC_TILT_DOWN;
 }
 
