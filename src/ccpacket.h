@@ -1,5 +1,5 @@
-#ifndef __CCPACKET_H__
-#define __CCPACKET_H__
+#ifndef CCPACKET_H
+#define CCPACKET_H
 
 #include "log.h"
 #include "timeval.h"

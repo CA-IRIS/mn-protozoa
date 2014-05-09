@@ -1,5 +1,5 @@
-#ifndef __CLUMP_H__
-#define __CLUMP_H__
+#ifndef CLUMP_H
+#define CLUMP_H
 
 typedef void (CL_CALLBACK) (void *value, void *bound);
 

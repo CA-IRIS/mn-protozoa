@@ -1,5 +1,5 @@
-#ifndef __INFINOVA_D_H__
-#define __INFINOVA_D_H__
+#ifndef INFINOVA_D_H
+#define INFINOVA_D_H
 
 #include "ccwriter.h"
 

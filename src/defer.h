@@ -1,5 +1,5 @@
-#ifndef __DEFER_H__
-#define __DEFER_H__
+#ifndef DEFER_H
+#define DEFER_H
 
 #include <sys/time.h>	/* for struct timeval */
 #include "ccpacket.h"	/* for struct ccpacket */

@@ -1,5 +1,5 @@
-#ifndef __VICON_H__
-#define __VICON_H__
+#ifndef VICON_H
+#define VICON_H
 
 #include "ccwriter.h"
 

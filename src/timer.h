@@ -1,5 +1,5 @@
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#ifndef TIMER_H
+#define TIMER_H
 
 #include <signal.h>	/* for struct sigaction */
 #include <sys/time.h>	/* for struct itimerval */

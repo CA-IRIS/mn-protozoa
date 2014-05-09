@@ -1,5 +1,5 @@
-#ifndef __MANCHESTER_H__
-#define __MANCHESTER_H__
+#ifndef MANCHESTER_H
+#define MANCHESTER_H
 
 #include "ccwriter.h"
 

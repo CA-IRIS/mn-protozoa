@@ -1,5 +1,5 @@
-#ifndef __POLLER_H__
-#define __POLLER_H__
+#ifndef POLLER_H
+#define POLLER_H
 
 #include <sys/poll.h>		/* for struct pollfd */
 #include "channel.h"		/* for struct channel */

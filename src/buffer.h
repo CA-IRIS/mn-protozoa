@@ -1,5 +1,5 @@
-#ifndef __BUFFER_H__
-#define __BUFFER_H__
+#ifndef BUFFER_H
+#define BUFFER_H
 
 #include <stdbool.h>	/* for bool */
 #include <stdlib.h>	/* for size_t, ssize_t */

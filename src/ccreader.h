@@ -1,5 +1,5 @@
-#ifndef __CCREADER_H__
-#define __CCREADER_H__
+#ifndef CCREADER_H
+#define CCREADER_H
 
 #include "buffer.h"
 #include "ccpacket.h"

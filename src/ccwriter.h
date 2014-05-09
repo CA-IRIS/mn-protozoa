@@ -1,5 +1,5 @@
-#ifndef __CCWRITER_H__
-#define __CCWRITER_H__
+#ifndef CCWRITER_H
+#define CCWRITER_H
 
 #include "ccpacket.h"	/* for struct ccpacket */
 #include "channel.h"	/* for struct channel */

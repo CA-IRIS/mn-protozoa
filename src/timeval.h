@@ -1,5 +1,5 @@
-#ifndef __TIMEVAL_H__
-#define __TIMEVAL_H__
+#ifndef TIMEVAL_H
+#define TIMEVAL_H
 
 #include <sys/time.h>
 #include <stdbool.h>

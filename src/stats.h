@@ -1,5 +1,5 @@
-#ifndef __STATS_H__
-#define __STATS_H__
+#ifndef STATS_H
+#define STATS_H
 
 #include "log.h"
 #include "ccpacket.h"

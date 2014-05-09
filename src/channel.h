@@ -1,5 +1,5 @@
-#ifndef __CHANNEL_H__
-#define __CHANNEL_H__
+#ifndef CHANNEL_H
+#define CHANNEL_H
 
 #include <stdbool.h>
 #include "buffer.h"

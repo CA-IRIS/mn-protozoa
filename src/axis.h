@@ -1,5 +1,5 @@
-#ifndef __AXIS_H__
-#define __AXIS_H__
+#ifndef AXIS_H
+#define AXIS_H
 
 #include "ccwriter.h"
 

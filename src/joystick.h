@@ -1,5 +1,5 @@
-#ifndef __JOYSTICK_H__
-#define __JOYSTICK_H__
+#ifndef JOYSTICK_H
+#define JOYSTICK_H
 
 #include "ccwriter.h"
 

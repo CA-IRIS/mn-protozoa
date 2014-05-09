@@ -1,5 +1,5 @@
-#ifndef __BITARRAY_H__
-#define __BITARRAY_H__
+#ifndef BITARRAY_H
+#define BITARRAY_H
 
 /* These work best as macros, since GCC doesn't know how to optimize static
  * inline functions very well. */

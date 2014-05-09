@@ -1,5 +1,5 @@
-#ifndef __PELCO_D_H__
-#define __PELCO_D_H__
+#ifndef PELCO_D_H
+#define PELCO_D_H
 
 #include "ccwriter.h"
 
