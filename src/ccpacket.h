@@ -69,21 +69,6 @@ enum lens_t {
 
 #define SPEED_MAX ((1 << 11) - 1)
 
-/*
- * A camera control packet is a protocol-neutral representation of a single
- * message to a camera receiver driver.
- */
-struct ccpacket {
-	int		receiver;	/* receiver address: 1 to 1024 */
-	enum status_t	status;		/* status request type */
-	enum command_t	command;	/* bitmask of commands */
-	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
-	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
-	enum lens_t	lens;		/* bitmask of lens functions */
-	int		preset;		/* preset number */
-	struct timeval	expire;		/* expiration time */
-};
-
 struct ccpacket *ccpacket_create(void);
 void ccpacket_destroy(struct ccpacket *self);
 void ccpacket_clear(struct ccpacket *pkt);

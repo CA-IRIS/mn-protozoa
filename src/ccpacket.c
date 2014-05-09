@@ -26,6 +26,21 @@ enum special_presets {
 	MENU_CANCEL_PRESET = 79,
 };
 
+/*
+ * A camera control packet is a protocol-neutral representation of a single
+ * message to a camera receiver driver.
+ */
+struct ccpacket {
+	int		receiver;	/* receiver address: 1 to 1024 */
+	enum status_t	status;		/* status request type */
+	enum command_t	command;	/* bitmask of commands */
+	int		pan;		/* 0 (none) to SPEED_MAX (fast) */
+	int		tilt;		/* 0 (none) to SPEED_MAX (fast) */
+	enum lens_t	lens;		/* bitmask of lens functions */
+	int		preset;		/* preset number */
+	struct timeval	expire;		/* expiration time */
+};
+
 /** Create a camera control packet.
  */
 struct ccpacket *ccpacket_create(void) {
