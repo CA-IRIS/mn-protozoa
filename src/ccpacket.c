@@ -15,7 +15,6 @@
 #include <string.h>	/* for memcpy */
 #include <stdlib.h>
 #include "ccpacket.h"
-#include "stats.h"
 
 /*
  * Special preset numbers for on-screen menu functions
@@ -637,21 +636,6 @@ void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
 		ccpacket_log_preset(pkt, log);
 	ccpacket_log_special(pkt, log);
 	log_line_end(log);
-}
-
-/*
- * ccpacket_count	Count the camera control packet statistics.
- */
-void ccpacket_count(struct ccpacket *pkt) {
-	ptz_stats_count(pkt);
-}
-
-/*
- * ccpacket_drop	Drop the camera control packet.
- */
-void ccpacket_drop(struct ccpacket *pkt) {
-	ptz_stats_drop();
-	ccpacket_count(pkt);
 }
 
 /*

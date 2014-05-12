@@ -5,7 +5,6 @@
 #include "ccpacket.h"
 
 void ptz_stats_init(struct log *log);
-void ptz_stats_count(struct ccpacket *pkt);
-void ptz_stats_drop(void);
+void ptz_stats_count(const struct ccpacket *pkt, enum domain d);
 
 #endif

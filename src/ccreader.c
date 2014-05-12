@@ -14,6 +14,7 @@
  */
 #include <strings.h>
 #include "ccreader.h"
+#include "stats.h"
 #include "joystick.h"
 #include "manchester.h"
 #include "pelco_d.h"
@@ -197,12 +198,9 @@ unsigned int ccreader_process_packet_no_clear(struct ccreader *rdr) {
 	unsigned int res = 0;
 	if (rdr->log->packet)
 		ccpacket_log(pkt, rdr->log, "IN", rdr->name);
+	ptz_stats_count(pkt, CC_DOM_IN);
 	ccpacket_set_timeout(pkt, rdr->timeout);
 	res = ccreader_do_writers(rdr);
-	if(res)
-		ccpacket_count(pkt);
-	else
-		ccpacket_drop(pkt);
 	return res;
 }
 

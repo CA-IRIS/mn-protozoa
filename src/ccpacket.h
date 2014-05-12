@@ -4,6 +4,11 @@
 #include "log.h"
 #include "timeval.h"
 
+enum domain {
+	CC_DOM_IN,
+	CC_DOM_OUT,
+};
+
 enum cc_flags {
 	CC_PAN_LEFT = 1 << 0,
 	CC_PAN_RIGHT = 1 << 1,
@@ -88,8 +93,6 @@ bool ccpacket_has_autopan(const struct ccpacket *pkt);
 bool ccpacket_has_power(const struct ccpacket *pkt);
 void ccpacket_log(struct ccpacket *pkt, struct log *log, const char *dir,
 	const char *name);
-void ccpacket_count(struct ccpacket *pkt);
-void ccpacket_drop(struct ccpacket *pkt);
 void ccpacket_copy(struct ccpacket *dest, struct ccpacket *src);
 
 #endif

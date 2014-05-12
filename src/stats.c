@@ -13,98 +13,97 @@
  * GNU General Public License for more details.
  */
 #include <string.h>	/* for memset */
+#include <stdint.h>
 #include "stats.h"
 
-/*
- * Packet stats struct.
- */
-struct ptz_stats {
-	struct log	*log;		/* logger */
-	long long	n_packets;	/* total count of packets */
-	long long	n_dropped;	/* count of dropped packets */
-	long long	n_pan;		/* count of pan packets */
-	long long	n_tilt;		/* count of tilt packets */
-	long long	n_zoom;		/* count of zoom packets */
-	long long	n_lens;		/* count of lens packets */
-	long long	n_wiper;	/* count of wiper packets */
-	long long	n_preset;	/* count of preset packets */
+/** Packet classifications */
+enum pkt_class {
+	PC_PAN,
+	PC_TILT,
+	PC_ZOOM,
+	PC_FOCUS,
+	PC_IRIS,
+	PC_WIPER,
+	PC_PRESET,
+	PC_TOTAL,
 };
 
-/** Packet stats structure */
-static struct ptz_stats stats;
+/** Names of packet classes */
+static const char *pc_name[] = {
+	"pan",
+	"tilt",
+	"zoom",
+	"focus",
+	"iris",
+	"wiper",
+	"preset",
+	"total",
+};
 
-/**
- * Initialize packet stats.
+/** Message logger */
+static struct log *log;
+
+/** Count of packets */
+static uint64_t n_pkts[PC_TOTAL + 1][CC_DOM_OUT + 1];
+
+/** Initialize packet stats.
  *
  * @param log		Message logger
  */
-void ptz_stats_init(struct log *log) {
-	memset(&stats, 0, sizeof(struct ptz_stats));
-	stats.log = log;
+void ptz_stats_init(struct log *lg) {
+	memset(&n_pkts, 0, sizeof(n_pkts));
+	log = lg;
 }
 
-/**
- * Print packet statistics.
+/** Print packet statistics.
  *
- * @param stat		Name of statistic to print
- * @param count		Count of the statistic
+ * @param pc		Packet class
  */
-static void ptz_stats_print(const char *stat, long long count) {
-	float percent = 100 * (float)count / stats.n_packets;
-	log_println(stats.log, "%10s: %10lld  %6.2f%%", stat, count, percent);
+static void ptz_stats_print(int pc) {
+	if (n_pkts[pc][CC_DOM_IN] || n_pkts[pc][CC_DOM_OUT]) {
+		uint64_t n_in = n_pkts[pc][CC_DOM_IN];
+		uint64_t n_out = n_pkts[pc][CC_DOM_OUT];
+		float prc_in = 100.0f * n_in / n_pkts[PC_TOTAL][CC_DOM_IN];
+		float prc_out = 100.0f * n_out / n_pkts[PC_TOTAL][CC_DOM_OUT];
+		log_println(log, "%8s: %10lld  %6.2f%% %10lld  %6.2f%%",
+			pc_name[pc], n_in, prc_in, n_out, prc_out);
+	}
 }
 
 /**
  * Display all packet statistics.
  */
 static void ptz_stats_display(void) {
-	log_println(stats.log, "protozoa statistics: %lld packets",
-		stats.n_packets);
-	if (stats.n_dropped)
-		ptz_stats_print("dropped", stats.n_dropped);
-	if (stats.n_pan)
-		ptz_stats_print("pan", stats.n_pan);
-	if (stats.n_tilt)
-		ptz_stats_print("tilt", stats.n_tilt);
-	if (stats.n_zoom)
-		ptz_stats_print("zoom", stats.n_zoom);
-	if (stats.n_lens)
-		ptz_stats_print("lens", stats.n_lens);
-	if (stats.n_wiper)
-		ptz_stats_print("wiper", stats.n_wiper);
-	if (stats.n_preset)
-		ptz_stats_print("preset", stats.n_preset);
+	int i;
+	log_println(log, "%8s  %10s  %6s  %10s  %6s", "Class", "Count IN",
+		"%% IN", "Count OUT", "%% OUT");
+	for (i = 0; i <= PC_TOTAL; i++)
+		ptz_stats_print(i);
 }
 
-/**
- * Count one packet in the packet stats.
+/** Count one packet in the packet stats.
  *
  * @param pkt		Packet to count
+ * @param d		Packet domain: CC_DOM_IN or CC_DOM_OUT
  */
-void ptz_stats_count(struct ccpacket *pkt) {
-	if (stats.log) {
-		stats.n_packets++;
+void ptz_stats_count(const struct ccpacket *pkt, enum domain d) {
+	if (log) {
 		if (ccpacket_has_pan(pkt))
-			stats.n_pan++;
+			n_pkts[PC_PAN][d]++;
 		if (ccpacket_has_tilt(pkt))
-			stats.n_tilt++;
+			n_pkts[PC_TILT][d]++;
 		if (ccpacket_get_zoom(pkt))
-			stats.n_zoom++;
-		if (ccpacket_get_focus(pkt) || ccpacket_get_iris(pkt))
-			stats.n_lens++;
+			n_pkts[PC_ZOOM][d]++;
+		if (ccpacket_get_focus(pkt))
+			n_pkts[PC_FOCUS][d]++;
+		if (ccpacket_get_iris(pkt))
+			n_pkts[PC_IRIS][d]++;
 		if (ccpacket_get_wiper(pkt))
-			stats.n_wiper++;
+			n_pkts[PC_WIPER][d]++;
 		if (ccpacket_get_preset_mode(pkt))
-			stats.n_preset++;
-		if ((stats.n_packets % 100) == 0)
+			n_pkts[PC_PRESET][d]++;
+		n_pkts[PC_TOTAL][d]++;
+		if ((n_pkts[PC_TOTAL][d] % 100) == 0)
 			ptz_stats_display();
 	}
-}
-
-/**
- * Drop one camera control packet.
- */
-void ptz_stats_drop(void) {
-	if (stats.log)
-		stats.n_dropped++;
 }
