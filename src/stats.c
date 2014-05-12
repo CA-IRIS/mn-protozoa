@@ -75,8 +75,8 @@ static void ptz_stats_print(int pc) {
  */
 static void ptz_stats_display(void) {
 	int i;
-	log_println(log, "%8s  %10s  %6s  %10s  %6s", "Class", "Count IN",
-		"%% IN", "Count OUT", "%% OUT");
+	log_println(log, "%8s  %10s %8s %10s %8s", "Class", "Count IN",
+		"IN \%", "Count OUT", "OUT \%");
 	for (i = 0; i <= PC_TOTAL; i++)
 		ptz_stats_print(i);
 }
