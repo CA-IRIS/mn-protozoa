@@ -15,6 +15,7 @@
 #include <string.h>		/* for strcpy, strlen */
 #include <strings.h>		/* for strcasecmp */
 #include "ccwriter.h"
+#include "stats.h"
 #include "defer.h"
 #include "axis.h"
 #include "infinova.h"
@@ -196,6 +197,7 @@ static int ccwriter_do_write_(struct ccwriter *wtr, struct ccpacket *pkt) {
 	}
 	c = wtr->do_write(wtr, pkt);
 	if(c > 0) {
+		ptz_stats_count(pkt, CC_DOM_OUT);
 		ccwriter_check_deferred(wtr, pkt, dpkt);
 		if(wtr->chn->log->packet)
 			ccpacket_log(pkt, wtr->chn->log, "OUT", wtr->chn->name);
