@@ -21,7 +21,7 @@
 #include "poller.h"
 #include "stats.h"
 
-#define VERSION "0.56a"
+#define VERSION "0.56"
 #define BANNER "protozoa: v" VERSION "  Copyright (C) 2006-2014  MnDOT"
 
 /** Log file to use when daemonized */
