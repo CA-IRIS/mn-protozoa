@@ -518,6 +518,14 @@
 	<td>Monitor status request</td>
 </tr>
 <tr>
+	<td>BB</td>
+	<td>Camera Lock request</td>
+</tr>
+<tr>
+	<td>BC</td>
+	<td>Camera Unlock request</td>
+</tr>
+<tr>
 	<td>C0</td>
 	<td>Camera control request</td>
 </tr>
@@ -576,7 +584,8 @@
 <tr>
 	<th>REQ</th>
 	<th>MLO</th>
-	<th colspan='3'>???</th>
+	<th>Normal (40)<br/>Locked (50)</th>
+	<th colspan='2'>???</th>
 	<th>CHI</th>
 	<th>CLO</th>
 	<th colspan='4'>???</th>
@@ -739,6 +748,58 @@
 	<td>01</td>
 	<td>00</td>
 	<td>Logged off status</td>
+</tr>
+</table>
+
+<h4>Camera Lock Request</h4>
+<table>
+<tr>
+	<th colspan='6'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th>MHI</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>BB</td>
+	<td>72</td>
+	<td>04</td>
+	<td>31</td>
+	<td>01</td>
+	<td>00</td>
+	<td>Lock camera #431 to mon #172 </td>
+</tr>
+</table>
+
+<h4>Camera Unlock Request</h4>
+<table>
+<tr>
+	<th colspan='7'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+	<th>MLO</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th>MHI</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>BC</td>
+	<td>01</td>
+	<td>72</td>
+	<td>04</td>
+	<td>31</td>
+	<td>01</td>
+	<td>00</td>
+	<td>Unlock camera #431 on mon #172 </td>
 </tr>
 </table>
 
