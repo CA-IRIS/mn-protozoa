@@ -31,10 +31,10 @@
 </tr>
 </table>
 
-<h3>Direct Addressing</h3>
+<h3>Direct Messages</h3>
 
 <p>
-	Direct addressing can only be used for camera control packets.
+	Direct messages can only be used for camera control packets.
 	The receiver address can range from 1 - 254.
 	The MESSAGE is 5 bytes:
 </p>
@@ -479,7 +479,173 @@
 </table>
 </div>
 
-<br/>
+<h3>System Messages</h3>
+<p>
+	System messages are used between a keyboard and a switcher system.
+</p>
+<table>
+<tr>
+	<th>Code</th>
+	<th>Function</th>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>Log off request / response</td>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>Select monitor request, or<br/>
+	    Monitor status response</td>
+</tr>
+<tr>
+	<td>B2</td>
+	<td>Select camera request</td>
+</tr>
+<tr>
+	<td>B6</td>
+	<td>Next camera request</td>
+</tr>
+<tr>
+	<td>B7</td>
+	<td>Previous camera request</td>
+</tr>
+<tr>
+	<td>BA</td>
+	<td>Monitor status request</td>
+</tr>
+<tr>
+	<td>C0</td>
+	<td>Camera control request</td>
+</tr>
+<tr>
+	<td>CD</td>
+	<td>Set date and time</td>
+</tr>
+<tr>
+	<td>D3</td>
+	<td>Log on response</td>
+</tr>
+<tr>
+	<td>DE</td>
+	<td>Keep alive?</td>
+</tr>
+<tr>
+	<td>F4</td>
+	<td>Log on request</td>
+</tr>
+</table>
+
+<h4>Select Monitor Request</h4>
+<table>
+<tr>
+	<th colspan='4'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>???</th>
+	<th>MHI</th>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>72</td>
+	<td>01</td>
+	<td>02</td>
+	<td>Select monitor #272</td>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>00</td>
+	<td>01</td>
+	<td>00</td>
+	<td>Log off</td>
+</tr>
+</table>
+
+<h4>Monitor Status Response</h4>
+<table>
+<tr>
+	<th colspan='17'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th colspan='3'>???</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th colspan='4'>???</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th colspan='3'>???</th>
+	<th>MHI</th>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>72</td>
+	<td>40</td>
+	<td>00</td>
+	<td>00</td>
+	<td>05</td>
+	<td>61</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>05</td>
+	<td>61</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>02</td>
+	<td>Camera #561 on Monitor #272</td>
+</tr>
+</table>
+
+<h4>Logged Off Response</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>MHI</th>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>00</td>
+	<td>00</td>
+	<td>Logged off</td>
+</tr>
+</table>
+
+<h4>Select Camera Request</h4>
+<table>
+<tr>
+	<th colspan='6'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th>MHI</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>B2</td>
+	<td>72</td>
+	<td>04</td>
+	<td>32</td>
+	<td>02</td>
+	<td>00</td>
+	<td>Select camera #432 on monitor #272</td>
+</tr>
+</table>
 
 <p class="stamp">
 	2014 Sep 9
