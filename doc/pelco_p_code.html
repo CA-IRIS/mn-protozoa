@@ -526,12 +526,16 @@
 	<td>Camera Unlock request</td>
 </tr>
 <tr>
+	<td>BD</td>
+	<td>Set date and time</td>
+</tr>
+<tr>
 	<td>C0</td>
 	<td>Camera control request</td>
 </tr>
 <tr>
 	<td>CD</td>
-	<td>Set date and time</td>
+	<td>Login date and time</td>
 </tr>
 <tr>
 	<td>D3</td>
@@ -803,6 +807,34 @@
 </tr>
 </table>
 
+<h4>Set Date/Time</h4>
+<table>
+<tr>
+	<th colspan='8'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+	<th>YR</th>
+	<th>MO (0=Jan)</th>
+	<th>DT</th>
+	<th>HR</th>
+	<th>MN</th>
+	<th>SC</th>
+</tr>
+<tr>
+	<td>BD</td>
+	<td>04</td>
+	<td>14</td>
+	<td>08</td>
+	<td>09</td>
+	<td>16</td>
+	<td>25</td>
+	<td>00</td>
+</tr>
+</table>
+
 <h4>Camera Control</h4>
 <table>
 <tr>
@@ -830,7 +862,7 @@
 </tr>
 </table>
 
-<h4>Set Date/Time</h4>
+<h4>Login Date/Time</h4>
 <table>
 <tr>
 	<th colspan='2'>MESSAGE</th>
