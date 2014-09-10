@@ -58,6 +58,7 @@
 </p>
 <p>
 	Pan and tilt speed can range from 0 - 63.
+	The special value of 64 indicated "turbo" pan speed.
 </p>
 <p>
 	Commands sent to a camera remain active until another command is
@@ -72,15 +73,15 @@
 </tr>
 <tr>
 	<th colspan='2'>0-15 &mdash; FLAGS</th>
-	<th>16-21</th>
-	<th>22-23</th>
+	<th>16-22</th>
+	<th>23</th>
 	<th>24-29</th>
 	<th>30-31</th>
 </tr>
 <tr>
 	<td>focus far</td>
 	<th>00</th>
-	<td rowspan='16'>Pan Speed (0-63)</td>
+	<td rowspan='16'>Pan Speed (0-64)<br/>64 is "turbo"</td>
 	<td rowspan='16'>Must be 0</td>
 	<td rowspan='16'>Tilt Speed (0-63)</td>
 	<td rowspan='16'>Must be 0</td>
