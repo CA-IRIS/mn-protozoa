@@ -521,6 +521,12 @@
 	<td/>
 </tr>
 <tr>
+	<td>B3</td>
+	<td><a href='#B3'>Video Loss</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
 	<td>B6</td>
 	<td><a href='#B6'>Next camera</a></td>
 	<td>✔</td>
@@ -561,6 +567,18 @@
 	<td><a href='#BD'>Set date and time</a></td>
 	<td>✔</td>
 	<td/>
+</tr>
+<tr>
+	<td>BF</td>
+	<td><a href='#BF'>Camera Properties</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
+	<td>BF</td>
+	<td><a href='#BF'>Camera Properties</a></td>
+	<td/>
+	<td>✔</td>
 </tr>
 <tr>
 	<td>C0</td>
@@ -710,6 +728,43 @@
 	<td>01</td>
 	<td>00</td>
 	<td>Select camera #432 on monitor #172</td>
+</tr>
+</table>
+
+<h4 id='B3'>Video Loss Request</h4>
+<table>
+<tr>
+	<th colspan='7'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+	<th>???</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th>???</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>B3</td>
+	<td>00</td>
+	<td>01</td>
+	<td>04</td>
+	<td>32</td>
+	<td>4D</td>
+	<td>00</td>
+	<td>Disable cam #432</td>
+</tr>
+<tr>
+	<td>B3</td>
+	<td>00</td>
+	<td>01</td>
+	<td>04</td>
+	<td>32</td>
+	<td>55</td>
+	<td>00</td>
+	<td>Enable cam #432</td>
 </tr>
 </table>
 
@@ -881,6 +936,49 @@
 	<td>16</td>
 	<td>25</td>
 	<td>00</td>
+</tr>
+</table>
+
+<h4 id='BF'>Camera Properties Request</h4>
+<table>
+<tr>
+	<th colspan='4'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>BF</td>
+	<td>04</td>
+	<td>32</td>
+	<td>00</td>
+	<td>Request #432</td>
+</tr>
+</table>
+
+<h4 id='BF'>Camera Properties Response</h4>
+<table>
+<tr>
+	<th colspan='2'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>BF</td>
+	<td>55</td>
+	<td>Cam enabled</td>
+</tr>
+<tr>
+	<td>BF</td>
+	<td>4D</td>
+	<td>Cam disabled</td>
 </tr>
 </table>
 
