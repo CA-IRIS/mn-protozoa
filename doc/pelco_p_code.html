@@ -528,6 +528,12 @@
 	<td/>
 </tr>
 <tr>
+	<td>B4</td>
+	<td><a href='#B4'>Pause Macro</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
 	<td>B6</td>
 	<td><a href='#B6'>Next camera</a></td>
 	<td>✔</td>
@@ -622,6 +628,12 @@
 	<td><a href='#DE'>Still alive?</a></td>
 	<td/>
 	<td>✔</td>
+</tr>
+<tr>
+	<td>EB</td>
+	<td><a href='#EB'>Cycle Macro</a></td>
+	<td>✔</td>
+	<td/>
 </tr>
 <tr>
 	<td>F4</td>
@@ -787,6 +799,31 @@
 	<td>55</td>
 	<td>00</td>
 	<td>Enable cam #432</td>
+</tr>
+</table>
+
+<h4 id='B4'>Pause Macro Request</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>MHI</th>
+</tr>
+<tr>
+	<td>B4</td>
+	<td>00</td>
+	<td>03</td>
+	<td>Pause macro on mon #300</td>
+</tr>
+<tr>
+	<td>B3</td>
+	<td>01</td>
+	<td>03</td>
+	<td>Pause macro on mon #301</td>
 </tr>
 </table>
 
@@ -1171,6 +1208,28 @@
 </tr>
 </table>
 
+<h4 id='EB'>Cycle Macro</h4>
+<table>
+<tr>
+	<th colspan='2'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>SUB<th>
+</tr>
+<tr>
+	<td>EB</td>
+	<td>01</td>
+	<td>Previous macro</td>
+</tr>
+<tr>
+	<td>EB</td>
+	<td>02</td>
+	<td>Next macro</td>
+</tr>
+</table>
+
 <h4 id='F4'>Log On Request</h4>
 <table>
 <tr>
@@ -1195,7 +1254,7 @@
 </table>
 
 <p class="stamp">
-	2017 Apr 25
+	2017 Apr 26
 </p>
 </body>
 </html>
