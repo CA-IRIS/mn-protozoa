@@ -618,6 +618,12 @@
 	<td>✔</td>
 </tr>
 <tr>
+	<td>D6</td>
+	<td><a href='#D6'>Alarm request?</a></td>
+	<td/>
+	<td>✔</td>
+</tr>
+<tr>
 	<td>DE</td>
 	<td><a href='#DE'>Keep alive?</a></td>
 	<td>✔</td>
@@ -632,6 +638,12 @@
 <tr>
 	<td>EB</td>
 	<td><a href='#EB'>Cycle Macro</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
+	<td>EC</td>
+	<td><a href='#EC'>Stop Macro</a></td>
 	<td>✔</td>
 	<td/>
 </tr>
@@ -1246,6 +1258,25 @@
 </tr>
 </table>
 
+<h4 id='D6'>Alarm Request</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>D6</td>
+	<td>00</td>
+	<td>00</td>
+	<td>???</td>
+</tr>
+</table>
+
 <h4 id='DE'>Keep Alive?</h4>
 <table>
 <tr>
@@ -1290,6 +1321,45 @@
 </tr>
 </table>
 
+<h4 id='EC'>Stop Macro</h4>
+<table>
+<tr>
+	<th colspan='5'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>???</th>
+	<th>???</th>
+	<th>MHI</th>
+</tr>
+<tr>
+	<td>EC</td>
+	<td>00</td>
+	<td>23</td>
+	<td>79</td>
+	<td>03</td>
+	<td>Stop macro on Mon #0300</td>
+</tr>
+<tr>
+	<td>EC</td>
+	<td>00</td>
+	<td>23</td>
+	<td>59</td>
+	<td>03</td>
+	<td>Stop macro on Mon #0300</td>
+</tr>
+<tr>
+	<td>EC</td>
+	<td>01</td>
+	<td>23</td>
+	<td>79</td>
+	<td>03</td>
+	<td>Stop macro on Mon #0301</td>
+</tr>
+</table>
+
 <h4 id='F4'>Log On Request</h4>
 <table>
 <tr>
@@ -1314,7 +1384,7 @@
 </table>
 
 <p class="stamp">
-	2017 Apr 28
+	2017 Jun 26
 </p>
 </body>
 </html>
