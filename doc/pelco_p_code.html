@@ -636,6 +636,12 @@
 	<td>✔</td>
 </tr>
 <tr>
+	<td>E8</td>
+	<td><a href='#E8'>Delete Macro</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
 	<td>EB</td>
 	<td><a href='#EB'>Cycle Macro</a></td>
 	<td>✔</td>
@@ -1299,6 +1305,31 @@
 </tr>
 </table>
 
+<h4 id='E8'>Delete Macro</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>MHI</th>
+</tr>
+<tr>
+	<td>E8</td>
+	<td>00</td>
+	<td>03</td>
+	<td>Delete macro on Mon #0300</td>
+</tr>
+<tr>
+	<td>E8</td>
+	<td>01</td>
+	<td>03</td>
+	<td>Delete macro on Mon #0301</td>
+</tr>
+</table>
+
 <h4 id='EB'>Cycle Macro</h4>
 <table>
 <tr>
@@ -1307,7 +1338,7 @@
 </tr>
 <tr>
 	<th>REQ</th>
-	<th>SUB<th>
+	<th>SUB</th>
 </tr>
 <tr>
 	<td>EB</td>
