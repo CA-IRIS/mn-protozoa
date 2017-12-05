@@ -529,7 +529,13 @@
 </tr>
 <tr>
 	<td>B4</td>
-	<td><a href='#B4'>Pause Macro</a></td>
+	<td><a href='#B4'>Play Macro</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
+	<td>B5</td>
+	<td><a href='#B5'>Pause Macro</a></td>
 	<td>✔</td>
 	<td/>
 </tr>
@@ -600,6 +606,12 @@
 	<td/>
 </tr>
 <tr>
+	<td>C8</td>
+	<td><a href='#C8'>Program buttons?</a></td>
+	<td/>
+	<td>✔</td>
+</tr>
+<tr>
 	<td>C9</td>
 	<td><a href='#C9'>Cycle monitor / camera</a></td>
 	<td>✔</td>
@@ -608,6 +620,12 @@
 <tr>
 	<td>CD</td>
 	<td><a href='#CD'>Update date / time</a></td>
+	<td/>
+	<td>✔</td>
+</tr>
+<tr>
+	<td>D0</td>
+	<td><a href='#D0'>Alarm Response</a></td>
 	<td/>
 	<td>✔</td>
 </tr>
@@ -624,6 +642,12 @@
 	<td>✔</td>
 </tr>
 <tr>
+	<td>D9</td>
+	<td><a href='#D9'>Cycle Alarm Request</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
 	<td>DE</td>
 	<td><a href='#DE'>Keep alive?</a></td>
 	<td>✔</td>
@@ -636,8 +660,38 @@
 	<td>✔</td>
 </tr>
 <tr>
+	<td>E1</td>
+	<td><a href='#E1'>Error Display</a></td>
+	<td/>
+	<td>✔</td>
+</tr>
+<tr>
+	<td>E2</td>
+	<td><a href='#E2'>Monitor Denied</a></td>
+	<td/>
+	<td>✔</td>
+</tr>
+<tr>
+	<td>E4</td>
+	<td><a href='#E4'>Add Camera to Macro</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
+	<td>E6</td>
+	<td><a href='#E6'>Check Macro</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
 	<td>E8</td>
 	<td><a href='#E8'>Delete Macro</a></td>
+	<td>✔</td>
+	<td/>
+</tr>
+<tr>
+	<td>E9</td>
+	<td><a href='#E9'>Define Macro</a></td>
 	<td>✔</td>
 	<td/>
 </tr>
@@ -652,6 +706,12 @@
 	<td><a href='#EC'>Run / Stop Macro</a></td>
 	<td>✔</td>
 	<td/>
+</tr>
+<tr>
+	<td>EE</td>
+	<td><a href='#EE'>Cycle Macro Response</a></td>
+	<td/>
+	<td>✔</td>
 </tr>
 <tr>
 	<td>F4</td>
@@ -698,11 +758,13 @@
 <tr>
 	<th>REQ</th>
 	<th>MLO</th>
-	<th>Normal (40)<br/>Locked (50)</th>
-	<th colspan='2'>???</th>
+	<th>STA</th>
+	<th>???</th>
 	<th>CHI</th>
 	<th>CLO</th>
-	<th colspan='4'>???</th>
+	<th>PHI</th>
+	<th>PLO</th>
+	<th colspan='3'>???</th>
 	<th>CHI</th>
 	<th>CLO</th>
 	<th colspan='3'>???</th>
@@ -713,9 +775,9 @@
 	<td>72</td>
 	<td>40</td>
 	<td>00</td>
-	<td>00</td>
 	<td>05</td>
 	<td>61</td>
+	<td>00</td>
 	<td>00</td>
 	<td>00</td>
 	<td>00</td>
@@ -726,7 +788,67 @@
 	<td>00</td>
 	<td>00</td>
 	<td>01</td>
-	<td>Camera #561 on Monitor #172</td>
+	<td>Camera #561 on Monitor #172 (Not locked)</td>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>72</td>
+	<td>50</td>
+	<td>00</td>
+	<td>05</td>
+	<td>61</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>05</td>
+	<td>61</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>01</td>
+	<td>Camera #561 on Monitor #172 (Locked)</td>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>93</td>
+	<td>42</td>
+	<td>00</td>
+	<td>09</td>
+	<td>01</td>
+	<td>03</td>
+	<td>01</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>09</td>
+	<td>01</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>01</td>
+	<td>Camera #902 on Monitor #193 (Macro #301)</td>
+</tr>
+<tr>
+	<td>B1</td>
+	<td>93</td>
+	<td>40</td>
+	<td>00</td>
+	<td>09</td>
+	<td>01</td>
+	<td>03</td>
+	<td>01</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>09</td>
+	<td>01</td>
+	<td>00</td>
+	<td>00</td>
+	<td>00</td>
+	<td>01</td>
+	<td>Camera #902 on Monitor #193 (Macro #301, paused)</td>
 </tr>
 </table>
 
@@ -781,6 +903,15 @@
 	<td>00</td>
 	<td>Ret pressed just after logon</td>
 </tr>
+<tr>
+	<td>B2</td>
+	<td>93</td>
+	<td>10</td>
+	<td>00</td>
+	<td>01</td>
+	<td>00</td>
+	<td>Select "All Seq" on monitor #193</td>
+</tr>
 </table>
 
 <h4 id='B3'>Video Loss Request</h4>
@@ -820,7 +951,7 @@
 </tr>
 </table>
 
-<h4 id='B4'>Pause Macro Request</h4>
+<h4 id='B4'>Play Macro Request</h4>
 <table>
 <tr>
 	<th colspan='3'>MESSAGE</th>
@@ -835,13 +966,32 @@
 	<td>B4</td>
 	<td>00</td>
 	<td>03</td>
-	<td>Pause macro on mon #300</td>
+	<td>Play macro on mon #300</td>
 </tr>
 <tr>
-	<td>B3</td>
+	<td>B4</td>
 	<td>01</td>
 	<td>03</td>
-	<td>Pause macro on mon #301</td>
+	<td>Play macro on mon #301</td>
+</tr>
+</table>
+
+<h4 id='B5'>Pause Macro Request</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>MLO</th>
+	<th>MHI</th>
+</tr>
+<tr>
+	<td>B5</td>
+	<td>93</td>
+	<td>01</td>
+	<td>Pause macro on mon #193</td>
 </tr>
 </table>
 
@@ -1183,6 +1333,125 @@
 </tr>
 </table>
 
+<h4 id='C8'>Program buttons?</h4>
+<table>
+<tr>
+	<th colspan='8'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>SUB</th>
+	<th>???</th>
+	<th>BNK</th>
+	<th>???</th>
+	<th>COL&nbsp;A</th>
+	<th>???</th>
+	<th>COL&nbsp;B</th>
+</tr>
+<tr>
+	<td>C8</td>
+	<td>F9</td>
+	<td>00&nbsp;00&nbsp;99<br>00&nbsp;01&nbsp;17</td>
+	<td>00</td>
+	<td>00&nbsp;00&nbsp;00<br>00&nbsp;00&nbsp;00<br>
+	    00&nbsp;00&nbsp;00<br>12&nbsp;00&nbsp;03</td>
+	<td>0F&nbsp;00&nbsp;01<br>0F&nbsp;00&nbsp;07<br>
+	    22&nbsp;10&nbsp;00<br>1E&nbsp;23&nbsp;79</td>
+	<td>0B&nbsp;00&nbsp;00<br>12&nbsp;00&nbsp;01<br>
+	    12&nbsp;00&nbsp;02<br>12&nbsp;00&nbsp;04</td>
+	<td>0F&nbsp;00&nbsp;02<br>0F&nbsp;00&nbsp;08<br>
+	    1E&nbsp;23&nbsp;53<br>1E&nbsp;23&nbsp;59</td>
+	<td>Bank #0</td>
+</tr>
+<tr>
+	<td>C8</td>
+	<td>F9</td>
+	<td>00&nbsp;00&nbsp;99<br>00&nbsp;01&nbsp;17</td>
+	<td>01</td>
+	<td>12&nbsp;00&nbsp;05<br>12&nbsp;00&nbsp;07<br>
+	    02&nbsp;00&nbsp;00<br>08&nbsp;00&nbsp;00</td>
+	<td>0F&nbsp;00&nbsp;03<br>0F&nbsp;00&nbsp;09<br>
+	    1E&nbsp;23&nbsp;52<br>1E&nbsp;23&nbsp;79</td>
+	<td>12&nbsp;00&nbsp;06<br>12&nbsp;00&nbsp;08<br>
+	    05&nbsp;00&nbsp;00<br>10&nbsp;00&nbsp;00</td>
+	<td>0F&nbsp;00&nbsp;04<br>0F&nbsp;00&nbsp;10<br>
+	    37&nbsp;00&nbsp;06<br>37&nbsp;00&nbsp;03</td>
+	<td>Bank #1</td>
+</tr>
+<tr>
+	<td>C8</td>
+	<td>F9</td>
+	<td>00&nbsp;00&nbsp;99<br>00&nbsp;01&nbsp;17</td>
+	<td>02</td>
+	<td>03&nbsp;00&nbsp;00<br>06&nbsp;00&nbsp;00<br>
+	    09&nbsp;00&nbsp;00<br>01&nbsp;00&nbsp;00</td>
+	<td>0F&nbsp;00&nbsp;05<br>0F&nbsp;00&nbsp;11<br>
+	    37&nbsp;00&nbsp;04<br>0F&nbsp;02&nbsp;36</td>
+	<td>04&nbsp;00&nbsp;00<br>07&nbsp;00&nbsp;00<br>
+	    0A&nbsp;00&nbsp;00<br>0E&nbsp;00&nbsp;00</td>
+	<td>0F&nbsp;00&nbsp;06<br>0F&nbsp;00&nbsp;12<br>
+	    37&nbsp;00&nbsp;01<br>0F&nbsp;02&nbsp;35</td>
+	<td>Bank #2</td>
+</tr>
+<tr>
+	<td>C8</td>
+	<td>F9</td>
+	<td>00&nbsp;00&nbsp;99<br>00&nbsp;01&nbsp;17</td>
+	<td>03</td>
+	<td>17&nbsp;00&nbsp;00<br>1F&nbsp;00&nbsp;00<br>
+	    30&nbsp;00&nbsp;00<br>13&nbsp;00&nbsp;00</td>
+	<td>32&nbsp;00&nbsp;00<br>24&nbsp;00&nbsp;00<br>
+	    26&nbsp;00&nbsp;00<br>28&nbsp;00&nbsp;00</td>
+	<td>18&nbsp;00&nbsp;00<br>1D&nbsp;00&nbsp;00<br>
+	    31&nbsp;00&nbsp;00<br>15&nbsp;00&nbsp;00</td>
+	<td>00&nbsp;00&nbsp;00<br>25&nbsp;00&nbsp;00<br>
+	    27&nbsp;00&nbsp;00<br>29&nbsp;00&nbsp;00</td>
+	<td>Bank #3</td>
+</tr>
+<tr>
+	<td>C8</td>
+	<td>FB</td>
+	<td>00&nbsp;00&nbsp;99<br>00&nbsp;01&nbsp;17</td>
+	<td colspan='5'/>
+	<td>Begin program mode?<br>(sent twice at start)</td>
+</tr>
+<tr>
+	<td>C8</td>
+	<td>FF</td>
+	<td>00&nbsp;00&nbsp;99<br>00&nbsp;01&nbsp;17</td>
+	<td colspan='5'/>
+	<td>End program mode?</td>
+</tr>
+</table>
+
+<table>
+<tr>
+	<th>CODE</th>
+	<th>DESCRIPTION</th>
+</tr>
+<tr>
+	<td>00</td>
+	<td>Disable?</td>
+</tr>
+<tr>
+	<td>0F</td>
+	<td>Select monitor</td>
+</tr>
+<tr>
+	<td>1E</td>
+	<td>Run macro</td>
+</tr>
+<tr>
+	<td>22</td>
+	<td>Select camera request</td>
+</tr>
+<tr>
+	<td>37</td>
+	<td>Aux # (6: Wiper, 3: Wash, 4: Cam On, 1: Cam Off)</td>
+</tr>
+</table>
+
 <h4 id='C9'>Cycle monitor / camera</h4>
 <table>
 <tr>
@@ -1239,6 +1508,25 @@
 </tr>
 </table>
 
+<h4 id='D0'>Alarm Response</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+	<th>??</th>
+</tr>
+<tr>
+	<td>D0</td>
+	<td>00</td>
+	<td>00</td>
+	<td>???</td>
+</tr>
+</table>
+
 <h4 id='D3'>Log On Response</h4>
 <table>
 <tr>
@@ -1283,6 +1571,28 @@
 </tr>
 </table>
 
+<h4 id='D9'>Cycle alarm request</h4>
+<table>
+<tr>
+	<th colspan='2'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>SUB</th>
+</tr>
+<tr>
+	<td>D9</td>
+	<td>01</td>
+	<td>Cycle alarm up (Respond with <a href="#D0">D0</a>)</td>
+</tr>
+<tr>
+	<td>D9</td>
+	<td>02</td>
+	<td>Cycle alarm down (Respond with <a href="#D0">D0</a></td>
+</tr>
+</table>
+
 <h4 id='DE'>Keep Alive?</h4>
 <table>
 <tr>
@@ -1302,6 +1612,100 @@
 	<td>DE</td>
 	<td>01</td>
 	<td>resp; No monitor selected</td>
+</tr>
+</table>
+
+<h4 id='E1'>Error Display</h4>
+<table>
+<tr>
+	<th colspan='2'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>E1</td>
+	<td>13</td>
+	<td>Cam Not Presesnt</td>
+</tr>
+<tr>
+	<td>E1</td>
+	<td>17</td>
+	<td>Mac Not Presesnt</td>
+</tr>
+<tr>
+	<td>E1</td>
+	<td>18</td>
+	<td>Alm Not Presesnt</td>
+</tr>
+<tr>
+	<td>E1</td>
+	<td>39</td>
+	<td>Macro Defined</td>
+</tr>
+<tr>
+	<td>E1</td>
+	<td>47</td>
+	<td>No Alt. Cam</td>
+</tr>
+</table>
+
+<h4 id='E2'>Monitor Denied</h4>
+<table>
+<tr>
+	<th colspan='2'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>E2</td>
+	<td>10</td>
+	<td>Monitor Denied</td>
+</tr>
+</table>
+
+<h4 id='E4'>Add Camera to Macro</h4>
+<table>
+<tr>
+	<th colspan='4'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>CHI</th>
+	<th>CLO</th>
+	<th>??</th>
+</tr>
+<tr>
+	<td>E4</td>
+	<td>09</td>
+	<td>01</td>
+	<td>00</td>
+	<td>Add camera #901 to macro</td>
+</tr>
+</table>
+
+<h4 id='E6'>Check Macro</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>PHI</th>
+	<th>PLO</th>
+</tr>
+<tr>
+	<td>E6</td>
+	<td>03</td>
+	<td>01</td>
+	<td>Check macro #0301</td>
 </tr>
 </table>
 
@@ -1327,6 +1731,38 @@
 	<td>01</td>
 	<td>03</td>
 	<td>Delete macro on Mon #0301</td>
+</tr>
+</table>
+
+<h4 id='E9'>Define Macro</h4>
+<table>
+<tr>
+	<th colspan='17'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th colspan='16'>???</th>
+</tr>
+<tr>
+	<td>E9</td>
+	<td>01</td>
+	<td>03</td>
+	<td>02</td>
+	<td>02</td>
+	<td>93</td>
+	<td>09</td>
+	<td>01</td>
+	<td>05</td>
+	<td>93</td>
+	<td>09</td>
+	<td>02</td>
+	<td>05</td>
+	<td>01</td>
+	<td>00</td>
+	<td>01</td>
+	<td>00</td>
+	<td>Define macro on #193</td>
 </tr>
 </table>
 
@@ -1407,6 +1843,25 @@
 </tr>
 </table>
 
+<h4 id='EE'>Cycle Macro Response</h4>
+<table>
+<tr>
+	<th colspan='3'>MESSAGE</th>
+	<th rowspan='2'>Description</th>
+</tr>
+<tr>
+	<th>REQ</th>
+	<th>???</th>
+	<th>???</th>
+</tr>
+<tr>
+	<td>EE</td>
+	<td>00</td>
+	<td>00</td>
+	<td>???</td>
+</tr>
+</table>
+
 <h4 id='F4'>Log On Request</h4>
 <table>
 <tr>
@@ -1431,7 +1886,7 @@
 </table>
 
 <p class="stamp">
-	2017 Nov 28
+	2017 Dec 5
 </p>
 </body>
 </html>
